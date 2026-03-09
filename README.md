@@ -1,5 +1,5 @@
     # AssignmentAssesor: the smart planner for Students!!
-    ## Video Demo:  <URL HERE>
+    ## Video Demo:
     ## Description: 
     ###AssignmentAssesor is a python program that will work through the command line to help students maintain order in there assignments by keeping track of tasks and there due dates, accounting for difficulty and estimated study time. AssignmentAssesor will calculate task priorities and help students by providing recommended study plans so students can get the most important assignments off the table!
     TODO:
@@ -14,3 +14,4 @@
         - and help student determine how many hours they should put aside for tasks based off difficulty formula
     4. show student marked tasks 
         - help maintian organization by keeping track of completed tasks
+
