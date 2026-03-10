@@ -16,29 +16,34 @@ def main():
     print(ascii_aa)
     print("Welcome to Assignment Assesor!!")
     while True:
-        name = input("Input valid name:\n")
-        if name == "":
-            print("Not valid name!")
-            continue
-        if any(char.isdigit() for char in name):
-            print("Not valid name!")
-        else:
-            break
-    
+        user = input("Input valid name:\n").strip()
+        if check_name(user):
+             break
+    show_menu()
     while True:
-        print(menu)
         choice = input("Choice: ")
-        
         if choice == "6":
+            print(f"See ya {user}!")
             break
 
+def check_name(name):
+        if not name:
+            print("Not valid name! Please try again")
+            return False
+        if any(char.isdigit() for char in name):
+            print("Not valid name! Please try again")
+            return False
+        if "  " in name:
+            print("Not valid name! Please try again")
+            return False
+        else:
+            print(f"Hey {name}! Please select an option:")
+            return True
 
-def function_1():
-    ...
 
+def show_menu():
+            print(menu)
 
-def function_2():
-    ...
 
 
 def function_n():
