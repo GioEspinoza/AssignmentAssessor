@@ -12,7 +12,6 @@ menu = """
 5. Mark task as completed
 6. Close program
 """
-
 tasks = []
 
 
@@ -25,9 +24,8 @@ def main():
         if check_name(user):
             break
 
-    show_menu()
-
     while True:
+        show_menu()
         choice = input("Choice: ").strip()
         if choice == "1":
             add_task()
@@ -118,7 +116,11 @@ def add_task():
 
 
 def view_all_tasks():
-    print(tasks)
+    if not tasks:
+        print("No tasks to display.")
+        return
+    for i, task in enumerate(tasks, start=1):
+        print(i, task)
 
 
 def view_urgent():
