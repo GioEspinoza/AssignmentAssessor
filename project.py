@@ -14,7 +14,6 @@ menu = """
 """
 tasks = []
 
-
 def main():
     print(ascii_aa)
     print("Welcome to Assignment Assessor!!")
@@ -43,7 +42,6 @@ def main():
         else:
             print("Not a valid input, please try again.")
 
-
 def check_name(name):
     if not name:
         print("Not valid name! Please try again")
@@ -58,10 +56,8 @@ def check_name(name):
     print(f"Hey {name}! Please select an option:")
     return True
 
-
 def show_menu():
     print(menu)
-
 
 def add_task():
     is_comp = check_task_status()
@@ -114,7 +110,6 @@ def add_task():
     print(value)
     rev_task(value)
 
-
 def view_all_tasks():
     if not tasks:
         print("No tasks to display.")
@@ -122,22 +117,42 @@ def view_all_tasks():
     for i, task in enumerate(tasks, start=1):
         print(i, task)
 
-
 def view_urgent():
-    pass
+    incomp = [task for task in tasks if not task["completed"]]
+    if not incomp:
+        print("No urgent tasks found.")
+        return
+    
+    sorted_tasks = sorted(incomp,keys=priority_calculation,reverse=True)
 
+    print("\nUrgent Tasks\n")
+    for i, task in enumerate(sorted_tasks, start=1):
+        priority = priority_calculation(task)
+        print(
+            f"{i}. {task["course"]} | {task["task"]} |"
+            f"Difficulty: {task["difficulty"]} | Due: {task["due_date"]} |"
+            f"Hours: {task["hours"]} | Priority:{priority:.2f}"
+            )
+
+def priority_calculation(task):
+    days_rem = days_left(task["due_date"])
+    if days_rem <= 0:
+        days_rem = 1
+    return ((task["difficulty"]*task["hours"])/days_rem)
+
+def days_left(due_date):
+    today = datetime.today().date()
+    due = datetime.strptime(due_date, "%m-%d-%Y").date()
+    return(due-today).days
 
 def study():
     pass
 
-
 def task_done():
     pass
 
-
 def end_aa(name):
     print(f"See ya {name}!")
-
 
 def check_task_status():
     while True:
@@ -146,7 +161,6 @@ def check_task_status():
             print("Invalid input, please try again.")
             continue
         return check_task == "y"
-
 
 def rev_task(task):
     while True:
@@ -162,7 +176,6 @@ def rev_task(task):
         else:
             print("Not valid input, please try again!")
 
-
 def ask_until_valid(prompt, validator, error_msg):
     while True:
         value = input(prompt).strip()
@@ -170,10 +183,8 @@ def ask_until_valid(prompt, validator, error_msg):
             return value
         print(error_msg)
 
-
 def is_not_empty(value):
     return bool(value)
-
 
 def is_in_range(value, low, high):
     if not value.isdigit():
@@ -189,18 +200,14 @@ def valid_date(value):
     except ValueError:
         return False
 
-
 def is_diff(value):
     return is_in_range(value, 1, 5)
-
 
 def is_positive_int(value):
     return value.isdigit() and int(value) > 0
 
-
 def is_hours(value):
     return is_positive_int(value)
-
 
 if __name__ == "__main__":
     main()
