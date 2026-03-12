@@ -91,7 +91,7 @@ def add_task():
     if is_comp:
         value["date_completed"] = ask_until_valid(
             "Enter date completed (MM-DD-YYYY):\n",
-            valid_date,
+            valid_comp_date,
             "Date must be in the format MM-DD-YYYY.",
         )
         value["hours"] = int(
@@ -107,7 +107,7 @@ def add_task():
     else:
         value["due_date"] = ask_until_valid(
             "Enter due date (MM-DD-YYYY):\n",
-            valid_date,
+            valid_due_date,
             "Date must be in the format MM-DD-YYYY.",
         )
         value["hours"] = int(
@@ -141,7 +141,7 @@ def view_urgent():
         print("No urgent tasks found.")
         return
     #sort the incompleted tasks by priority level using priority formula
-    sorted_tasks = sorted(incomp,keys=priority_calculation,reverse=True)
+    sorted_tasks = sorted(incomp,key=priority_calculation,reverse=True)
 
     #display most urgent tasks in detail, based off priority.
     print("\nUrgent Tasks\n")
@@ -191,30 +191,26 @@ def study():
     #display organized list
     for i, task in enumerate(sorted_tasks, start=1):
         days_rem = days_left(task["due_date"])
-
-        hours_day = hours_per_day(task["hours"])
-
-        print(
-            f"{i}. {task["course"]} | {task["task"]} |"
-            f"Difficulty: {task["difficulty"]} | Days Left: {days_rem} |"
-            f"Hours suggested per day: {hours_day} | "
-            )
+        hours_day = hours_per_day(task["hours"], days_rem)
+        if days_rem > 0:
+            print(
+                f"{i}. {task["course"]} | {task["task"]} |"
+                f"Difficulty: {task["difficulty"]} | Days Left: {days_rem} |"
+                f"Hours suggested per day: {hours_day} | "
+                )
+        else:
+            print(
+                f"{i}. {task["course"]} | {task["task"]} |"
+                f"Difficulty: {task["difficulty"]} | Days left: OVERDUE|"
+                )
 
 def hours_per_day(hours, day):
     """Will return the recommended hours per day based off value = hours needed/days rem"""
-    #if days is 0 set to 1
-    if days <= 0:
-        days = 1
+    #if day is 0 set to 1
+    if day <= 0:
+        day = 1
     #the value value of the hours per day
-    hours_recommended = hours/days
-    #if overdue set value for return
-    overdue = "OVERDUE"
-    #if hours are not 0 and positive, return the hours!
-    if hours_recommended > 0:
-        return round_down_to_two_decimals(hours/days)
-    #if not return OVERDUE
-    else:
-        return overdue
+    return round_down_to_two_decimals(hours/day)
 
 #function that simplifes the rounding process
 def round_down_to_two_decimals(num):
@@ -245,6 +241,7 @@ def rev_mark_comp(task):
         review_task = input("\nIs this correct? [y/n]: ").lower().strip()
         if review_task == "y":
             task["completed"] = True
+            #strftime formats date objects as strings.
             task["date_completed"] = datetime.today().strftime("%m-%d-%Y")
             print(f"Marked as compelted")
         elif review_task == "n":
@@ -312,11 +309,23 @@ def is_in_range(value, low, high):
     num = int(value)
     return low <= num <= high
 
-def valid_date(value):
+def valid_due_date(value):
     """check if date enterd is valid or not"""
     try:
-        datetime.strptime(value, "%m-%d-%Y")
-        return True
+        #must ensure both dates are the same object
+        due = datetime.strptime(value, "%m-%d-%Y").date()
+        today = datetime.today().date()
+        return due>=today
+    except ValueError:
+        return False
+    
+def valid_comp_date(value):
+    """check if date enterd is valid or not"""
+    try:
+        #must ensure both dates are the same object
+        due = datetime.strptime(value, "%m-%d-%Y").date()
+        today = datetime.today().date()
+        return due<=today
     except ValueError:
         return False
 
