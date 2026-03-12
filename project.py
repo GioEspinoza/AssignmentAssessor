@@ -148,9 +148,9 @@ def view_urgent():
     for i, task in enumerate(sorted_tasks, start=1):
         priority = priority_calculation(task)
         print(
-            f"{i}. {task["course"]} | {task["task"]} |"
-            f"Difficulty: {task["difficulty"]} | Due: {task["due_date"]} |"
-            f"Hours: {task["hours"]} | Priority:{priority:.2f}"
+            f"{i}. {task['course']} | {task['task']} |"
+            f"Difficulty: {task['difficulty']} | Due: {task['due_date']} |"
+            f"Hours: {task['hours']} | Priority:{priority:.2f}"
             )
 
 def priority_calculation(task):
@@ -184,7 +184,7 @@ def study():
     for task in incomp:
         task["priority"]= priority_calculation(task)
     #sort list by most urgent
-    sorted_tasks = sorted(incomp,keys=priority_calculation,reverse=True)
+    sorted_tasks = sorted(incomp,key=priority_calculation,reverse=True)
 
     print("Study Plan")
 
@@ -194,14 +194,14 @@ def study():
         hours_day = hours_per_day(task["hours"], days_rem)
         if days_rem > 0:
             print(
-                f"{i}. {task["course"]} | {task["task"]} |"
-                f"Difficulty: {task["difficulty"]} | Days Left: {days_rem} |"
+                f"{i}. {task['course']} | {task['task']} |"
+                f"Difficulty: {task['difficulty']} | Days Left: {days_rem} |"
                 f"Hours suggested per day: {hours_day} | "
                 )
         else:
             print(
-                f"{i}. {task["course"]} | {task["task"]} |"
-                f"Difficulty: {task["difficulty"]} | Days left: OVERDUE|"
+                f"{i}. {task['course']} | {task['task']} |"
+                f"Difficulty: {task['difficulty']} | Days left: OVERDUE|"
                 )
 
 def hours_per_day(hours, day):
@@ -224,15 +224,15 @@ def task_done():
         return
     #organize task into numbered
     for i, task in enumerate(incomp, start=1):
-        print(f"{i}. {task["course"]} | {task["task"]} | Due: {task["due_date"]}")
+        print(f"{i}. {task['course']} | {task['task']} | Due: {task['due_date']}")
     #get and validate user choice
-    choice = user_choice_compeleted_task(len(incomp))
+    choice = user_choice_completed_task(len(incomp))
     index = choice - 1
     chosen = incomp[index]
     
     #confirm user choice before saving
     print("\nOverview of choice:\n")
-    print(f"{i}. {chosen["course"]} | {chosen["task"]} | Due: {chosen["due_date"]} ")
+    print(f"{choice}. {chosen['course']} | {chosen['task']} | Due: {chosen['due_date']} ")
     rev_mark_comp(chosen)
 
 def rev_mark_comp(task):
@@ -244,6 +244,7 @@ def rev_mark_comp(task):
             #strftime formats date objects as strings.
             task["date_completed"] = datetime.today().strftime("%m-%d-%Y")
             print(f"Marked as compelted")
+            break
         elif review_task == "n":
             print("Restarting choice of task...\n")
             task_done()
@@ -251,7 +252,7 @@ def rev_mark_comp(task):
         else:
             print("Not valid input, please try again!")
 
-def user_choice_compeleted_task(counter):
+def user_choice_completed_task(counter):
     """Will check whether input is in range and valid, loop if not"""
     while True:
         choice = (input("Enter the number of whichever task you completed"))
@@ -304,10 +305,11 @@ def is_not_empty(value):
 
 def is_in_range(value, low, high):
     """check object to see if in range"""
-    if not value.isdigit():
+    try:
+        num = int(value)
+        return low<= num <= high
+    except ValueError:
         return False
-    num = int(value)
-    return low <= num <= high
 
 def valid_due_date(value):
     """check if date enterd is valid or not"""
