@@ -2,11 +2,11 @@ import pyfiglet
 from datetime import datetime
 import math
 
-#save title in ascii format
+# save title in ascii format
 proj_title = "Assignment Assessor"
 ascii_aa = pyfiglet.figlet_format(proj_title)
 
-#save menu for easy reprints
+# save menu for easy reprints
 menu = """
 1. Add task
 2. View all tasks
@@ -16,10 +16,11 @@ menu = """
 6. Close program
 """
 
-#empty lisk to hold tasks
+# empty lisk to hold tasks
 tasks = []
 
-#Print and welcome to program, check for user name, and menu loop
+
+# Print and welcome to program, check for user name, and menu loop
 def main():
     print(ascii_aa)
     print("Welcome to Assignment Assessor!!")
@@ -48,7 +49,8 @@ def main():
         else:
             print("Not a valid input, please try again.")
 
-#ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
+
+# ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
 def check_name(name):
     if not name:
         print("Not valid name! Please try again")
@@ -63,17 +65,19 @@ def check_name(name):
     print(f"Hey {name}! Please select an option:")
     return True
 
-#function to show menu
+
+# function to show menu
 def show_menu():
     print(menu)
- 
+
+
 def add_task():
-    #First check if task is complete or not,
+    # First check if task is complete or not,
     is_comp = check_task_status()
-    #hold empty dictionary for task values
+    # hold empty dictionary for task values
     value = {}
 
-    #then ask for course, task name, and difficulty
+    # then ask for course, task name, and difficulty
     value["course"] = ask_until_valid(
         "Enter course name:\n", is_not_empty, "Course name cannot be empty."
     )
@@ -87,7 +91,7 @@ def add_task():
             "Difficulty must be an integer between 1 and 5.",
         )
     )
-    #if task is completed, ask for date and hours as if already done
+    # if task is completed, ask for date and hours as if already done
     if is_comp:
         value["date_completed"] = ask_until_valid(
             "Enter date completed (MM-DD-YYYY):\n",
@@ -102,8 +106,8 @@ def add_task():
             )
         )
         value["completed"] = True
-    
-    #if not completed, ask for date and hours as if not done
+
+    # if not completed, ask for date and hours as if not done
     else:
         value["due_date"] = ask_until_valid(
             "Enter due date (MM-DD-YYYY):\n",
@@ -119,12 +123,13 @@ def add_task():
         )
         value["completed"] = False
 
-    #and then reviewing over task with user to ensure accuracy.
+    # and then reviewing over task with user to ensure accuracy.
     print("\nOverview of task added:\n")
     print(value)
     rev_task(value)
 
-#simply show all task, loop back to menu if no task available
+
+# simply show all task, loop back to menu if no task available
 def view_all_tasks():
     if not tasks:
         print("No tasks to display.")
@@ -133,17 +138,18 @@ def view_all_tasks():
     for i, task in enumerate(tasks, start=1):
         print(i, task)
 
-#function that will display incompleted urgent tasks
+
+# function that will display incompleted urgent tasks
 def view_urgent():
-    #seperating tasks by completion status, if all are completed loop back
+    # seperating tasks by completion status, if all are completed loop back
     incomp = [task for task in tasks if not task["completed"]]
     if not incomp:
         print("No urgent tasks found.")
         return
-    #sort the incompleted tasks by priority level using priority formula
-    sorted_tasks = sorted(incomp,key=priority_calculation,reverse=True)
+    # sort the incompleted tasks by priority level using priority formula
+    sorted_tasks = sorted(incomp, key=priority_calculation, reverse=True)
 
-    #display most urgent tasks in detail, based off priority.
+    # display most urgent tasks in detail, based off priority.
     print("\nUrgent Tasks\n")
     for i, task in enumerate(sorted_tasks, start=1):
         priority = priority_calculation(task)
@@ -151,44 +157,47 @@ def view_urgent():
             f"{i}. {task['course']} | {task['task']} |"
             f"Difficulty: {task['difficulty']} | Due: {task['due_date']} |"
             f"Hours: {task['hours']} | Priority:{priority:.2f}"
-            )
+        )
+
 
 def priority_calculation(task):
     """Will return the priority status of task based off difficulty*hours/days remaining"""
 
-    #set due date to days left until task needs to be completed
+    # set due date to days left until task needs to be completed
     days_rem = days_left(task["due_date"])
-    #if due date is 0 or overdue, priority should be very high
+    # if due date is 0 or overdue, priority should be very high
     if days_rem <= 0:
         days_rem = 1
-    #return priority level based off formula (difficulty*hours)/ days left
-    return ((task["difficulty"]*task["hours"])/days_rem)
+    # return priority level based off formula (difficulty*hours)/ days left
+    return (task["difficulty"] * task["hours"]) / days_rem
 
-#assign a variable with the amount of days left until due date
+
+# assign a variable with the amount of days left until due date
 def days_left(due_date):
-    #using datetime to get todays date,
+    # using datetime to get todays date,
     today = datetime.today().date()
-    #must convert due date to date value
+    # must convert due date to date value
     due = datetime.strptime(due_date, "%m-%d-%Y").date()
-    #subtract both dates and only return the day value
-    return(due-today).days
+    # subtract both dates and only return the day value
+    return (due - today).days
+
 
 def study():
-    #filter out for only incomplete task
-    #we only want incompleted tasks to study for.
+    # filter out for only incomplete task
+    # we only want incompleted tasks to study for.
     incomp = [task for task in tasks if not task["completed"]]
     if not incomp:
         print("No urgent tasks found.")
         return
-    #calculate for priority in each task
+    # calculate for priority in each task
     for task in incomp:
-        task["priority"]= priority_calculation(task)
-    #sort list by most urgent
-    sorted_tasks = sorted(incomp,key=priority_calculation,reverse=True)
+        task["priority"] = priority_calculation(task)
+    # sort list by most urgent
+    sorted_tasks = sorted(incomp, key=priority_calculation, reverse=True)
 
     print("Study Plan")
 
-    #display organized list
+    # display organized list
     for i, task in enumerate(sorted_tasks, start=1):
         days_rem = days_left(task["due_date"])
         hours_day = hours_per_day(task["hours"], days_rem)
@@ -197,43 +206,49 @@ def study():
                 f"{i}. {task['course']} | {task['task']} |"
                 f"Difficulty: {task['difficulty']} | Days Left: {days_rem} |"
                 f"Hours suggested per day: {hours_day} | "
-                )
+            )
         else:
             print(
                 f"{i}. {task['course']} | {task['task']} |"
                 f"Difficulty: {task['difficulty']} | Days left: OVERDUE|"
-                )
+            )
+
 
 def hours_per_day(hours, day):
     """Will return the recommended hours per day based off value = hours needed/days rem"""
-    #if day is 0 set to 1
+    # if day is 0 set to 1
     if day <= 0:
         day = 1
-    #the value value of the hours per day
-    return round_down_to_two_decimals(hours/day)
+    # the value value of the hours per day
+    return round_down_to_two_decimals(hours / day)
 
-#function that simplifes the rounding process
+
+# function that simplifes the rounding process
 def round_down_to_two_decimals(num):
-    return math.floor(num*100)/100
+    return math.floor(num * 100) / 100
+
 
 def task_done():
-    #seperating tasks by completion status, if all are completed loop back
+    # seperating tasks by completion status, if all are completed loop back
     incomp = [task for task in tasks if not task["completed"]]
     if not incomp:
         print("No incomplete tasks found.")
         return
-    #organize task into numbered
+    # organize task into numbered
     for i, task in enumerate(incomp, start=1):
         print(f"{i}. {task['course']} | {task['task']} | Due: {task['due_date']}")
-    #get and validate user choice
+    # get and validate user choice
     choice = user_choice_completed_task(len(incomp))
     index = choice - 1
     chosen = incomp[index]
-    
-    #confirm user choice before saving
+
+    # confirm user choice before saving
     print("\nOverview of choice:\n")
-    print(f"{choice}. {chosen['course']} | {chosen['task']} | Due: {chosen['due_date']} ")
+    print(
+        f"{choice}. {chosen['course']} | {chosen['task']} | Due: {chosen['due_date']} "
+    )
     rev_mark_comp(chosen)
+
 
 def rev_mark_comp(task):
     """will confirm user choice in task to be marked for completion"""
@@ -241,7 +256,7 @@ def rev_mark_comp(task):
         review_task = input("\nIs this correct? [y/n]: ").lower().strip()
         if review_task == "y":
             task["completed"] = True
-            #strftime formats date objects as strings.
+            # strftime formats date objects as strings.
             task["date_completed"] = datetime.today().strftime("%m-%d-%Y")
             print(f"Marked as compelted")
             break
@@ -252,10 +267,11 @@ def rev_mark_comp(task):
         else:
             print("Not valid input, please try again!")
 
+
 def user_choice_completed_task(counter):
     """Will check whether input is in range and valid, loop if not"""
     while True:
-        choice = (input("Enter the number of whichever task you completed"))
+        choice = input("Enter the number of whichever task you completed: ")
         if choice.isdigit():
             choice = int(choice)
 
@@ -263,9 +279,11 @@ def user_choice_completed_task(counter):
                 return choice
         print("Not valid number! try again.")
 
+
 def end_aa(name):
     """exits program"""
     print(f"See ya {name}!")
+
 
 def check_task_status():
     """will check whether task is completed or not"""
@@ -275,6 +293,7 @@ def check_task_status():
             print("Invalid input, please try again.")
             continue
         return check_task == "y"
+
 
 def rev_task(task):
     """will check if users input for whether task is completed is valid"""
@@ -291,6 +310,7 @@ def rev_task(task):
         else:
             print("Not valid input, please try again!")
 
+
 def ask_until_valid(prompt, validator, error_msg):
     """simple prompt loop"""
     while True:
@@ -299,49 +319,57 @@ def ask_until_valid(prompt, validator, error_msg):
             return value
         print(error_msg)
 
+
 def is_not_empty(value):
     """check if value is empty"""
     return bool(value)
+
 
 def is_in_range(value, low, high):
     """check object to see if in range"""
     try:
         num = int(value)
-        return low<= num <= high
+        return low <= num <= high
     except ValueError:
         return False
+
 
 def valid_due_date(value):
     """check if date enterd is valid or not"""
     try:
-        #must ensure both dates are the same object
+        # must ensure both dates are the same object
         due = datetime.strptime(value, "%m-%d-%Y").date()
         today = datetime.today().date()
-        return due>=today
+        return due >= today
     except ValueError:
         return False
-    
+
+
 def valid_comp_date(value):
     """check if date enterd is valid or not"""
     try:
-        #must ensure both dates are the same object
+        # must ensure both dates are the same object
         due = datetime.strptime(value, "%m-%d-%Y").date()
         today = datetime.today().date()
-        return due<=today
+        return due <= today
     except ValueError:
         return False
+
 
 def is_diff(value):
     """check if difficulty entered is in range of difficulty"""
     return is_in_range(value, 1, 5)
 
+
 def is_positive_int(value):
     """check if pos"""
     return value.isdigit() and int(value) > 0
 
+
 def is_hours(value):
     """check if hours is pos"""
     return is_positive_int(value)
+
 
 if __name__ == "__main__":
     main()
