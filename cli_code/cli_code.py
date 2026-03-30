@@ -1,0 +1,54 @@
+import pyfiglet
+from aa_logic import *
+
+# save title in ascii format
+proj_title = "Assignment Assessor"
+ascii_aa = pyfiglet.figlet_format(proj_title)
+
+# save menu for easy reprints
+menu = """
+1. Add task
+2. View all tasks
+3. View urgent tasks
+4. Study plan
+5. Mark task as completed
+6. Close program
+"""
+
+# empty list to hold tasks
+tasks = []
+
+
+# Print and welcome to program, check for user name, and menu loop
+def main():
+    print(ascii_aa)
+    print("Welcome to Assignment Assessor!!")
+
+    while True:
+        user = input("Input valid name:\n").strip()
+        if check_name(user):
+            break
+
+    while True:
+        show_menu()
+        choice = input("Choice: ").strip()
+        if choice == "1":
+            add_task(tasks)
+        elif choice == "2":
+            view_all_tasks(tasks)
+        elif choice == "3":
+            view_urgent(tasks)
+        elif choice == "4":
+            study(tasks)
+        elif choice == "5":
+            task_done(tasks)
+        elif choice == "6":
+            end_aa(user)
+            break
+        else:
+            print("Not a valid input, please try again.")
+
+
+# function to show menu
+def show_menu():
+    print(menu)
