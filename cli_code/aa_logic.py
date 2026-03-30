@@ -1,53 +1,5 @@
-import pyfiglet
 from datetime import datetime
 import math
-
-# save title in ascii format
-proj_title = "Assignment Assessor"
-ascii_aa = pyfiglet.figlet_format(proj_title)
-
-# save menu for easy reprints
-menu = """
-1. Add task
-2. View all tasks
-3. View urgent tasks
-4. Study plan
-5. Mark task as completed
-6. Close program
-"""
-
-# empty lisk to hold tasks
-tasks = []
-
-
-# Print and welcome to program, check for user name, and menu loop
-def main():
-    print(ascii_aa)
-    print("Welcome to Assignment Assessor!!")
-
-    while True:
-        user = input("Input valid name:\n").strip()
-        if check_name(user):
-            break
-
-    while True:
-        show_menu()
-        choice = input("Choice: ").strip()
-        if choice == "1":
-            add_task()
-        elif choice == "2":
-            view_all_tasks()
-        elif choice == "3":
-            view_urgent()
-        elif choice == "4":
-            study()
-        elif choice == "5":
-            task_done()
-        elif choice == "6":
-            end_aa(user)
-            break
-        else:
-            print("Not a valid input, please try again.")
 
 
 # ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
@@ -66,12 +18,7 @@ def check_name(name):
     return True
 
 
-# function to show menu
-def show_menu():
-    print(menu)
-
-
-def add_task():
+def add_task(tasks):
     # First check if task is complete or not,
     is_comp = check_task_status()
     # hold empty dictionary for task values
@@ -126,11 +73,11 @@ def add_task():
     # and then reviewing over task with user to ensure accuracy.
     print("\nOverview of task added:\n")
     print(value)
-    rev_task(value)
+    rev_task(value, tasks)
 
 
 # simply show all task, loop back to menu if no task available
-def view_all_tasks():
+def view_all_tasks(tasks):
     if not tasks:
         print("No tasks to display.")
         return
@@ -140,7 +87,7 @@ def view_all_tasks():
 
 
 # function that will display incompleted urgent tasks
-def view_urgent():
+def view_urgent(tasks):
     # seperating tasks by completion status, if all are completed loop back
     incomp = [task for task in tasks if not task["completed"]]
     if not incomp:
@@ -182,7 +129,7 @@ def days_left(due_date):
     return (due - today).days
 
 
-def study():
+def study(tasks):
     # filter out for only incomplete task
     # we only want incompleted tasks to study for.
     incomp = [task for task in tasks if not task["completed"]]
@@ -228,7 +175,7 @@ def round_down_to_two_decimals(num):
     return math.floor(num * 100) / 100
 
 
-def task_done():
+def task_done(tasks):
     # seperating tasks by completion status, if all are completed loop back
     incomp = [task for task in tasks if not task["completed"]]
     if not incomp:
@@ -247,10 +194,10 @@ def task_done():
     print(
         f"{choice}. {chosen['course']} | {chosen['task']} | Due: {chosen['due_date']} "
     )
-    rev_mark_comp(chosen)
+    rev_mark_comp(chosen, tasks)
 
 
-def rev_mark_comp(task):
+def rev_mark_comp(task, tasks):
     """will confirm user choice in task to be marked for completion"""
     while True:
         review_task = input("\nIs this correct? [y/n]: ").lower().strip()
@@ -262,7 +209,7 @@ def rev_mark_comp(task):
             break
         elif review_task == "n":
             print("Restarting choice of task...\n")
-            task_done()
+            task_done(tasks)
             break
         else:
             print("Not valid input, please try again!")
@@ -295,7 +242,7 @@ def check_task_status():
         return check_task == "y"
 
 
-def rev_task(task):
+def rev_task(task, tasks):
     """will check if users input for whether task is completed is valid"""
     while True:
         review_task = input("\nIs this correct? [y/n]: ").lower().strip()
@@ -305,7 +252,7 @@ def rev_task(task):
             break
         elif review_task == "n":
             print("Restarting addition of task...\n")
-            add_task()
+            add_task(tasks)
             break
         else:
             print("Not valid input, please try again!")
@@ -369,7 +316,3 @@ def is_positive_int(value):
 def is_hours(value):
     """check if hours is pos"""
     return is_positive_int(value)
-
-
-if __name__ == "__main__":
-    main()
