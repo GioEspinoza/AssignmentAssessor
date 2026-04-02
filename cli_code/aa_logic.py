@@ -18,64 +18,23 @@ def check_name(name):
     return True
 
 
-def add_task(tasks):
-    # First check if task is complete or not,
-    is_comp = check_task_status()
-    # hold empty dictionary for task values
-    value = {}
-
-    # then ask for course, task name, and difficulty
-    value["course"] = ask_until_valid(
-        "Enter course name:\n", is_not_empty, "Course name cannot be empty."
-    )
-    value["task"] = ask_until_valid(
-        "Enter name of task:\n", is_not_empty, "Task name cannot be empty."
-    )
-    value["difficulty"] = int(
-        ask_until_valid(
-            "Enter difficulty (1-5):\n",
-            is_diff,
-            "Difficulty must be an integer between 1 and 5.",
-        )
-    )
-    # if task is completed, ask for date and hours as if already done
-    if is_comp:
-        value["date_completed"] = ask_until_valid(
-            "Enter date completed (MM-DD-YYYY):\n",
-            valid_comp_date,
-            "Date must be in the format MM-DD-YYYY.",
-        )
-        value["hours"] = int(
-            ask_until_valid(
-                "Enter hours used:\n",
-                is_hours,
-                "Hours used must be a positive integer.",
-            )
-        )
-        value["completed"] = True
-
-    # if not completed, ask for date and hours as if not done
+def add_task(tasks, completed, course, task, difficulty, date_completed=None, due_date=None,used_hours=None, to_use_hours=None):
+    value = {
+        "course":course,
+        "task":task,
+        "difficulty":difficulty,
+        "completed":completed
+    }
+    if completed:
+        value["date_completed"] = date_completed
+        value["hours"] = used_hours
     else:
-        value["due_date"] = ask_until_valid(
-            "Enter due date (MM-DD-YYYY):\n",
-            valid_due_date,
-            "Date must be in the format MM-DD-YYYY.",
-        )
-        value["hours"] = int(
-            ask_until_valid(
-                "Enter hours needed:\n",
-                is_hours,
-                "Hours needed must be a positive integer.",
-            )
-        )
-        value["completed"] = False
-
-    # and then reviewing over task with user to ensure accuracy.
-    print("\nOverview of task added:\n")
-    print(value)
-    rev_task(value, tasks)
+        value["due_date"] = due_date
+        value["hours"] = to_use_hours
 
 
+    tasks.append(value)
+    return value
 # simply show all task, loop back to menu if no task available
 def view_all_tasks(tasks):
     if not tasks:
@@ -232,14 +191,13 @@ def end_aa(name):
     print(f"See ya {name}!")
 
 
-def check_task_status():
+def check_task_status(completion_prompt):
     """will check whether task is completed or not"""
     while True:
-        check_task = input("Is task already completed? [y/n]: ").lower().strip()
-        if check_task not in ["y", "n"]:
+        if completion_prompt not in ["y", "n"]:
             print("Invalid input, please try again.")
             continue
-        return check_task == "y"
+        return completion_prompt == "y"
 
 
 def rev_task(task, tasks):
