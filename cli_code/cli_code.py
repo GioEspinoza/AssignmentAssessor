@@ -42,8 +42,11 @@ def main():
 
             if completed:
                 comp_task = prompt_comp_task()
-                date_completed,hours = comp_task["date_completed"],comp_task["hours"]
+                date_completed = comp_task["date_completed"]
+                hours = comp_task["hours"]
+                due_date = None
                 value = add_task(tasks, completed, course, task, difficulty,hours, date_completed, due_date)
+
             else:
                 incomp_task = prompt_incomp_task()
                 due_date = incomp_task["due_date"]
@@ -103,7 +106,7 @@ def prompt_incomp_task():
             ask_until_valid(
                 "Enter hours needed:\n",
                 is_hours,
-                "Hours needed must be a positive integer.",
+                "Invalid input",
             )
         )
     return incomp_values
@@ -119,7 +122,7 @@ def prompt_comp_task():
             ask_until_valid(
                 "Enter hours used:\n",
                 is_hours,
-                "Hours needed must be a positive integer.",
+                "Invalid input",
             )
         )
     return comp_values
