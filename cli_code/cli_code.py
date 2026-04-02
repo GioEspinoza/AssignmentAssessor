@@ -33,7 +33,28 @@ def main():
         show_menu()
         choice = input("Choice: ").strip()
         if choice == "1":
-            add_task(tasks)
+            #first prompt user for completion status
+            is_comp = input("Is task already completed? [y/n]: ").lower().strip()
+            #prompt for constant values
+            constant_values = prompt_constant_values()
+            course, task, difficulty = constant_values["course"],constant_values["task"],constant_values["difficulty"]
+            completed = check_task_status(is_comp)
+
+            if completed:
+                comp_task = prompt_comp_task()
+                date_completed,hours = comp_task["date_completed"],comp_task["hours"]
+                value = add_task(tasks, completed, course, task, difficulty,hours, date_completed, due_date)
+            else:
+                incomp_task = prompt_incomp_task()
+                due_date = incomp_task["due_date"]
+                hours =  incomp_task["hours"]
+                date_completed = None
+                value = add_task(tasks, completed, course, task, difficulty, hours, due_date, date_completed)
+
+            print("\nOverview of task added:\n")
+            print(value)
+            rev_task(value, tasks)
+
         elif choice == "2":
             view_all_tasks(tasks)
         elif choice == "3":
@@ -52,3 +73,56 @@ def main():
 # function to show menu
 def show_menu():
     print(menu)
+
+def prompt_constant_values():
+    constant_values = {}
+    constant_values["course"] = ask_until_valid(
+        "Enter course name:\n", is_not_empty, "Course name cannot be empty."
+    )
+    constant_values["task"] = ask_until_valid(
+        "Enter name of task:\n", is_not_empty, "Task name cannot be empty."
+    )
+    constant_values["difficulty"] = int(
+        ask_until_valid(
+            "Enter difficulty (1-5):\n",
+            is_diff,
+            "Difficulty must be an integer between 1 and 5.",
+        )
+    )
+
+    return constant_values
+def prompt_incomp_task():
+    incomp_values = {}
+
+    incomp_values["due_date"] = ask_until_valid(
+            "Enter due date (MM-DD-YYYY):\n",
+            valid_due_date,
+            "Invalid Date/Date Format",
+        )
+    incomp_values["hours"] = int(
+            ask_until_valid(
+                "Enter hours needed:\n",
+                is_hours,
+                "Hours needed must be a positive integer.",
+            )
+        )
+    return incomp_values
+def prompt_comp_task():
+    comp_values = {}
+
+    comp_values["date_completed"] = ask_until_valid(
+            "Enter date completed (MM-DD-YYYY):\n",
+            valid_due_date,
+            "Invalid Date/Date Format",
+        )
+    comp_values["hours"] = int(
+            ask_until_valid(
+                "Enter hours used:\n",
+                is_hours,
+                "Hours needed must be a positive integer.",
+            )
+        )
+    return comp_values
+
+if __name__ == "__main__":
+    main()
