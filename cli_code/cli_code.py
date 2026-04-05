@@ -53,19 +53,39 @@ def main():
                 hours =  incomp_task["hours"]
                 date_completed = None
                 value = add_task(tasks, completed, course, task, difficulty, hours, due_date, date_completed)
+            
 
             print("\nOverview of task added:\n")
             print(value)
             rev_task(value, tasks)
 
+            menu_go_back()
+
         elif choice == "2":
             view_all_tasks(tasks)
+            menu_go_back()
+
         elif choice == "3":
-            view_urgent(tasks)
+            if not urgent_sort(tasks):
+                print("No urgent/incompleted tasks found.")
+                continue
+            else:
+                print("\nUrgent Tasks\n")
+                  # display most urgent tasks in detail, based off priority.
+                for i, task in enumerate(urgent_sort(tasks), start=1):
+                    print(
+                    f"{i}. {task['course']} | {task['task']} |"
+                    f"Difficulty: {task['difficulty']} | Due: {task['due_date']} |"
+                    f"Hours: {task['hours']} | Priority:{task['priority']:.2f}"
+                    )
+            menu_go_back()
+                
         elif choice == "4":
             study(tasks)
+            menu_go_back()
         elif choice == "5":
             task_done(tasks)
+            menu_go_back()
         elif choice == "6":
             end_aa(user)
             break
@@ -94,6 +114,7 @@ def prompt_constant_values():
     )
 
     return constant_values
+
 def prompt_incomp_task():
     incomp_values = {}
 
@@ -110,12 +131,13 @@ def prompt_incomp_task():
             )
         )
     return incomp_values
+
 def prompt_comp_task():
     comp_values = {}
 
     comp_values["date_completed"] = ask_until_valid(
             "Enter date completed (MM-DD-YYYY):\n",
-            valid_due_date,
+            valid_comp_date,
             "Invalid Date/Date Format",
         )
     comp_values["hours"] = int(
@@ -126,6 +148,36 @@ def prompt_comp_task():
             )
         )
     return comp_values
+
+# simply show all task, loop back to menu if no task available
+def view_all_tasks(tasks):
+    if not tasks:
+        print("No tasks to display.")
+        return
+    print("List of tasks:\n")
+    for i, task in enumerate(tasks, start=1):
+        print(i, task)
+
+# ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
+def check_name(name):
+    if not name:
+        print("Not valid name! Please try again")
+        return False
+    if any(char.isdigit() for char in name):
+        print("Not valid name! Please try again")
+        return False
+    if "  " in name:
+        print("Not valid name! Please try again")
+        return False
+
+    print(f"Hey {name}! Please select an option:")
+    return True
+
+def menu_go_back():
+    while True:
+        user_input = input("\nType menu to go back to menu: ")
+        if user_input.lower() == "menu":
+            break
 
 if __name__ == "__main__":
     main()
