@@ -2,20 +2,6 @@ from datetime import datetime
 import math
 
 
-# ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
-def check_name(name):
-    if not name:
-        print("Not valid name! Please try again")
-        return False
-    if any(char.isdigit() for char in name):
-        print("Not valid name! Please try again")
-        return False
-    if "  " in name:
-        print("Not valid name! Please try again")
-        return False
-
-    print(f"Hey {name}! Please select an option:")
-    return True
 
 
 def add_task(tasks, completed, course, task, difficulty, date_completed=None, due_date=None,used_hours=None, to_use_hours=None):
@@ -31,40 +17,20 @@ def add_task(tasks, completed, course, task, difficulty, date_completed=None, du
     else:
         value["due_date"] = due_date
         value["hours"] = to_use_hours
-
-
-    tasks.append(value)
+        
     return value
-# simply show all task, loop back to menu if no task available
-def view_all_tasks(tasks):
-    if not tasks:
-        print("No tasks to display.")
-        return
-    print("List of tasks:\n")
-    for i, task in enumerate(tasks, start=1):
-        print(i, task)
 
-
-# function that will display incompleted urgent tasks
-def view_urgent(tasks):
-    # seperating tasks by completion status, if all are completed loop back
-    incomp = [task for task in tasks if not task["completed"]]
-    if not incomp:
-        print("No urgent tasks found.")
-        return
-    # sort the incompleted tasks by priority level using priority formula
-    sorted_tasks = sorted(incomp, key=priority_calculation, reverse=True)
-
-    # display most urgent tasks in detail, based off priority.
-    print("\nUrgent Tasks\n")
-    for i, task in enumerate(sorted_tasks, start=1):
-        priority = priority_calculation(task)
-        print(
-            f"{i}. {task['course']} | {task['task']} |"
-            f"Difficulty: {task['difficulty']} | Due: {task['due_date']} |"
-            f"Hours: {task['hours']} | Priority:{priority:.2f}"
-        )
-
+# function that will return list of incompleted urgent tasks
+def urgent_sort(tasks):
+    sorted_tasks = []
+    for task in tasks:
+        if not task["completed"]:
+            sorted_tasks.append(task)
+    for task in sorted_tasks:
+        task["priority"] = priority_calculation(task)
+    # sort the incompleted tasks by priority level using priority formula, potentially account for due date later
+    sorted_tasks = sorted(sorted_tasks, key=lambda x: x["priority"], reverse=True)
+    return sorted_tasks
 
 def priority_calculation(task):
     """Will return the priority status of task based off difficulty*hours/days remaining"""
