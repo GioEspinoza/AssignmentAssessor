@@ -1,10 +1,9 @@
 from datetime import datetime
 import math
+incomp_tasks = []
 
-
-
-
-def add_task(tasks, completed, course, task, difficulty, date_completed=None, due_date=None,used_hours=None, to_use_hours=None):
+def add_task(completed, course, task, difficulty, used_hours, to_use_hours,date_completed=None, due_date=None):
+    
     value = {
         "course":course,
         "task":task,
@@ -17,53 +16,26 @@ def add_task(tasks, completed, course, task, difficulty, date_completed=None, du
     else:
         value["due_date"] = due_date
         value["hours"] = to_use_hours
+        incomp_tasks.append(value)
+        
         
     return value
 
 # function that will return list of incompleted urgent tasks
-def urgent_sort(tasks):
-    incomplete = [t for t in tasks if not t["completed"]]
-    
-    for t in incomplete:
+def urgent_sort():
+    for t in incomp_tasks:
         t["priority"] = priority_calculation(t)
 
     # sort the incompleted tasks by priority level using priority formula, potentially account for due date later
-    return sorted(incomplete, key=lambda x: x["priority"], reverse=True)
-
-def priority_calculation(task):
-    """Will return the priority status of task based off difficulty*hours/days remaining"""
-
-    # set due date to days left until task needs to be completed
-    days_rem = days_left(task["due_date"])
-    # if due date is 0 or overdue, priority should be very high
-    if days_rem <= 0:
-        days_rem = 1
-    # return priority level based off formula (difficulty*hours)/ days left
-    return (task["difficulty"] * task["hours"]) / days_rem
+    return sorted(incomp_tasks, key=lambda x: x["priority"], reverse=True)
 
 
-# assign a variable with the amount of days left until due date
-def days_left(due_date):
-    # using datetime to get todays date,
-    today = datetime.today().date()
-    # must convert due date to date value
-    due = datetime.strptime(due_date, "%m-%d-%Y").date()
-    # subtract both dates and only return the day value
-    return (due - today).days
-
-
-def study(tasks):
-    # filter out for only incomplete task
-    # we only want incompleted tasks to study for.
-    incomp = [task for task in tasks if not task["completed"]]
-    if not incomp:
-        print("No urgent tasks found.")
-        return
+def study():
     # calculate for priority in each task
-    for task in incomp:
+    for task in incomp_tasks:
         task["priority"] = priority_calculation(task)
     # sort list by most urgent
-    sorted_tasks = sorted(incomp, key=priority_calculation, reverse=True)
+    sorted_tasks = sorted(incomp_tasks, key=priority_calculation, reverse=True)
 
     print("Study Plan")
 
@@ -154,6 +126,17 @@ def end_aa(name):
     """exits program"""
     print(f"See ya {name}!")
 
+def priority_calculation(task):
+    """Will return the priority status of task based off difficulty*hours/days remaining"""
+
+    # set due date to days left until task needs to be completed
+    days_rem = days_left(task["due_date"])
+    # if due date is 0 or overdue, priority should be very high
+    if days_rem <= 0:
+        days_rem = 1
+    # return priority level based off formula (difficulty*hours)/ days left
+    return (task["difficulty"] * task["hours"]) / days_rem
+
 
 def check_task_status(completion_prompt):
     """will check whether task is completed or not"""
@@ -224,6 +207,14 @@ def valid_comp_date(value):
     except ValueError:
         return False
 
+# assign a variable with the amount of days left until due date
+def days_left(due_date):
+    # using datetime to get todays date,
+    today = datetime.today().date()
+    # must convert due date to date value
+    due = datetime.strptime(due_date, "%m-%d-%Y").date()
+    # subtract both dates and only return the day value
+    return (due - today).days
 
 def is_diff(value):
     """check if difficulty entered is in range of difficulty"""
