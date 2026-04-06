@@ -22,15 +22,13 @@ def add_task(tasks, completed, course, task, difficulty, date_completed=None, du
 
 # function that will return list of incompleted urgent tasks
 def urgent_sort(tasks):
-    sorted_tasks = []
-    for task in tasks:
-        if not task["completed"]:
-            sorted_tasks.append(task)
-    for task in sorted_tasks:
-        task["priority"] = priority_calculation(task)
+    incomplete = [t for t in tasks if not t["completed"]]
+    
+    for t in incomplete:
+        t["priority"] = priority_calculation(t)
+
     # sort the incompleted tasks by priority level using priority formula, potentially account for due date later
-    sorted_tasks = sorted(sorted_tasks, key=lambda x: x["priority"], reverse=True)
-    return sorted_tasks
+    return sorted(incomplete, key=lambda x: x["priority"], reverse=True)
 
 def priority_calculation(task):
     """Will return the priority status of task based off difficulty*hours/days remaining"""
