@@ -18,7 +18,6 @@ menu = """
 # empty list to hold tasks
 tasks = []
 
-
 # Print and welcome to program, check for user name, and menu loop
 def main():
     print(ascii_aa)
@@ -37,51 +36,55 @@ def main():
             is_comp = input("Is task already completed? [y/n]: ").lower().strip()
             #prompt for constant values
             constant_values = prompt_constant_values()
-            course, task, difficulty = constant_values["course"],constant_values["task"],constant_values["difficulty"]
+            course = constant_values["course"]
+            task = constant_values["task"]
+            difficulty = constant_values["difficulty"]
             completed = check_task_status(is_comp)
 
             if completed:
                 comp_task = prompt_comp_task()
                 date_completed = comp_task["date_completed"]
-                hours = comp_task["hours"]
+                used_hours = comp_task["hours"]
                 due_date = None
-                value = add_task(tasks, completed, course, task, difficulty,hours, date_completed, due_date)
+                value = add_task(completed, course, task, difficulty, used_hours, None, date_completed, due_date)
 
             else:
                 incomp_task = prompt_incomp_task()
                 due_date = incomp_task["due_date"]
-                hours =  incomp_task["hours"]
+                to_use_hours = incomp_task["hours"]
                 date_completed = None
-                value = add_task(tasks, completed, course, task, difficulty, hours, due_date, date_completed)
-            
-
+                value = add_task(completed, course, task, difficulty, None, to_use_hours, date_completed, due_date)
             print("\nOverview of task added:\n")
             print(value)
             rev_task(value, tasks)
 
-            menu_go_back()
-
         elif choice == "2":
             view_all_tasks(tasks)
+            menu_go_back()
 
         elif choice == "3":
-            if not urgent_sort(tasks):
-                print("No urgent/incompleted tasks found.")
-                continue
-            else:
+            if has_incomplete_tasks():
                 print("\nUrgent Tasks\n")
                   # display most urgent tasks in detail, based off priority.
-                for i, task in enumerate(urgent_sort(tasks), start=1):
-                    print(
-                    f"{i}. {task['course']} | {task['task']} |"
-                    f"Difficulty: {task['difficulty']} | Due: {task['due_date']} |"
-                    f"Hours: {task['hours']} | Priority:{task['priority']:.2f}"
-                    )
+            for i, task in enumerate(urgent_sort(), start=1):
+                print(
+                f"{i}. {task['course']} | {task['task']} |"
+                f"Difficulty: {task['difficulty']} | Due: {task['due_date']} |"
+                f"Hours: {task['hours']} | Priority:{task['priority']:.2f}"
+                )
+            
+            else:
+                print("No urgent tasks found.")
+            
             menu_go_back()
-                
+       
         elif choice == "4":
-            study(tasks)
+            if has_incomplete_tasks():
+                study()
+            else:
+                print("No urgent tasks found.")
             menu_go_back()
+
         elif choice == "5":
             task_done(tasks)
             menu_go_back()
@@ -177,6 +180,9 @@ def menu_go_back():
         user_input = input("\nType menu to go back to menu: ")
         if user_input.lower() == "menu":
             break
+
+def has_incomplete_tasks():
+    return urgent_sort() != []
 
 if __name__ == "__main__":
     main()
