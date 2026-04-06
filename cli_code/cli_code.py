@@ -63,7 +63,6 @@ def main():
 
         elif choice == "2":
             view_all_tasks(tasks)
-            menu_go_back()
 
         elif choice == "3":
             if not urgent_sort(tasks):
