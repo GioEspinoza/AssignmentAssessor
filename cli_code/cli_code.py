@@ -1,5 +1,7 @@
 import pyfiglet
-from aa_logic import *
+from backend import aa_logic
+from backend import storage
+from datetime import datetime
 
 # save title in ascii format
 proj_title = "Assignment Assessor"
@@ -15,19 +17,24 @@ menu = """
 6. Close program
 """
 
+username = storage.load_user_prof()["username"]
+password = storage.load_user_prof()["password"]
 # empty list to hold tasks
-tasks = []
-incomp_tasks = []
-
+tasks = storage.load_data()
 # Print and welcome to program, check for user name, and menu loop
 def main():
     print(ascii_aa)
     print("Welcome to Assignment Assessor!!")
 
     while True:
-        user = input("Input valid name:\n").strip()
-        if check_name(user):
-            break
+        if username == None:
+            user = input("Input valid name:\n").strip()
+            if check_new_name(user):
+                new_pass(user)
+        else:
+            pass_attempt = input(print(f"Welcome back, {username}! Please enter password:\n"))
+            if check_pass(pass_attempt):
+                break
 
     while True:
         show_menu()
@@ -40,14 +47,14 @@ def main():
         ## view all tasks
         elif choice == "2":
             view_all_tasks(tasks)
-            menu_go_back()
 
         ## view urgent tasks, sorted by priority
         elif choice == "3":
-            if incomp_tasks:
+            if check_incomp_tasks(tasks):
+                sorted_tasks = aa_logic.urgent_sort(tasks)
                 print("\nUrgent Tasks\n")
                   # display most urgent tasks in detail, based off priority.
-                for i, task in enumerate(urgent_sort(incomp_tasks), start=1):
+                for i, task in enumerate(sorted_tasks, start=1):
                     print(
                     f"{i}. {task['course']} | {task['task']} |"
                     f"Difficulty: {task['difficulty']} | Due: {task['due_date']} |"
@@ -60,11 +67,12 @@ def main():
                
         ## study plan, sorted by priority, with hours per day recommendation based off days left until due date and hours needed
         elif choice == "4":
-            if incomp_tasks:
+            if check_incomp_tasks(tasks):
                 print("Study Plan")
-                for i, task in enumerate(urgent_sort(incomp_tasks), start=1):
-                    days_rem = days_left(task["due_date"])
-                    hours_day = hours_per_day(task["hours"], days_rem)
+                sorted_tasks = aa_logic.urgent_sort(tasks)
+                for i, task in enumerate(sorted_tasks, start=1):
+                    days_rem = aa_logic.days_left(task["due_date"])
+                    hours_day = aa_logic.hours_per_day(task["hours"], days_rem)
                     if days_rem > 0:
                         print(
                             f"{i}. {task['course']} | {task['task']} |"
@@ -83,11 +91,11 @@ def main():
             
         ## mark task as completed, will show list of incompleted tasks, ask for user choice, confirm choice, and mark as completed if confirmed
         elif choice == "5":
-                if not incomp_tasks:
+                if not check_incomp_tasks(tasks):
                     print("No incomplete tasks to mark as completed.")
                     continue
                 else:
-                    mark_complete(urgent_sort(incomp_tasks))
+                    mark_complete(tasks)
 
         ## bye    
         elif choice == "6":
@@ -105,15 +113,15 @@ def show_menu():
 def prompt_constant_values():
     constant_values = {}
     constant_values["course"] = ask_until_valid(
-        "Enter course name:\n", is_not_empty, "Course name cannot be empty."
+        "Enter course name:\n", aa_logic.is_not_empty, "Course name cannot be empty."
     )
     constant_values["task"] = ask_until_valid(
-        "Enter name of task:\n", is_not_empty, "Task name cannot be empty."
+        "Enter name of task:\n", aa_logic.is_not_empty, "Task name cannot be empty."
     )
     constant_values["difficulty"] = int(
         ask_until_valid(
             "Enter difficulty (1-5):\n",
-            is_diff,
+            aa_logic.is_diff,
             "Difficulty must be an integer between 1 and 5.",
         )
     )
@@ -125,13 +133,13 @@ def prompt_incomp_task():
 
     incomp_values["due_date"] = ask_until_valid(
             "Enter due date (MM-DD-YYYY):\n",
-            valid_due_date,
+            aa_logic.valid_due_date,
             "Invalid Date/Date Format",
         )
     incomp_values["hours"] = int(
             ask_until_valid(
                 "Enter hours needed:\n",
-                is_hours,
+                aa_logic.is_hours,
                 "Invalid input",
             )
         )
@@ -142,13 +150,13 @@ def prompt_comp_task():
 
     comp_values["date_completed"] = ask_until_valid(
             "Enter date completed (MM-DD-YYYY):\n",
-            valid_comp_date,
+            aa_logic.valid_comp_date,
             "Invalid Date/Date Format",
         )
     comp_values["hours"] = int(
             ask_until_valid(
                 "Enter hours used:\n",
-                is_hours,
+                aa_logic.is_hours,
                 "Invalid input",
             )
         )
@@ -162,9 +170,10 @@ def view_all_tasks(tasks):
     print("List of tasks:\n")
     for i, task in enumerate(tasks, start=1):
         print(i, task)
+    menu_go_back()
 
 # ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
-def check_name(name):
+def check_new_name(name):
     if not name:
         print("Not valid name! Please try again")
         return False
@@ -174,7 +183,7 @@ def check_name(name):
     if "  " in name:
         print("Not valid name! Please try again")
         return False
-
+    
     print(f"Hey {name}! Please select an option:")
     return True
 
@@ -184,7 +193,6 @@ def menu_go_back():
         if user_input.lower() == "menu":
             break
 
-
 def user_choice_completed_task(counter):
     """Will check whether input is in range and valid, loop if not"""
     while True:
@@ -192,23 +200,25 @@ def user_choice_completed_task(counter):
         if choice.isdigit():
             choice = int(choice)
 
-            if is_in_range(choice, 1, counter):
+            if aa_logic.is_in_range(choice, 1, counter):
                 return choice
         print("Not valid number! try again.")
 
 def rev_mark_comp(task, tasks):
     """will confirm user choice in task to be marked for completion"""
+
     while True:
         review_task = input("\nIs this correct? [y/n]: ").lower().strip()
         if review_task == "y":
             task["completed"] = True
             # strftime formats date objects as strings.
             task["date_completed"] = datetime.today().strftime("%m-%d-%Y")
-            print(f"Marked as compelted")
+            print(f"Marked as completed on {task['date_completed']}.")
+            storage.save_data(tasks)
             break
         elif review_task == "n":
             print("Restarting choice of task...\n")
-            mark_complete(urgent_sort(tasks))
+            mark_complete(tasks)
             break
         else:
             print("Not valid input, please try again!")
@@ -219,6 +229,7 @@ def rev_task(task, tasks):
         review_task = input("\nIs this correct? [y/n]: ").lower().strip()
         if review_task == "y":
             tasks.append(task)
+            storage.save_data(tasks)
             print("Saved.")
             break
         elif review_task == "n":
@@ -243,32 +254,31 @@ def choice_1(tasks):
         date_completed = comp_task["date_completed"]
         used_hours = comp_task["hours"]
         due_date = None
-        value = add_task(completed, course, task, difficulty, used_hours, None, date_completed, due_date)
+        value = aa_logic.add_task(completed, course, task, difficulty, used_hours, None, date_completed, due_date)
 
     else:
         incomp_task = prompt_incomp_task()
         due_date = incomp_task["due_date"]
         to_use_hours = incomp_task["hours"]
         date_completed = None
-        incomp_tasks.append(add_task(completed, course, task, difficulty, None, to_use_hours, None, due_date))
-        value = add_task(completed, course, task, difficulty, None, to_use_hours, date_completed, due_date)
+        value = aa_logic.add_task(completed, course, task, difficulty, None, to_use_hours, date_completed, due_date)
     print("\nOverview of task added:\n")
     print(value)
     rev_task(value, tasks)
 
-def mark_complete(incomp_tasks):
-    for i, task in enumerate(incomp_tasks, start=1):
+def mark_complete(tasks):
+    sorted_tasks = aa_logic.urgent_sort(tasks)
+    for i, task in enumerate(sorted_tasks, start=1):
         print(f"{i}. {task['course']} | {task['task']} | Due: {task['due_date']}")
-    choice = user_choice_completed_task(len(incomp_tasks))
+    choice = user_choice_completed_task(len(sorted_tasks))
     print("Incompleted Tasks:\n")
-    chosen = incomp_tasks[choice-1]
+    chosen = sorted_tasks[choice-1]
     print("\nOverview of choice:\n")
     print(
         f"{choice}. {chosen['course']} | {chosen['task']} | Due: {chosen['due_date']} "
     )
-    rev_mark_comp(chosen, incomp_tasks)
+    rev_mark_comp(chosen, tasks)
         
-
 def check_task_status(completion_prompt):
     """will check whether task is completed or not"""
     while True:
@@ -288,6 +298,16 @@ def ask_until_valid(prompt, validator, error_msg):
         if validator(value):
             return value
         print(error_msg)
+    
+def check_incomp_tasks(tasks):
+    """checks if there are any incompleted tasks"""
+    return any(not task.get("completed", False) for task in tasks)
+
+def new_pass():
+    ...
+
+def check_pass(password):
+    ...
 
 if __name__ == "__main__":
     main()
