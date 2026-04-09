@@ -11,7 +11,8 @@ def load_data():
             return json.load(file)
     except FileNotFoundError:
         return []
-def save_name(username, password):
+    
+def save_profile(username, password):
     data = {
         "username":username,
         "password":password

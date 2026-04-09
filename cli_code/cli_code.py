@@ -17,25 +17,21 @@ menu = """
 6. Close program
 """
 
-username = storage.load_user_prof()["username"]
-password = storage.load_user_prof()["password"]
-# empty list to hold tasks
 tasks = storage.load_data()
 # Print and welcome to program, check for user name, and menu loop
 def main():
     print(ascii_aa)
-    print("Welcome to Assignment Assessor!!")
 
+    username, password = storage.load_user_prof()
     while True:
         if username == None:
-            user = input("Input valid name:\n").strip()
-            if check_new_name(user):
-                new_pass(user)
+            print("Create Account:")
+            username, password = new_profile()
+            break
         else:
-            pass_attempt = input(print(f"Welcome back, {username}! Please enter password:\n"))
-            if check_pass(pass_attempt):
+            print(f"Welcome back {username}!")
+            if check_hpassword(input("Please enter password:\n")):
                 break
-
     while True:
         show_menu()
         choice = input("Choice: ").strip()
@@ -99,7 +95,7 @@ def main():
 
         ## bye    
         elif choice == "6":
-            end_aa(user)
+            end_aa(username)
             break
         
         else:
@@ -109,6 +105,40 @@ def main():
 # function to show menu
 def show_menu():
     print(menu)
+
+def new_profile():
+    while True:
+        username = input("Please enter username:\n".strip())
+        if check_new_name(username):
+            print("Enter new password: (At least 6 chars, no spaces)")
+            password = input("\n")
+            if check_new_pass(password):
+                hpassword = hash_password(password)
+                storage.save_profile(username,hpassword)
+            else:
+                continue
+        else:
+            continue
+
+def check_new_pass(password):
+    if not password:
+        print("Not valid password! Please try again")
+        return False
+    if len(password) < 6:
+        print("Not valid password! Please try again")
+        return False
+    if "  " in password:
+        print("Not valid name! Please try again")
+        return False
+    
+    print("Password saved.")
+    return True
+
+def hash_password(password):
+    ...
+
+def check_hpassword(password):
+    ...
 
 def prompt_constant_values():
     constant_values = {}
@@ -184,7 +214,7 @@ def check_new_name(name):
         print("Not valid name! Please try again")
         return False
     
-    print(f"Hey {name}! Please select an option:")
+    print(f"Hey {name}!")
     return True
 
 def menu_go_back():
@@ -303,11 +333,7 @@ def check_incomp_tasks(tasks):
     """checks if there are any incompleted tasks"""
     return any(not task.get("completed", False) for task in tasks)
 
-def new_pass():
-    ...
 
-def check_pass(password):
-    ...
 
 if __name__ == "__main__":
     main()
