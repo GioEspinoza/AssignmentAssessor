@@ -21,12 +21,13 @@ def add_task(completed, course, task, difficulty, used_hours, to_use_hours,date_
         
     return value
 
-def urgent_sort(tasks):  
-    for t in tasks:
+def urgent_sort(tasks): 
+    incomp_tasks = [t for t in tasks if not t["completed"]]
+    for t in incomp_tasks:
         t["priority"] = priority_calculation(t)
 
     # sort the incompleted tasks by priority level using priority formula, potentially account for due date later
-    return sorted(tasks, key=lambda x: x["priority"], reverse=True)
+    return sorted(incomp_tasks, key=lambda x: x["priority"], reverse=True)
 
 def hours_per_day(hours, day):
     """Will return the recommended hours per day based off value = hours needed/days rem"""
