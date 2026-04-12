@@ -102,3 +102,7 @@ def is_positive_int(value):
 def is_hours(value):
     """check if hours is pos"""
     return is_positive_int(value)
+
+def check_incomp_tasks(tasks):
+    """checks if there are any incompleted tasks"""
+    return any(not task.get("completed", False) for task in tasks)
