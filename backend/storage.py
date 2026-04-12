@@ -12,11 +12,11 @@ def load_data():
     except FileNotFoundError:
         return []
     
-def save_profile(username, password):
+def save_profile(username, hpassword):
     data = {
         "username":username,
-        "password":password
-    }
+        "hpassword":hpassword
+    } 
     with open("user_prof.json", "w") as file:
         json.dump(data, file, indent=4)
 
