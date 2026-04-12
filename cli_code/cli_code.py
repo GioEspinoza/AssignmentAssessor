@@ -2,7 +2,7 @@ import pyfiglet
 from backend import aa_logic
 from backend import storage
 from datetime import datetime
-import hashlib #python hash, pbkdf2_hmac does password hashes
+import hashlib
 import os #os utilities 
 
 # save title in ascii format
@@ -24,16 +24,17 @@ tasks = storage.load_data()
 def main():
     print(ascii_aa)
 
-    username, password = storage.load_user_prof()
+    username, hpassword = storage.load_user_prof()
     while True:
         if username == None:
             print("Create Account:")
-            username, password = new_profile()
+            username, hpassword = new_profile()
             break
         else:
             print(f"Welcome back {username}!")
-            if check_hpassword(input("Please enter password:\n")):
+            if storage.check_hpassword(hpassword, input("Please enter password:\n")):
                 break
+
     while True:
         show_menu()
         choice = input("Choice: ").strip()
@@ -48,7 +49,7 @@ def main():
 
         ## view urgent tasks, sorted by priority
         elif choice == "3":
-            if check_incomp_tasks(tasks):
+            if aa_logic.check_incomp_tasks(tasks):
                 sorted_tasks = aa_logic.urgent_sort(tasks)
                 print("\nUrgent Tasks\n")
                   # display most urgent tasks in detail, based off priority.
@@ -62,10 +63,10 @@ def main():
             
             else:
                 print("No urgent tasks found.")
-               
+            
         ## study plan, sorted by priority, with hours per day recommendation based off days left until due date and hours needed
         elif choice == "4":
-            if check_incomp_tasks(tasks):
+            if aa_logic.check_incomp_tasks(tasks):
                 print("Study Plan")
                 sorted_tasks = aa_logic.urgent_sort(tasks)
                 for i, task in enumerate(sorted_tasks, start=1):
@@ -89,7 +90,7 @@ def main():
             
         ## mark task as completed, will show list of incompleted tasks, ask for user choice, confirm choice, and mark as completed if confirmed
         elif choice == "5":
-                if not check_incomp_tasks(tasks):
+                if not aa_logic.check_incomp_tasks(tasks):
                     print("No incomplete tasks to mark as completed.")
                     continue
                 else:
@@ -103,7 +104,6 @@ def main():
         else:
             print("Not a valid input, please try again.")
 
-
 # function to show menu
 def show_menu():
     print(menu)
@@ -115,7 +115,7 @@ def new_profile():
             print("Enter new password: (At least 8 chars, no spaces)")
             password = input("\n")
             if check_new_pass(password):
-                hpassword = hash_password(password)
+                hpassword = storage.hash_password(password)
                 storage.save_profile(username,hpassword)
             else:
                 continue
@@ -133,51 +133,8 @@ def check_new_pass(password):
         print("Not valid name! Please try again")
         return False
     
-    print("Password saved.")
+    print("Password saved. Welcome")
     return True
-
-#####################################################################################
-
-### 3 jobs are done in hash_password, including the making of the random salt, 
-### then hashing the password using the salt, 
-### and then returinng the final output of both salt and hash together
-
-#hashing are chain based aglorithms that depend on the last step to hash the next.
-#a salt is used to change the first input before hashing ensuring all password hashes are different
-
-def hash_password(password): #takes the plain password from the user to convert to hash
-
-    salt = os.urandom(16) #Generates 16 random bytes for salt that are cryptographically secure. W/o salt rainbow tables break through
-
-    key = hashlib.pbkdf2_hmac( #starts password hash, key will hold final hash
-
-        'sha256', #hash algorithm in use, layered with pbkdf2
-
-        password.encode(), #converts password string to bytes using standard encoding, hash function can only work on bytes
-
-        salt, #gives function the salt to combine with hash key
-
-        100000 # number of iterations, will hash x amount of times
-    )
-    return salt + key #return both salt and key together, original salt is needed for verification
-    # output: first 16 bytes - og salt, remaining bytes will be acutal hash key
-
-
-def check_hpassword(password, attempt): #will check password attempt
-    salt = password[:16] #will get salt by taking first 16 letters from stored hpassword
-    stored_key = password[16:] #rest must be the hash password
-
-    #using the stored salt, it will replicate the hashing process to validate
-    new_key = hashlib.pbkdf2_hmac(
-        'sha256',
-        attempt.encode(),
-        salt,
-        100000
-    )
-
-    return new_key == stored_key #compare to see if hashing results are equal.
-
-###################################################################################### 
 
 def prompt_constant_values():
     constant_values = {}
@@ -367,12 +324,6 @@ def ask_until_valid(prompt, validator, error_msg):
         if validator(value):
             return value
         print(error_msg)
-    
-def check_incomp_tasks(tasks):
-    """checks if there are any incompleted tasks"""
-    return any(not task.get("completed", False) for task in tasks)
-
-
 
 if __name__ == "__main__":
     main()
