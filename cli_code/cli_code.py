@@ -72,6 +72,7 @@ def main():
                     f"Difficulty: {task['difficulty']} | Due: {task['due_date']} |"
                     f"Hours: {task['hours']} | Priority:{task['priority']:.2f}"
                     )
+                    print("-----")
                 menu_go_back()
             
             else:
@@ -217,12 +218,14 @@ def view_all_tasks(tasks):
                 f"Difficulty: {task['difficulty']} | Due Date: {task['due_date']} |"
                 f"Hours needed: {task['hours']} | "
                 )
+            print("-----")
         else:
             print(
                 f"{i}. Course: {task['course']} | Task: {task['task']} |"
                 f"Difficulty: {task['difficulty']} | Date Completed: {task['date_completed']} |"
                 f"Hours used: {task['hours']} | "
                 )
+            print("-----")
     menu_go_back()
 
 # ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
