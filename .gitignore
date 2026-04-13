@@ -1,3 +1,5 @@
 venv/
 __pycache__/
 *.pyc
+tasks.json
+user_prof.json
