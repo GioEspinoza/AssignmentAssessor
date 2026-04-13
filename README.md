@@ -21,5 +21,4 @@
     ##Libraries
     ###assignment assessors only requires 2 libraries which can be found in the requirements.txt file.
 
-    
-    
+    ##Note: tasks.json and user_prof.json are not included. They will be created automatically when you run the program.

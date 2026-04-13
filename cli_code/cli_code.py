@@ -1,9 +1,8 @@
 import pyfiglet
 from backend import aa_logic
 from backend import storage
+from backend import auth
 from datetime import datetime
-import hashlib
-import os #os utilities 
 
 # save title in ascii format
 proj_title = "Assignment Assessor"
@@ -23,22 +22,36 @@ tasks = storage.load_data()
 # Print and welcome to program, check for user name, and menu loop
 def main():
     print(ascii_aa)
-
-    username, hpassword = storage.load_user_prof()
+    
+    user_data = storage.load_user_prof()
+    if user_data is None:
+        username = None
+        hpassword = None
+    else:
+        username = user_data['username']
+        hpassword = user_data['hpassword']
+    #basic password authentication
     while True:
-        if username == None:
-            print("Create Account:")
+        if username is None:
+            print("Newcomer Detected!")
             username, hpassword = new_profile()
+            print(f"Welcome to AssignmentAssessor, {username}!")
             break
         else:
             print(f"Welcome back {username}!")
-            if storage.check_hpassword(hpassword, input("Please enter password:\n")):
-                break
+            while True:
+                if auth.check_hpassword(hpassword, input("Please enter password:\n")):
+                    break
+                else:
+                    print("Incorrect password please try again.")
+            break
 
     while True:
         show_menu()
+
         choice = input("Choice: ").strip()
         ### main menu options ###
+
         ##addtask
         if choice == "1":
             choice_1(tasks)
@@ -108,20 +121,23 @@ def main():
 def show_menu():
     print(menu)
 
+#creates new profile if user has no previous data
 def new_profile():
     while True:
-        username = input("Please enter username:\n".strip())
+        username = input("Please enter username:\n").strip()
         if check_new_name(username):
             print("Enter new password: (At least 8 chars, no spaces)")
             password = input("\n")
             if check_new_pass(password):
-                hpassword = storage.hash_password(password)
-                storage.save_profile(username,hpassword)
+                hpassword = auth.hash_password(password)
+                storage.save_user_prof(username,hpassword)
+                return username, hpassword
             else:
                 continue
         else:
             continue
 
+#ensures new password meets criteria
 def check_new_pass(password):
     if not password:
         print("Not valid password! Please try again")
@@ -130,7 +146,7 @@ def check_new_pass(password):
         print("Not valid password! Please try again")
         return False
     if "  " in password:
-        print("Not valid name! Please try again")
+        print("Not valid password! Please try again")
         return False
     
     print("Password saved. Welcome")
@@ -195,7 +211,18 @@ def view_all_tasks(tasks):
         return
     print("List of tasks:\n")
     for i, task in enumerate(tasks, start=1):
-        print(i, task)
+        if not task['completed']:
+            print(
+                f"{i}. Course: {task['course']} | Task: {task['task']} |"
+                f"Difficulty: {task['difficulty']} | Due Date: {task['due_date']} |"
+                f"Hours needed: {task['hours']} | "
+                )
+        else:
+            print(
+                f"{i}. Course: {task['course']} | Task: {task['task']} |"
+                f"Difficulty: {task['difficulty']} | Date Completed: {task['date_completed']} |"
+                f"Hours used: {task['hours']} | "
+                )
     menu_go_back()
 
 # ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
@@ -213,6 +240,7 @@ def check_new_name(name):
     print(f"Hey {name}!")
     return True
 
+#menu loop function
 def menu_go_back():
     while True:
         user_input = input("\nType menu to go back to menu: ")
@@ -281,6 +309,10 @@ def choice_1(tasks):
         used_hours = comp_task["hours"]
         due_date = None
         value = aa_logic.add_task(completed, course, task, difficulty, used_hours, None, date_completed, due_date)
+        print("\nOverview of task added:\n")
+        print(
+            f"{value['course']} | {value['task']} | Completed on: {value['date_completed']} in {value['hours']} hours with a difficulty of {value['difficulty']}."
+        )
 
     else:
         incomp_task = prompt_incomp_task()
@@ -288,10 +320,13 @@ def choice_1(tasks):
         to_use_hours = incomp_task["hours"]
         date_completed = None
         value = aa_logic.add_task(completed, course, task, difficulty, None, to_use_hours, date_completed, due_date)
-    print("\nOverview of task added:\n")
-    print(value)
+        print("\nOverview of task added:\n")
+        print(
+            f"{value['course']} | {value['task']} | To be completed by: {value['due_date']} in {value['hours']} hours with a difficulty of {value['difficulty']}."
+        )
     rev_task(value, tasks)
 
+#prompt user for task to mark as completed
 def mark_complete(tasks):
     sorted_tasks = aa_logic.urgent_sort(tasks)
     for i, task in enumerate(sorted_tasks, start=1):
