@@ -34,7 +34,7 @@ def main():
     while True:
         if username is None:
             print("Newcomer Detected!")
-            username, hpassword = new_profile()
+            username = new_profile()
             print(f"Welcome to AssignmentAssessor, {username}!")
             break
         else:
@@ -132,7 +132,7 @@ def new_profile():
             if check_new_pass(password):
                 hpassword = auth.hash_password(password)
                 storage.save_user_prof(username,hpassword)
-                return username, hpassword
+                return username
             else:
                 continue
         else:
