@@ -1,9 +1,27 @@
 import sys
 from pathlib import Path
-from backend import storage, auth
+from backend import storage, auth, aa_logic
 import customtkinter as ctk
 
 user_data = storage.load_user_prof()
+
+
+def new_user():
+    while True:
+        if aa_logic.check_new_name(username_entry.get()):
+            if aa_logic.check_new_pass(password_entry.get()):
+                storage.save_user_prof(username_entry.get(),auth.hash_password(password_entry.get()))
+                return username_entry.get()
+            else:
+                continue
+        else:
+            continue
+
+def log_in():
+    ...
+
+def show_menu():
+    ...
 
 aa_app = ctk.CTk()
 #set title and window size
