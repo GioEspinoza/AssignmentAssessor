@@ -5,8 +5,7 @@ from backend import auth
 from datetime import datetime
 
 # save title in ascii format
-proj_title = "Assignment Assessor"
-ascii_aa = pyfiglet.figlet_format(proj_title)
+ascii_aa = pyfiglet.figlet_format("Assignment Assessor")
 
 # save menu for easy reprints
 menu = """
@@ -126,32 +125,24 @@ def show_menu():
 def new_profile():
     while True:
         username = input("Please enter username:\n").strip()
-        if check_new_name(username):
-            print("Enter new password: (At least 8 chars, no spaces)")
-            password = input("\n")
-            if check_new_pass(password):
-                hpassword = auth.hash_password(password)
-                storage.save_user_prof(username,hpassword)
-                return username
-            else:
-                continue
-        else:
+        valid, message = auth.check_new_name(username)
+        if not valid:
+            print(message)
             continue
+        print(f"Hey {username}!")
+        
+        print("Enter new password: (At least 8 chars, no spaces)")
+        password = input("\n")
+        passvalid, message = auth.check_new_pass(password)
+        if not passvalid:
+            print(message)
+            continue
+        storage.save_user_prof(username,auth.hash_password(password))
+        print(message)
+        return username
 
-#ensures new password meets criteria
-def check_new_pass(password):
-    if not password:
-        print("Not valid password! Please try again")
-        return False
-    if len(password) < 8:
-        print("Not valid password! Please try again")
-        return False
-    if "  " in password:
-        print("Not valid password! Please try again")
-        return False
-    
-    print("Password saved. Welcome")
-    return True
+
+
 
 def prompt_constant_values():
     constant_values = {}
@@ -227,21 +218,6 @@ def view_all_tasks(tasks):
                 )
             print("-----")
     menu_go_back()
-
-# ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
-def check_new_name(name):
-    if not name:
-        print("Not valid name! Please try again")
-        return False
-    if any(char.isdigit() for char in name):
-        print("Not valid name! Please try again")
-        return False
-    if "  " in name:
-        print("Not valid name! Please try again")
-        return False
-    
-    print(f"Hey {name}!")
-    return True
 
 #menu loop function
 def menu_go_back():
