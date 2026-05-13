@@ -1,4 +1,4 @@
-venv/
+.venv
 __pycache__/
 *.pyc
 tasks.json
@@ -13,3 +13,6 @@ user_prof.json
 .VSCodeCounter/2026-05-12_16-31-14/results.csv
 .VSCodeCounter/2026-05-12_16-31-14/diff.txt
 .VSCodeCounter/2026-05-12_16-31-14/diff.csv
+.tasks.json
+.user_prof.json
+.VSCodeCounter

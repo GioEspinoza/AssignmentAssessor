@@ -154,19 +154,13 @@ def new_user(username_entry, password_entry, invalid_label, authentication_frame
         )
         aa_app.after(2500, invalid_label.pack_forget)
         return
-    
+        
     storage.save_user_prof(
             username_entry,
             auth.hash_password(password_entry)
             )
-    
-    user_data = storage.load_user_prof()
-
     authentication_frame.destroy()
-    aa_title.configure(
-        font=("Terminal", 40),
-        pady=5
-    )
+    aa_title.pack_forget()
     aa_subtitle.pack_forget()
     menu_screen()
                 
