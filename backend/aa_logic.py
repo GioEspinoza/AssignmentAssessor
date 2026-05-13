@@ -2,7 +2,7 @@ from datetime import datetime
 import math
 
 
-def add_task(completed, course, task, difficulty, used_hours, to_use_hours,date_completed=None, due_date=None):
+def add_task(completed, course, task, difficulty, used_hours, to_use_hours, date_completed=None, due_date=None):
     
     value = {
         "course":course,
