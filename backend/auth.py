@@ -42,3 +42,16 @@ def check_hpassword(hpassword, attempt): #will check password attempt
     return new_key == stored_key #compare to see if hashing results are equal.
 
 ######################################################################################
+
+# ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
+def check_new_name(name):
+    user = name.strip()
+    if not user or any(char.isdigit() for char in user) or "  " in user:
+        return False, "Not valid name! Please try again"
+    return True, ""
+
+#ensures new password meets criteria
+def check_new_pass(password):
+    if not password or len(password) < 8 or "  " in password:
+        return False, "Not valid password! Please try again"
+    return True, "Valid password"
