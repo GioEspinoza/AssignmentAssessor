@@ -16,7 +16,10 @@ aa_title = ctk.CTkLabel(
     aa_app, 
     pady=25,
     text='Assignment Assessor',
-    font=('Terminal',50))
+    font=('Terminal',50),
+    fg_color='grey',
+    corner_radius=10
+)
 
 #encapsulate login screen
 def login_screen():
@@ -125,6 +128,7 @@ def login_screen():
     
 #function that will register new user
 def new_user(username_entry, password_entry, invalid_label, authentication_frame, aa_subtitle):
+    global user_data
     #check if user and password are valid
     valid, message = auth.check_new_name(username_entry)
     passvalid, passmessage = auth.check_new_pass(password_entry)
@@ -175,13 +179,194 @@ def log_in(password_entry, invalid_label, authentication_frame, aa_subtitle):
         return
     
     authentication_frame.destroy()
-    aa_title.pack_forget()
+    aa_title.configure(
+        font=("Terminal", 40),
+        pady=5
+    )
     aa_subtitle.pack_forget()
     menu_screen()
 
 #will show menu after authencation
 def menu_screen():
-    ...
+    #instantiate menu frame
+    menu_frame = ctk.CTkFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+    #instantiate exit button
+    quit_button = ctk.CTkButton(
+        aa_app,
+        font=('Terminal', 20),
+        text="Exit",
+        command=lambda:back_to_login(menu_frame, quit_button)
+        )
+
+    #instantiate menu buttons
+    add_task_button = ctk.CTkButton(
+        menu_frame,
+        font=('Terminal', 20),
+        text="Add Task",
+        command= lambda: add_task_gui(menu_frame, quit_button)
+    )
+
+    view_task_button = ctk.CTkButton(
+        menu_frame,
+        font=('Terminal', 20),
+        text="View Task(s)"
+        )
+    
+    view_urgent_button = ctk.CTkButton(
+        menu_frame,
+        font=('Terminal', 20),
+        text="View Urgent(s)"
+        )
+    
+    study_button = ctk.CTkButton(
+        menu_frame,
+        font=('Terminal', 20),
+        text="Study Plan"
+        )
+    
+    completed_button = ctk.CTkButton(
+        menu_frame,
+        font=('Terminal', 20),
+        text="Mark as Complete"
+        )
+
+    #pack frame
+    menu_frame.pack(
+        pady=20,
+        padx=250,
+        fill ='both', 
+        expand = 1
+    )
+
+    #pack buttons
+    add_task_button.pack(
+        pady=25
+    )
+
+    view_task_button.pack(
+        pady=25
+    )
+
+    view_urgent_button.pack(
+        pady=25
+    )
+
+    study_button.pack(
+        pady=25
+    )
+
+    completed_button.pack(
+        pady=25
+    )
+    
+    #pack exit button
+    quit_button.pack(
+        pady=10
+    )
+
+#add task function
+def add_task_gui(menu_frame, quit_button):
+    #instatiate frame for add task inputs
+    add_task_frame = ctk.CTkFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+    #instantiate and configure course text box
+    course_entry = ctk.CTkEntry(
+        add_task_frame,
+        placeholder_text="Course Name",
+        placeholder_text_color='grey',
+        font=('Terminal', 15)
+    )
+
+    task_entry = ctk.CTkEntry(
+        add_task_frame,
+        placeholder_text='Task Name',
+        placeholder_text_color='grey',
+        font=('Terminal', 15)
+    )
+
+    #instantiate compelted check box
+    completed_box = ctk.CTkCheckBox(
+        add_task_frame,
+        text="Is task completed?",
+        checkmark_color='green',
+        fg_color='white',
+        hover_color="white"
+    )
+
+    #instatiate difficulty label and scale
+    difficulty_label = ctk.CTkLabel(
+        add_task_frame,
+        text="On a scale of 1-5, how difficult?",
+        font=("Terminal", 10)
+    )
+
+    difficulty_scale = ctk.CTkSlider(
+        add_task_frame,
+        corner_radius=10,
+        button_color='white',
+        button_hover_color='grey',
+        button_corner_radius=10,
+        border_color='transparent',
+        number_of_steps=4,
+        progress_color='red',
+    )
+
+    #quit button back to menu
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(add_task_frame, inner_quit_button)
+    )
+    #unshow menu frame and then show task frame
+    menu_frame.destroy()
+    add_task_frame.pack(
+        pady=20,
+        padx=200,
+        fill ='both', 
+        expand = 1
+    )
+    
+    #show task frame inputs
+    course_entry.pack(
+        pady=10
+    )
+    task_entry.pack(
+        pady=10
+    )
+    completed_box.pack(
+        pady=10
+    )
+    difficulty_label.pack(
+        pady=15
+    )
+    difficulty_scale.pack(
+    )
+
+    #destroy outer quit button and show inner quit button
+    quit_button.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )
+
+def back_to_menu(frame, inner_quit):
+    frame.destroy()
+    inner_quit.destroy()
+    menu_screen()
+
+def back_to_login(frame, quit):
+    frame.destroy()
+    quit.destroy()
+    login_screen()
 
 aa_title.pack(pady=30)
 login_screen()
