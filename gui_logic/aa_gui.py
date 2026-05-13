@@ -4,6 +4,7 @@ from backend import storage, auth, aa_logic
 import customtkinter as ctk
 
 user_data = storage.load_user_prof()
+tasks = storage.load_data()
 
 aa_app = ctk.CTk()
 
@@ -40,7 +41,7 @@ def login_screen():
     )
     password_entry.configure(
             placeholder_text="Password",
-            placeholder_text_color='grey',
+            placeholder_text_color='white',
             font=('Terminal', 15),
             show="*"
         )
@@ -50,7 +51,7 @@ def login_screen():
     )
     username_entry.configure(
         placeholder_text='Username',
-        placeholder_text_color='grey',
+        placeholder_text_color='white',
         font=('Terminal', 15)
     )
 
@@ -159,6 +160,9 @@ def new_user(username_entry, password_entry, invalid_label, authentication_frame
             username_entry,
             auth.hash_password(password_entry)
             )
+    
+    user_data = storage.load_user_prof()
+
     authentication_frame.destroy()
     aa_title.pack_forget()
     aa_subtitle.pack_forget()
@@ -271,6 +275,18 @@ def menu_screen():
 
 #add task function
 def add_task_gui(menu_frame, quit_button):
+    #make window bigger
+    aa_app.geometry('900x800')
+
+    #instantiate label for invalid password/usernames
+    invalid_label = ctk.CTkLabel(
+            aa_app,
+            font=('Terminal', 15),
+            bg_color='transparent',
+            text_color='red',
+            text=''        
+        )
+   
     #instatiate frame for add task inputs
     add_task_frame = ctk.CTkFrame(
         aa_app,
@@ -282,14 +298,14 @@ def add_task_gui(menu_frame, quit_button):
     course_entry = ctk.CTkEntry(
         add_task_frame,
         placeholder_text="Course Name",
-        placeholder_text_color='grey',
+        placeholder_text_color='white',
         font=('Terminal', 15)
     )
 
     task_entry = ctk.CTkEntry(
         add_task_frame,
         placeholder_text='Task Name',
-        placeholder_text_color='grey',
+        placeholder_text_color='white',
         font=('Terminal', 15)
     )
 
@@ -306,31 +322,75 @@ def add_task_gui(menu_frame, quit_button):
     difficulty_label = ctk.CTkLabel(
         add_task_frame,
         text="On a scale of 1-5, how difficult?",
-        font=("Terminal", 10)
+        font=("Terminal", 15)
     )
-
     difficulty_scale = ctk.CTkSlider(
         add_task_frame,
         corner_radius=10,
+        fg_color='green',
         button_color='white',
-        button_hover_color='grey',
+        button_hover_color='white',
         button_corner_radius=10,
         border_color='transparent',
         number_of_steps=4,
+        from_=1,
+        to=5,
         progress_color='red',
     )
 
+    #instantiate hours label and entry point
+    hours_label = ctk.CTkLabel(
+        add_task_frame,
+        text="Input hours needed/used:",
+        font=("Terminal", 15)
+    )
+    hours_entry = ctk.CTkEntry(
+        add_task_frame,
+        placeholder_text='Hours',
+        placeholder_text_color='white',
+        font=('Terminal', 15)
+    )
+
+    #instatiate data label and entry point
+    date_label = ctk.CTkLabel(
+        add_task_frame,
+        text="Input date due/completed:",
+        font=("Terminal", 15)
+    )
+    date_entry = ctk.CTkEntry(
+        add_task_frame,
+        placeholder_text='Date',
+        placeholder_text_color='white',
+        font=('Terminal', 15)
+    )
+    
+    #instantiate submit button
+    submit_button = ctk.CTkButton(
+        add_task_frame,
+        text='Submit Task',
+        font=('Terminal', 20),
+        command= lambda: submit_task_handle(
+            completed_box.getboolean(),
+            course_entry.get().strip(),
+            task_entry.get().strip(),
+            difficulty_scale.getint()+1,            
+            hours_entry.get(),
+            date_entry.get(),
+            invalid_label
+        )
+    )
     #quit button back to menu
     inner_quit_button = ctk.CTkButton(
-        aa_app,
+        add_task_frame,
         text="Cancel",
         font=('Terminal', 15),
         command= lambda: back_to_menu(add_task_frame, inner_quit_button)
     )
+
     #unshow menu frame and then show task frame
     menu_frame.destroy()
     add_task_frame.pack(
-        pady=20,
+        pady=100,
         padx=200,
         fill ='both', 
         expand = 1
@@ -338,18 +398,29 @@ def add_task_gui(menu_frame, quit_button):
     
     #show task frame inputs
     course_entry.pack(
-        pady=10
+        pady=20
     )
     task_entry.pack(
-        pady=10
+        pady=5
     )
     completed_box.pack(
-        pady=10
+        pady=5
     )
     difficulty_label.pack(
-        pady=15
+        pady=10
     )
     difficulty_scale.pack(
+    )
+    hours_label.pack(
+        pady=10
+    )
+    hours_entry.pack()
+    date_label.pack(
+        pady=10
+    )
+    date_entry.pack()
+    submit_button.pack(
+        pady=5
     )
 
     #destroy outer quit button and show inner quit button
@@ -358,15 +429,66 @@ def add_task_gui(menu_frame, quit_button):
         pady=10
     )
 
+#submit task handle function
+def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_label):
+    #check if task is completed or not
+    if is_comp is False:
+        #check if inputs for course and task are detected
+        if check_not_empty_gui(course, task) is False:
+            invalid_label.configure(
+                text="Empty inputs detected"
+            )
+            invalid_label.pack(
+                pady=10
+            )
+            aa_app.after(2500, invalid_label.pack_forget)
+            return
+        if aa_logic.valid_due_date(date) is False:
+            invalid_label.configure(
+                text="Invalid date input - (MM-DD-YYYY)"
+            )
+            invalid_label.pack(
+                pady=10
+            )
+            aa_app.after(2500, invalid_label.pack_forget)
+            return
+        return aa_logic.add_task(is_comp, course, task, difficulty, None, hours, None, date)
+    
+    if check_not_empty_gui(course, task) is False:
+        invalid_label.configure(
+            text="Empty inputs detected"
+        )
+        invalid_label.pack(
+            pady=10
+        )
+        aa_app.after(2500, invalid_label.pack_forget)
+        return
+    if aa_logic.valid_comp_date(date) is False:
+            invalid_label.configure(
+                text="Invalid date input - (MM-DD-YYYY)"
+            )
+            invalid_label.pack(
+                pady=10
+            )
+            aa_app.after(2500, invalid_label.pack_forget)
+            return
+    return aa_logic.add_task(is_comp, course, task, difficulty, hours, None, date, None)
+
+#back/quit button functions
 def back_to_menu(frame, inner_quit):
     frame.destroy()
     inner_quit.destroy()
     menu_screen()
-
 def back_to_login(frame, quit):
     frame.destroy()
     quit.destroy()
     login_screen()
+
+#helper method for empty values
+def check_not_empty_gui(course, task):
+    if aa_logic.is_not_empty(course) and aa_logic.is_not_empty(task):
+        return True
+    return False
 
 aa_title.pack(pady=30)
 login_screen()
