@@ -3,3 +3,13 @@ __pycache__/
 *.pyc
 tasks.json
 user_prof.json
+.user_prof.json
+.VSCodeCounter/2026-05-12_16-31-14/details.md
+.VSCodeCounter/2026-05-12_16-31-14/diff-details.md
+.VSCodeCounter/2026-05-12_16-31-14/diff.md
+.VSCodeCounter/2026-05-12_16-31-14/results.json
+.VSCodeCounter/2026-05-12_16-31-14/results.txt
+.VSCodeCounter/2026-05-12_16-31-14/results.md
+.VSCodeCounter/2026-05-12_16-31-14/results.csv
+.VSCodeCounter/2026-05-12_16-31-14/diff.txt
+.VSCodeCounter/2026-05-12_16-31-14/diff.csv
