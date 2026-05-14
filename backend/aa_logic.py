@@ -95,13 +95,17 @@ def is_diff(value):
     """check if difficulty entered is in range of difficulty"""
     return is_in_range(value, 1, 5)
 
-def is_positive_int(value):
-    """check if pos"""
-    return value.isdigit() and int(value) > 0
-
+def is_positive_float(value):
+    """check if pos and float"""
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+    
 def is_hours(value):
     """check if hours is pos"""
-    return is_positive_int(value)
+    return is_positive_float(value)
 
 def check_incomp_tasks(tasks):
     """checks if there are any incompleted tasks"""
