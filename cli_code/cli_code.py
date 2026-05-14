@@ -170,7 +170,7 @@ def prompt_incomp_task():
             aa_logic.valid_due_date,
             "Invalid Date/Date Format",
         )
-    incomp_values["hours"] = int(
+    incomp_values["hours"] = float(
             ask_until_valid(
                 "Enter hours needed:\n",
                 aa_logic.is_hours,
@@ -187,7 +187,7 @@ def prompt_comp_task():
             aa_logic.valid_comp_date,
             "Invalid Date/Date Format",
         )
-    comp_values["hours"] = int(
+    comp_values["hours"] = float(
             ask_until_valid(
                 "Enter hours used:\n",
                 aa_logic.is_hours,
