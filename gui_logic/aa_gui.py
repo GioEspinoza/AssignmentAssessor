@@ -220,25 +220,29 @@ def menu_screen():
     view_task_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="View Task(s)"
+        text="View Task(s)",
+        command= lambda: view_tasks_gui(menu_frame, quit_button, tasks)
         )
     
     view_urgent_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="View Urgent(s)"
+        text="View Urgent(s)",
+        command= lambda: view_urgents_gui(menu_frame, quit_button)
         )
     
     study_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="Study Plan"
+        text="Study Plan",
+        command= lambda: study_plan_gui(menu_frame, quit_button)
         )
     
     completed_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="Mark as Complete"
+        text="Mark as Complete",
+        command= lambda: mark_completed_gui(menu_frame, quit_button)
         )
 
     #pack frame
@@ -253,23 +257,19 @@ def menu_screen():
     add_task_button.pack(
         pady=25
     )
-
     view_task_button.pack(
         pady=25
     )
-
     view_urgent_button.pack(
         pady=25
     )
-
     study_button.pack(
         pady=25
     )
-
     completed_button.pack(
         pady=25
     )
-    
+
     #pack exit button
     quit_button.pack(
         pady=10
@@ -432,7 +432,6 @@ def add_task_gui(frame, button_or_label):
     inner_quit_button.pack(
         pady=10
     )
-
 #submit task handle function
 def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_label, frame, quit_button):
     #check if task is completed or not
@@ -505,23 +504,6 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
 
     rev_task_gui(aa_logic.add_task(is_comp, course, task, difficulty, hours, None, date, None), frame, quit_button)
     return
-
-#back/quit button functions
-def back_to_menu(frame, button_or_label):
-    frame.destroy()
-    button_or_label.destroy()
-    menu_screen()
-def back_to_login(frame, quit):
-    frame.destroy()
-    quit.destroy()
-    login_screen()
-
-#helper method for empty values
-def check_not_empty_gui(course, task, hours):
-    if aa_logic.is_not_empty(course) and aa_logic.is_not_empty(task) and aa_logic.is_not_empty(hours):
-        return True
-    return False
-
 #review task logic for gui
 def rev_task_gui(task, frame, quit_button):
     #minimize window
@@ -615,13 +597,194 @@ def rev_task_gui(task, frame, quit_button):
         side='left',
         padx=10
     )
-
 #logic for yes and no buttons
 def submit_task(tasks, task, frame, button_or_label):
     tasks.append(task)
     storage.save_data(tasks)
     back_to_menu(frame, button_or_label)
 
+#view task function
+def view_tasks_gui(frame, button_or_label, tasks):
+    aa_app.geometry('900x800')
+    tasks = storage.load_data()
+
+    frame.destroy()
+    view_tasks_frame = ctk.CTkScrollableFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+    
+    sorted_tasks = aa_logic.alphabetical_tasks(tasks)
+    for i, task in enumerate(sorted_tasks, start=1):
+        task_label= ctk.CTkLabel(
+            view_tasks_frame,
+            font=('Terminal', 20),
+        )
+    
+        if task['completed'] is False:
+            task_label.configure(
+                text_color='red',
+                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+            )
+        else:
+            task_label.configure(
+                text_color='green',
+                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDate Completed: {task['date_completed']}\n"
+                )
+        task_label.pack(
+            pady=10
+        )
+
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(view_tasks_frame, inner_quit_button)
+    )
+    
+    view_tasks_frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
+
+    button_or_label.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )
+
+#view urgents function
+def view_urgents_gui(frame, button_or_label):
+    aa_app.geometry('900x800')
+
+
+    frame.destroy()
+    view_urgents_frame = ctk.CTkScrollableFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+    sorted_urgent_tasks = aa_logic.alphabetical_tasks(aa_logic.urgent_sort(tasks))
+    for i, task in enumerate(sorted_urgent_tasks, start=1):
+        task_label= ctk.CTkLabel(
+            view_urgents_frame,
+            font=('Terminal', 20),
+        )
+        task_label.configure(
+                text_color='red',
+                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nPriority Rating: {task['priority']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+            )
+        task_label.pack(
+            pady=10
+        )
+
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(view_urgents_frame, inner_quit_button)
+    )  
+    view_urgents_frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
+
+    button_or_label.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )
+
+#study plan function
+def study_plan_gui(frame, button_or_label):
+    aa_app.geometry('900x800')
+
+
+    frame.destroy()
+    study_plan_frame = ctk.CTkScrollableFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+        #quit button back to menu
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(study_plan_frame, inner_quit_button)
+    )
+    
+
+    
+    study_plan_frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
+
+    button_or_label.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )    
+
+#mark as completed function
+def mark_completed_gui(frame, button_or_label):
+    aa_app.geometry('900x800')
+
+
+    frame.destroy()
+    mark_completed_frame = ctk.CTkScrollableFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+        #quit button back to menu
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(mark_completed_frame, inner_quit_button)
+    )
+    
+
+    
+    mark_completed_frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
+
+    button_or_label.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )
+
+#back/quit button functions
+def back_to_menu(frame, button_or_label):
+    frame.pack_forget()
+    frame.destroy()
+    button_or_label.destroy()
+    aa_app.geometry('800x600')
+    menu_screen()
+def back_to_login(frame, quit):
+    frame.destroy()
+    quit.destroy()
+    aa_app.geometry('800x600')      
+    login_screen()
+
+#helper method for empty values
+def check_not_empty_gui(course, task, hours):
+    if aa_logic.is_not_empty(course) and aa_logic.is_not_empty(task) and aa_logic.is_not_empty(hours):
+        return True
+    return False
 
 aa_title.pack(pady=30)
 login_screen()
