@@ -7,18 +7,16 @@ def add_task(completed, course, task, difficulty, used_hours, to_use_hours, date
     value = {
         "course":course,
         "task":task,
-        "difficulty":difficulty,
+        "difficulty":float(difficulty),
         "completed":completed
     }
     if completed:
         value["date_completed"] = date_completed
-        value["hours"] = used_hours
+        value["hours"] = float(used_hours)
     else:
         value["due_date"] = due_date
-        value["hours"] = to_use_hours
-        
-        
-        
+        value["hours"] = float(to_use_hours)
+
     return value
 
 def urgent_sort(tasks): 
@@ -49,7 +47,7 @@ def priority_calculation(task):
     if days_rem <= 0:
         days_rem = 1
     # return priority level based off formula (difficulty*hours)/ days left
-    return (task["difficulty"] * task["hours"]) / days_rem
+    return (float(task["difficulty"]) * float(task["hours"])) / days_rem
 
 def is_not_empty(value):
     """check if value is empty"""
@@ -110,3 +108,6 @@ def is_hours(value):
 def check_incomp_tasks(tasks):
     """checks if there are any incompleted tasks"""
     return any(not task.get("completed", False) for task in tasks)
+
+def alphabetical_tasks(tasks):
+    return sorted(tasks, key=lambda t: t["course"].lower())
