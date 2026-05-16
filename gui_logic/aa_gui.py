@@ -614,26 +614,35 @@ def view_tasks_gui(frame, button_or_label, tasks):
         bg_color='transparent',
         corner_radius=10
     )
-    
-    sorted_tasks = aa_logic.alphabetical_tasks(tasks)
-    for i, task in enumerate(sorted_tasks, start=1):
-        task_label= ctk.CTkLabel(
-            view_tasks_frame,
-            font=('Terminal', 20),
-        )
-    
-        if task['completed'] is False:
-            task_label.configure(
-                text_color='red',
-                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+    if tasks is False:
+        sorted_tasks = aa_logic.alphabetical_tasks(tasks)
+        for i, task in enumerate(sorted_tasks, start=1):
+            task_label= ctk.CTkLabel(
+                view_tasks_frame,
+                font=('Terminal', 20),
             )
-        else:
-            task_label.configure(
-                text_color='green',
-                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDate Completed: {task['date_completed']}\n"
+        
+            if task['completed'] is False:
+                task_label.configure(
+                    text_color='red',
+                    text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
                 )
+            else:
+                task_label.configure(
+                    text_color='green',
+                    text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDate Completed: {task['date_completed']}\n"
+                    )
+            task_label.pack(
+                pady=10
+            )
+    else:
+        task_label=ctk.CTkLabel(
+            view_tasks_frame,
+            text="No tasks found!",
+            font=("Terminal", 35, "bold")
+        )
         task_label.pack(
-            pady=10
+            pady=200
         )
 
     inner_quit_button = ctk.CTkButton(
@@ -666,21 +675,29 @@ def view_urgents_gui(frame, button_or_label):
         bg_color='transparent',
         corner_radius=10
     )
-
-    sorted_urgent_tasks = aa_logic.alphabetical_tasks(aa_logic.urgent_sort(tasks))
-    for i, task in enumerate(sorted_urgent_tasks, start=1):
-        task_label= ctk.CTkLabel(
-            view_urgents_frame,
-            font=('Terminal', 20),
-        )
-        task_label.configure(
-                text_color='red',
-                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nPriority Rating: {task['priority']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+    if aa_logic.check_incomp_tasks(tasks):
+        sorted_urgent_tasks = aa_logic.urgent_sort(tasks)
+        for i, task in enumerate(sorted_urgent_tasks, start=1):
+            task_label= ctk.CTkLabel(
+                view_urgents_frame,
+                font=('Terminal', 20),
             )
-        task_label.pack(
-            pady=10
+            task_label.configure(
+                    text_color='red',
+                    text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nPriority Rating: {task['priority']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+                )
+            task_label.pack(
+                pady=10
+            )
+    else:
+        task_label=ctk.CTkLabel(
+            view_urgents_frame,
+            text="No incomplete tasks found!",
+            font=("Terminal", 35, "bold")
         )
-
+        task_label.pack(
+            pady=200
+        )
     inner_quit_button = ctk.CTkButton(
         aa_app,
         text="Cancel",
@@ -711,6 +728,16 @@ def study_plan_gui(frame, button_or_label):
         corner_radius=10
     )
 
+    study_plan_label = ctk.CTkLabel(
+        study_plan_frame,
+        text='Study Plan',
+        font=('Terminal', 25, 'bold')
+    )
+
+    if aa_logic.check_incomp_tasks(tasks):
+        sorted_tasks =  (aa_logic.urgent_sort(tasks))
+
+
         #quit button back to menu
     inner_quit_button = ctk.CTkButton(
         aa_app,
@@ -726,6 +753,9 @@ def study_plan_gui(frame, button_or_label):
         padx=150,
         fill ='both', 
         expand = 1
+    )
+    study_plan_label.pack(
+        pady=5
     )
 
     button_or_label.destroy()
