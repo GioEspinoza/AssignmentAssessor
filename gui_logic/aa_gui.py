@@ -220,25 +220,29 @@ def menu_screen():
     view_task_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="View Task(s)"
+        text="View Task(s)",
+        command= lambda: view_tasks_gui(menu_frame, quit_button)
         )
     
     view_urgent_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="View Urgent(s)"
+        text="View Urgent(s)",
+        command= lambda: view_urgents_gui(menu_frame, quit_button)
         )
     
     study_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="Study Plan"
+        text="Study Plan",
+        command= lambda: study_plan_gui(menu_frame, quit_button)
         )
     
     completed_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="Mark as Complete"
+        text="Mark as Complete",
+        command= lambda: mark_completed_gui(menu_frame, quit_button)
         )
 
     #pack frame
@@ -253,23 +257,19 @@ def menu_screen():
     add_task_button.pack(
         pady=25
     )
-
     view_task_button.pack(
         pady=25
     )
-
     view_urgent_button.pack(
         pady=25
     )
-
     study_button.pack(
         pady=25
     )
-
     completed_button.pack(
         pady=25
     )
-    
+
     #pack exit button
     quit_button.pack(
         pady=10
@@ -508,6 +508,7 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
 
 #back/quit button functions
 def back_to_menu(frame, button_or_label):
+    frame.pack_forget()
     frame.destroy()
     button_or_label.destroy()
     menu_screen()
@@ -622,6 +623,137 @@ def submit_task(tasks, task, frame, button_or_label):
     storage.save_data(tasks)
     back_to_menu(frame, button_or_label)
 
+def view_tasks_gui(frame, button_or_label):
+    aa_app.geometry('900x800')
+
+
+    frame.destroy()
+    view_tasks_frame = ctk.CTkScrollableFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+        #quit button back to menu
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(view_tasks_frame, inner_quit_button)
+    )
+    
+
+    
+    view_tasks_frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
+
+    button_or_label.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )
+
+def view_urgents_gui(frame, button_or_label):
+    aa_app.geometry('900x800')
+
+
+    frame.destroy()
+    view_urgents_frame = ctk.CTkScrollableFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+        #quit button back to menu
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(view_urgents_frame, inner_quit_button)
+    )
+    
+
+    
+    view_urgents_frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
+
+    button_or_label.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )
+
+def study_plan_gui(frame, button_or_label):
+    aa_app.geometry('900x800')
+
+
+    frame.destroy()
+    study_plan_frame = ctk.CTkScrollableFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+        #quit button back to menu
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(study_plan_frame, inner_quit_button)
+    )
+    
+
+    
+    study_plan_frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
+
+    button_or_label.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )    
+
+def mark_completed_gui(frame, button_or_label):
+    aa_app.geometry('900x800')
+
+
+    frame.destroy()
+    mark_completed_frame = ctk.CTkScrollableFrame(
+        aa_app,
+        bg_color='transparent',
+        corner_radius=10
+    )
+
+        #quit button back to menu
+    inner_quit_button = ctk.CTkButton(
+        aa_app,
+        text="Cancel",
+        font=('Terminal', 15),
+        command= lambda: back_to_menu(mark_completed_frame, inner_quit_button)
+    )
+    
+
+    
+    mark_completed_frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
+
+    button_or_label.destroy()
+    inner_quit_button.pack(
+        pady=10
+    )
 
 aa_title.pack(pady=30)
 login_screen()
