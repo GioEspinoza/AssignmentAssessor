@@ -614,7 +614,7 @@ def view_tasks_gui(frame, button_or_label, tasks):
         bg_color='transparent',
         corner_radius=10
     )
-    if tasks is False:
+    if tasks:
         sorted_tasks = aa_logic.alphabetical_tasks(tasks)
         for i, task in enumerate(sorted_tasks, start=1):
             task_label= ctk.CTkLabel(
@@ -717,9 +717,8 @@ def view_urgents_gui(frame, button_or_label):
     )
 
 #study plan function
-def study_plan_gui(frame, button_or_label):
+def study_plan_gui(frame, button_or_label): 
     aa_app.geometry('900x800')
-
 
     frame.destroy()
     study_plan_frame = ctk.CTkScrollableFrame(
@@ -734,11 +733,7 @@ def study_plan_gui(frame, button_or_label):
         font=('Terminal', 25, 'bold')
     )
 
-    if aa_logic.check_incomp_tasks(tasks):
-        sorted_tasks =  (aa_logic.urgent_sort(tasks))
-
-
-        #quit button back to menu
+    #quit button back to menu
     inner_quit_button = ctk.CTkButton(
         aa_app,
         text="Cancel",
@@ -746,18 +741,52 @@ def study_plan_gui(frame, button_or_label):
         command= lambda: back_to_menu(study_plan_frame, inner_quit_button)
     )
     
-
-    
     study_plan_frame.pack(
         pady=25,
         padx=150,
         fill ='both', 
         expand = 1
     )
+    
     study_plan_label.pack(
-        pady=5
+        pady=20
     )
 
+    if aa_logic.check_incomp_tasks(tasks):
+
+        #sort task list to only include 
+        for i, task in enumerate(aa_logic.urgent_sort(tasks), start=1):
+            hours_day = aa_logic.hours_per_day(float(task["hours"]), float(aa_logic.days_left(task["due_date"])))
+            if aa_logic.days_left(task["due_date"]) > 0:
+                task_label=ctk.CTkLabel(
+                study_plan_frame,
+                font=('Terminal', 20),
+                text_color='white',
+                text = f"[{i}] - Course: {task['course']}\n\nTask: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nAmount of Days Left: {aa_logic.days_left(task["due_date"])}\n\nSuggested Hours Per Day: {hours_day}\n\n"
+                )
+                task_label.pack(
+                    pady=10
+                )
+            else:
+                task_label=ctk.CTkLabel(
+                    study_plan_frame,
+                    font=('Terminal', 20),
+                    text_color='white',
+                    text=f"[{i}] - Course: {task['course']}\nTask: {task['task']}\nDifficulty: {task['difficulty']}\nDays left: OVERDUE\n\n"
+                )
+                task_label.pack(
+                    pady=10
+                )
+    else:
+        task_label=ctk.CTkLabel(
+            study_plan_frame,
+            text="No incomplete tasks found!",
+            font=("Terminal", 35, "bold")
+        )
+        task_label.pack(
+            pady=200
+        )
+    
     button_or_label.destroy()
     inner_quit_button.pack(
         pady=10
