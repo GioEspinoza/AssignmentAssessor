@@ -238,11 +238,11 @@ def menu_screen():
         command= lambda: study_plan_gui(menu_frame, quit_button)
         )
     
-    completed_button = ctk.CTkButton(
+    edit_task_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="Mark as Complete",
-        command= lambda: mark_completed_gui(menu_frame, quit_button)
+        text="Edit Task",
+        command= lambda: edit_task_gui(menu_frame, quit_button)
         )
 
     #pack frame
@@ -266,7 +266,7 @@ def menu_screen():
     study_button.pack(
         pady=25
     )
-    completed_button.pack(
+    edit_task_button.pack(
         pady=25
     )
 
@@ -771,7 +771,7 @@ def study_plan_gui(frame, button_or_label):
                 task_label=ctk.CTkLabel(
                     study_plan_frame,
                     font=('Terminal', 20),
-                    text_color='white',
+                    text_color='red',
                     text=f"[{i}] - Course: {task['course']}\nTask: {task['task']}\nDifficulty: {task['difficulty']}\nDays left: OVERDUE\n\n"
                 )
                 task_label.pack(
@@ -793,7 +793,7 @@ def study_plan_gui(frame, button_or_label):
     )    
 
 #mark as completed function
-def mark_completed_gui(frame, button_or_label):
+def edit_task_gui(frame, button_or_label):
     aa_app.geometry('900x800')
 
 
