@@ -754,7 +754,7 @@ def study_plan_gui(frame, button_or_label):
 
     if aa_logic.check_incomp_tasks(tasks):
 
-        #sort task list to only include 
+        #sort task list to only include urgent sorts but have overdues at the top.
         for i, task in enumerate(aa_logic.urgent_sort(tasks), start=1):
             hours_day = aa_logic.hours_per_day(float(task["hours"]), float(aa_logic.days_left(task["due_date"])))
             if aa_logic.days_left(task["due_date"]) > 0:
@@ -772,7 +772,7 @@ def study_plan_gui(frame, button_or_label):
                     study_plan_frame,
                     font=('Terminal', 20),
                     text_color='red',
-                    text=f"[{i}] - Course: {task['course']}\nTask: {task['task']}\nDifficulty: {task['difficulty']}\nDays left: OVERDUE\n\n"
+                    text=f"[{i}] - Course: {task['course']}\n\nTask: {task['task']}\n\nDifficulty: {task['difficulty']}\n\nDays left: OVERDUE\n\nHours per day: ASAP\n\n"
                 )
                 task_label.pack(
                     pady=10
