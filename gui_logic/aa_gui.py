@@ -623,18 +623,30 @@ def view_tasks_gui(frame, button_or_label, tasks):
             )
         
             if task['completed'] is False:
-                task_label.configure(
-                    text_color='red',
-                    text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
-                )
+                if aa_logic.days_left(task["due_date"]) > 0:
+                    task_label.configure(
+                        text_color='white',
+                        text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+                    )
+                    task_label.pack(
+                        pady=10
+                    )
+                else:
+                    task_label.configure(
+                        text_color='red',
+                        text=f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: OVERDUE\n\n"
+                    )
+                    task_label.pack(
+                        pady=10
+                    )
             else:
                 task_label.configure(
-                    text_color='green',
+                    text_color='white',
                     text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDate Completed: {task['date_completed']}\n"
-                    )
-            task_label.pack(
-                pady=10
-            )
+                )
+                task_label.pack(
+                    pady=10
+                )
     else:
         task_label=ctk.CTkLabel(
             view_tasks_frame,
