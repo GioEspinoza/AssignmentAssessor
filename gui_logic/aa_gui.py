@@ -753,9 +753,12 @@ def study_plan_gui(frame, button_or_label):
     )
 
     if aa_logic.check_incomp_tasks(tasks):
-
+        print([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0])
+        sorted_overdue_tasks = [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0]
+        print([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0])
+        sorted_urgent_tasks = [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0]
         #sort task list to only include urgent sorts but have overdues at the top.
-        for i, task in enumerate(aa_logic.urgent_sort(tasks), start=1):
+        for i, task in enumerate(sorted_overdue_tasks + [task for task in sorted_urgent_tasks if task not in sorted_overdue_tasks], start=1):
             hours_day = aa_logic.hours_per_day(float(task["hours"]), float(aa_logic.days_left(task["due_date"])))
             if aa_logic.days_left(task["due_date"]) > 0:
                 task_label=ctk.CTkLabel(
