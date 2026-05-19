@@ -664,7 +664,7 @@ def view_tasks_gui(frame, button_or_label, tasks):
         pady=10
     )
 
-#view urgents function
+#display only incomplete tasks that are urgent in order of priority (overdue first, then by least amount of days left) and display if they are overdue or not. If there are no incomplete tasks, display that there are no incomplete tasks.
 def view_urgents_gui(frame, button_or_label):
     aa_app.geometry('900x800')
 
@@ -677,23 +677,38 @@ def view_urgents_gui(frame, button_or_label):
     )
     if aa_logic.check_incomp_tasks(tasks):
         sorted_urgent_tasks = aa_logic.urgent_sort(tasks)
-        for i, task in enumerate(sorted_urgent_tasks, start=1):
-            task_label= ctk.CTkLabel(
+
+        #sorted_overdue_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) <= 0]
+        #sorted_urgent_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) > 0]
+
+        for i, task in enumerate([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0] + [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0], start=1):
+            if aa_logic.days_left(task["due_date"]) > 0:
+                task_label=ctk.CTkLabel(
                 view_urgents_frame,
                 font=('Terminal', 20),
-            )
-            task_label.configure(
-                    text_color='red',
+                text_color='white',
                     text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nPriority Rating: {task['priority']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
                 )
-            task_label.pack(
-                pady=10
-            )
+                task_label.pack(
+                    pady=10
+                )
+            else:
+                task_label=ctk.CTkLabel(
+                    view_urgents_frame,
+                    font=('Terminal', 20),
+                    text_color='red',
+                    text=f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: OVERDUE\n\n"
+                )
+                task_label.pack(
+                    pady=10
+                )
     else:
         task_label=ctk.CTkLabel(
             view_urgents_frame,
+            font=("Terminal", 35, "bold"),
+            text_color='white',
             text="No incomplete tasks found!",
-            font=("Terminal", 35, "bold")
+            
         )
         task_label.pack(
             pady=200
@@ -753,12 +768,13 @@ def study_plan_gui(frame, button_or_label):
     )
 
     if aa_logic.check_incomp_tasks(tasks):
-        print([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0])
-        sorted_overdue_tasks = [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0]
-        print([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0])
-        sorted_urgent_tasks = [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0]
+        sorted_urgent_tasks = aa_logic.urgent_sort(tasks)
+
+        #sorted_overdue_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) <= 0]
+        #sorted_urgent_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) > 0]
+
         #sort task list to only include urgent sorts but have overdues at the top.
-        for i, task in enumerate(sorted_overdue_tasks + [task for task in sorted_urgent_tasks if task not in sorted_overdue_tasks], start=1):
+        for i, task in enumerate([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0] + [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0], start=1):
             hours_day = aa_logic.hours_per_day(float(task["hours"]), float(aa_logic.days_left(task["due_date"])))
             if aa_logic.days_left(task["due_date"]) > 0:
                 task_label=ctk.CTkLabel(
