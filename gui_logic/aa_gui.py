@@ -238,11 +238,11 @@ def menu_screen():
         command= lambda: study_plan_gui(menu_frame, quit_button)
         )
     
-    completed_button = ctk.CTkButton(
+    edit_task_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
-        text="Mark as Complete",
-        command= lambda: mark_completed_gui(menu_frame, quit_button)
+        text="Edit Task",
+        command= lambda: edit_task_gui(menu_frame, quit_button)
         )
 
     #pack frame
@@ -266,7 +266,7 @@ def menu_screen():
     study_button.pack(
         pady=25
     )
-    completed_button.pack(
+    edit_task_button.pack(
         pady=25
     )
 
@@ -614,26 +614,47 @@ def view_tasks_gui(frame, button_or_label, tasks):
         bg_color='transparent',
         corner_radius=10
     )
-    
-    sorted_tasks = aa_logic.alphabetical_tasks(tasks)
-    for i, task in enumerate(sorted_tasks, start=1):
-        task_label= ctk.CTkLabel(
-            view_tasks_frame,
-            font=('Terminal', 20),
-        )
-    
-        if task['completed'] is False:
-            task_label.configure(
-                text_color='red',
-                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+    if tasks:
+        sorted_tasks = aa_logic.alphabetical_tasks(tasks)
+        for i, task in enumerate(sorted_tasks, start=1):
+            task_label= ctk.CTkLabel(
+                view_tasks_frame,
+                font=('Terminal', 20),
             )
-        else:
-            task_label.configure(
-                text_color='green',
-                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDate Completed: {task['date_completed']}\n"
+        
+            if task['completed'] is False:
+                if aa_logic.days_left(task["due_date"]) > 0:
+                    task_label.configure(
+                        text_color='white',
+                        text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+                    )
+                    task_label.pack(
+                        pady=10
+                    )
+                else:
+                    task_label.configure(
+                        text_color='red',
+                        text=f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: OVERDUE\n\n"
+                    )
+                    task_label.pack(
+                        pady=10
+                    )
+            else:
+                task_label.configure(
+                    text_color='white',
+                    text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDate Completed: {task['date_completed']}\n"
                 )
+                task_label.pack(
+                    pady=10
+                )
+    else:
+        task_label=ctk.CTkLabel(
+            view_tasks_frame,
+            text="No tasks found!",
+            font=("Terminal", 35, "bold")
+        )
         task_label.pack(
-            pady=10
+            pady=200
         )
 
     inner_quit_button = ctk.CTkButton(
@@ -655,7 +676,7 @@ def view_tasks_gui(frame, button_or_label, tasks):
         pady=10
     )
 
-#view urgents function
+#display only incomplete tasks that are urgent in order of priority (overdue first, then by least amount of days left) and display if they are overdue or not. If there are no incomplete tasks, display that there are no incomplete tasks.
 def view_urgents_gui(frame, button_or_label):
     aa_app.geometry('900x800')
 
@@ -666,21 +687,44 @@ def view_urgents_gui(frame, button_or_label):
         bg_color='transparent',
         corner_radius=10
     )
+    if aa_logic.check_incomp_tasks(tasks):
+        sorted_urgent_tasks = aa_logic.urgent_sort(tasks)
 
-    sorted_urgent_tasks = aa_logic.alphabetical_tasks(aa_logic.urgent_sort(tasks))
-    for i, task in enumerate(sorted_urgent_tasks, start=1):
-        task_label= ctk.CTkLabel(
+        #sorted_overdue_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) <= 0]
+        #sorted_urgent_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) > 0]
+
+        for i, task in enumerate([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0] + [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0], start=1):
+            if aa_logic.days_left(task["due_date"]) > 0:
+                task_label=ctk.CTkLabel(
+                view_urgents_frame,
+                font=('Terminal', 20),
+                text_color='white',
+                    text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nPriority Rating: {task['priority']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+                )
+                task_label.pack(
+                    pady=10
+                )
+            else:
+                task_label=ctk.CTkLabel(
+                    view_urgents_frame,
+                    font=('Terminal', 20),
+                    text_color='red',
+                    text=f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: OVERDUE\n\n"
+                )
+                task_label.pack(
+                    pady=10
+                )
+    else:
+        task_label=ctk.CTkLabel(
             view_urgents_frame,
-            font=('Terminal', 20),
+            font=("Terminal", 35, "bold"),
+            text_color='white',
+            text="No incomplete tasks found!",
+            
         )
-        task_label.configure(
-                text_color='red',
-                text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nPriority Rating: {task['priority']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
-            )
         task_label.pack(
-            pady=10
+            pady=200
         )
-
     inner_quit_button = ctk.CTkButton(
         aa_app,
         text="Cancel",
@@ -700,9 +744,8 @@ def view_urgents_gui(frame, button_or_label):
     )
 
 #study plan function
-def study_plan_gui(frame, button_or_label):
+def study_plan_gui(frame, button_or_label): 
     aa_app.geometry('900x800')
-
 
     frame.destroy()
     study_plan_frame = ctk.CTkScrollableFrame(
@@ -711,7 +754,13 @@ def study_plan_gui(frame, button_or_label):
         corner_radius=10
     )
 
-        #quit button back to menu
+    study_plan_label = ctk.CTkLabel(
+        study_plan_frame,
+        text='Study Plan',
+        font=('Terminal', 25, 'bold')
+    )
+
+    #quit button back to menu
     inner_quit_button = ctk.CTkButton(
         aa_app,
         text="Cancel",
@@ -719,22 +768,63 @@ def study_plan_gui(frame, button_or_label):
         command= lambda: back_to_menu(study_plan_frame, inner_quit_button)
     )
     
-
-    
     study_plan_frame.pack(
         pady=25,
         padx=150,
         fill ='both', 
         expand = 1
     )
+    
+    study_plan_label.pack(
+        pady=20
+    )
 
+    if aa_logic.check_incomp_tasks(tasks):
+        sorted_urgent_tasks = aa_logic.urgent_sort(tasks)
+
+        #sorted_overdue_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) <= 0]
+        #sorted_urgent_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) > 0]
+
+        #sort task list to only include urgent sorts but have overdues at the top.
+        for i, task in enumerate([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0] + [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0], start=1):
+            hours_day = aa_logic.hours_per_day(float(task["hours"]), float(aa_logic.days_left(task["due_date"])))
+            if aa_logic.days_left(task["due_date"]) > 0:
+                task_label=ctk.CTkLabel(
+                study_plan_frame,
+                font=('Terminal', 20),
+                text_color='white',
+                text = f"[{i}] - Course: {task['course']}\n\nTask: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nAmount of Days Left: {aa_logic.days_left(task["due_date"])}\n\nSuggested Hours Per Day: {hours_day}\n\n"
+                )
+                task_label.pack(
+                    pady=10
+                )
+            else:
+                task_label=ctk.CTkLabel(
+                    study_plan_frame,
+                    font=('Terminal', 20),
+                    text_color='red',
+                    text=f"[{i}] - Course: {task['course']}\n\nTask: {task['task']}\n\nDifficulty: {task['difficulty']}\n\nDays left: OVERDUE\n\nHours per day: ASAP\n\n"
+                )
+                task_label.pack(
+                    pady=10
+                )
+    else:
+        task_label=ctk.CTkLabel(
+            study_plan_frame,
+            text="No incomplete tasks found!",
+            font=("Terminal", 35, "bold")
+        )
+        task_label.pack(
+            pady=200
+        )
+    
     button_or_label.destroy()
     inner_quit_button.pack(
         pady=10
     )    
 
 #mark as completed function
-def mark_completed_gui(frame, button_or_label):
+def edit_task_gui(frame, button_or_label):
     aa_app.geometry('900x800')
 
 
