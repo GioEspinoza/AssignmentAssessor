@@ -1,5 +1,3 @@
-#import sys
-#from pathlib import Path
 from datetime import date
 
 from backend import storage, auth, aa_logic
@@ -825,10 +823,12 @@ def study_plan_gui(frame, button_or_label):
     )    
 
 #edit task function
-def edit_task_gui(frame, button_or_label):
-    aa_app.geometry('1000x1000')
+def edit_task_gui(frame, button_or_label=None):
+    aa_app.geometry('800x600')
     tasks = storage.load_data()
-    frame.destroy()
+
+    if frame != aa_app:
+        frame.destroy()
 
     #outter frame that will hold all task frames
     mark_completed_frame = ctk.CTkScrollableFrame(
@@ -887,14 +887,15 @@ def edit_task_gui(frame, button_or_label):
             font=('Terminal', 25),
             corner_radius=10,
             hover_color='white',
-            command= lambda index=i-1, selected_task=task: edit_task_handle(selected_task, i, mark_completed_frame, inner_quit_button)
+            command= lambda index=i-1, selected_task=task: edit_task_handle(selected_task, index, mark_completed_frame, inner_quit_button)
         )
         inner_task_button.pack(
             side="right",
             padx=10
         )
-    
-    button_or_label.destroy()
+    if button_or_label:
+        button_or_label.destroy()
+
     inner_quit_button.pack(
         pady=20
     )
@@ -992,22 +993,98 @@ def edit_task_handle(task, index, frame, quit_button):
             to=5,
             progress_color='red',
         )
-        difficulty_slider.set({task['difficulty']})
+        difficulty_slider.set(task['difficulty'])
         difficulty_slider.grid(row=3, column=1, padx=20, pady=20)
 
+        #hours label with its prefilled entry to edit
         hours_label=ctk.CTkLabel(
             edit_task_handle_frame,
-            text=f"Hours Needed: {task['hours']}",
+            text="Hours Needed:",
             font=('Terminal', 20)
         )
         hours_label.grid(row=4, column=0, padx=20, pady=20, sticky="w")
+        
+        hours_entry=ctk.CTkEntry(
+            edit_task_handle_frame,
+            font=('Terminal', 20),
+            placeholder_text=f"{task['hours']}"
+        )
+        hours_entry.grid(row=4, column=1, padx=20, pady=20)
+
 
         date_label=ctk.CTkLabel(
             edit_task_handle_frame,
-            text=f"Date Due: {task['due_date']}",
+            text=f"Due Date:",
             font=('Terminal', 20)
         )
         date_label.grid(row=5, column=0, padx=20, pady=20, sticky="w")
+
+        date_entry=ctk.CTkEntry(
+            edit_task_handle_frame,
+            font=('Terminal', 20),
+            placeholder_text=f"{task['due_date']}"
+        )
+        date_entry.grid(row=5, column=1, padx=20, pady=20)
+
+        #frame to hold three buttons at the bottom of the edit page, save, delete, and cancel
+        button_frame = ctk.CTkFrame(
+            edit_task_handle_frame,
+            fg_color='transparent'
+        )
+        button_frame.grid(row=6, column=0, columnspan=2, rowspan=1, sticky="ew", padx=20, pady=20)
+
+        #save button that will update task in tasks
+        save_button = ctk.CTkButton(
+            button_frame,
+            text="Save Changes",
+            font=('Terminal', 15),
+            command= lambda: save_task_handle(
+                index,
+                completion_status_check.get() == "True",
+                course_name_entry.get().strip(),
+                task_name_entry.get().strip(),
+                int(difficulty_slider.get()),            
+                hours_entry.get(),
+                date_entry.get(),
+                edit_task_handle_frame,
+                button_frame
+            )
+        )
+        save_button.pack(
+            side='left',
+            padx=10,
+            pady=10
+        )
+
+        #delete button that will delete task from tasks and update storage
+        delete_button = ctk.CTkButton(
+            button_frame,
+            text="Delete Task",
+            font=('Terminal', 15),
+            command= lambda: delete_task_handle(
+                index,
+                edit_task_handle_frame,
+                button_frame
+            )
+        )
+        delete_button.pack(
+            side='left',
+            padx=10,
+            pady=10
+        )
+        
+        #cancel button that will take user back to menu without saving changes
+        cancel_button = ctk.CTkButton(
+            button_frame,
+            text="Cancel",
+            font=('Terminal', 15),
+            command= lambda: back_to_edit_task_gui(edit_task_handle_frame)
+        )
+        cancel_button.pack(
+            side='left',
+            padx=10,
+            pady=10
+        )
 
     #elements in grid for comp tasks
     else:
@@ -1057,32 +1134,265 @@ def edit_task_handle(task, index, frame, quit_button):
         completion_status_check.select()
         completion_status_check.grid(row=2, column=1, padx=20, pady=20)
 
-        dfficulty_label=ctk.CTkLabel(
+        difficulty_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text=f"Difficulty: {task['difficulty']}",
             font=('Terminal', 20)
         )
-        dfficulty_label.grid(row=4, column=0, padx=20, pady=20, sticky="w")
+        difficulty_label.grid(row=3, column=0, padx=20, pady=20, sticky="w")
         
+        difficulty_slider=ctk.CTkSlider(
+            edit_task_handle_frame,
+            corner_radius=10,
+            fg_color='green',
+            button_color='white',
+            button_hover_color='white',
+            button_corner_radius=10,
+            border_color='transparent',
+            number_of_steps=4,
+            from_=1,
+            to=5,
+            progress_color='red',
+        )
+        difficulty_slider.set(task['difficulty'])
+        difficulty_slider.grid(row=3, column=1, padx=20, pady=20)
+
+
         hours_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text=f"Hours Used: {task['hours']}",
             font=('Terminal', 20)
         )
-        hours_label.grid(row=5, column=0, padx=20, pady=20, sticky="w")
+        hours_label.grid(row=4, column=0, padx=20, pady=20, sticky="w")
 
+        hours_entry=ctk.CTkEntry(
+            edit_task_handle_frame,
+            font=('Terminal', 20),
+            placeholder_text=f"{task['hours']}"
+        )
+        hours_entry.grid(row=4, column=1, padx=20, pady=20)
+        
         date_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text=f"Date Completed: {task['date_completed']}",
             font=('Terminal', 20)
         )
-        date_label.grid(row=6, column=0, padx=20, pady=20, sticky="w")
+        date_label.grid(row=5, column=0, padx=20, pady=20, sticky="w")
 
+        date_entry=ctk.CTkEntry(
+            edit_task_handle_frame,
+            font=('Terminal', 20),
+            placeholder_text=f"{task['date_completed']}"
+        )
+        date_entry.grid(row=5, column=1, padx=20, pady=20)
+
+        #frame to hold three buttons at the bottom of the edit page, save, delete, and cancel
+        button_frame = ctk.CTkFrame(
+            edit_task_handle_frame,
+            fg_color='transparent'
+        )
+        button_frame.grid(row=6, column=0, columnspan=2, rowspan=1, sticky="ew", padx=20, pady=20)
+
+        #save button that will update task in tasks
+        save_button = ctk.CTkButton(
+            button_frame,
+            text="Save Changes",
+            font=('Terminal', 15),
+            command= lambda: save_task_handle(
+                index,
+                completion_status_check.get() == "True",
+                course_name_entry.get().strip(),
+                task_name_entry.get().strip(),
+                int(difficulty_slider.get()),            
+                hours_entry.get(),
+                date_entry.get(),
+                edit_task_handle_frame,
+                button_frame
+            )
+        )
+        save_button.pack(
+            side='left',
+            padx=10,
+            pady=10
+        )
+
+        #delete button that will delete task from tasks and update storage
+        delete_button = ctk.CTkButton(
+            button_frame,
+            text="Delete Task",
+            font=('Terminal', 15),
+            command= lambda: delete_task_handle(
+                index,
+                edit_task_handle_frame,
+                button_frame
+            )
+        )
+        delete_button.pack(
+            side='left',
+            padx=10,
+            pady=10
+        )
+        
+        #cancel button that will take user back to menu without saving changes
+        cancel_button = ctk.CTkButton(
+            button_frame,
+            text="Cancel",
+            font=('Terminal', 15),
+            command= lambda: back_to_edit_task_gui(edit_task_handle_frame)
+        )
+        cancel_button.pack(
+            side='left',
+            padx=10,
+            pady=10
+        )
+
+#helper function to update checkbox text on click
 def update_checkbox_text(checkbox):
     # Retrieve current value (onvalue/offvalue) and update text
-    current_val = checkbox.get()
-    checkbox.configure(text=f"{current_val}")
+    checkbox.configure(
+        font=('Terminal', 20),
+        text=f"{checkbox.get()}")
 
+#handle save button for edits
+def save_task_handle(index, is_comp, course, task, difficulty, hours, date, frame, button_or_label):
+    tasks = storage.load_data()
+    if check_not_empty_gui(course, task, hours) is False:
+        invalid_label = ctk.CTkLabel(
+            aa_app,
+            font=('Terminal', 20),
+            bg_color='transparent',
+            text_color='red',
+            text='Empty inputs detected!'        
+        )
+        invalid_label.pack(
+            pady=5
+        )
+        aa_app.after(2500, invalid_label.pack_forget)
+        return
+    
+    if aa_logic.is_hours(hours) is False:
+        invalid_label = ctk.CTkLabel(
+            aa_app,
+            font=('Terminal', 20),
+            bg_color='transparent',
+            text_color='red',
+            text='Invalid hour input!'        
+        )
+        invalid_label.pack(
+            pady=5
+        )
+        aa_app.after(2500, invalid_label.pack_forget)
+        return
+    
+    if is_comp is False and aa_logic.valid_due_date(date) is False:
+        invalid_label = ctk.CTkLabel(
+            aa_app,
+            font=('Terminal', 20),
+            bg_color='transparent',
+            text_color='red',
+            text='Invalid date input - (MM-DD-YYYY)!'        
+        )
+        invalid_label.pack(
+            pady=5
+        )
+        aa_app.after(2500, invalid_label.pack_forget)
+        return
+    
+    if is_comp is True and aa_logic.valid_comp_date(date) is False:
+        invalid_label = ctk.CTkLabel(
+            aa_app,
+            font=('Terminal', 20),
+            bg_color='transparent',
+            text_color='red',
+            text='Invalid date input - (MM-DD-YYYY)!'        
+        )
+        invalid_label.pack(
+            pady=5
+        )
+        aa_app.after(2500, invalid_label.pack_forget)
+        return
+
+    updated_task = {
+        "course": course,
+        "task": task,
+        "completed": is_comp,
+        "difficulty": difficulty,
+        "hours": hours,
+        "due_date": date if not is_comp else None,
+        "date_completed": date if is_comp else None
+    }
+    tasks[index] = updated_task
+    storage.save_data(tasks)
+    edit_task_gui(frame, button_or_label)
+
+#handle delete button for edits with confirmation popup
+def delete_task_handle(index, frame, button_or_label):
+    frame.pack_forget()
+    #popup window to confirm delete
+    confirm_frame = ctk.CTkFrame(aa_app)
+    confirm_frame.pack(
+        pady=100,  
+        padx=200,
+        fill='both',
+        expand=1
+    )
+    confirm_label = ctk.CTkLabel(
+        confirm_frame,
+        text="Are you sure you want to delete this task?",
+        font=('Terminal', 15)
+    )
+    confirm_label.pack(
+        pady=20
+    )
+
+    button_frame = ctk.CTkFrame(
+        confirm_frame,
+        bg_color='transparent',
+        fg_color='transparent'
+    )
+    button_frame.pack(
+        pady=20
+    )
+
+    yes_button = ctk.CTkButton(
+        button_frame,
+        text="Yes",
+        font=('Terminal', 15),
+        fg_color='red',
+        hover_color='white',
+        command=lambda: confirm_delete(index, confirm_frame, frame, button_or_label)
+    )
+    yes_button.pack(
+        side='left',
+        padx=10
+    )
+
+    no_button = ctk.CTkButton(
+        button_frame,
+        text="No",
+        font=('Terminal', 15),
+        command=lambda: cancel_delete(frame, confirm_frame, button_or_label)
+    )
+    no_button.pack(
+        side='left',
+        padx=10
+    )
+
+#confirm delete function to delete task and update storage
+def confirm_delete(index, confirm_frame, frame, button_or_label):
+    tasks = storage.load_data()
+    del tasks[index]
+    storage.save_data(tasks)
+    confirm_frame.destroy()
+    edit_task_gui(frame, button_or_label)
+def cancel_delete(frame, confirm_frame, button_or_label):
+    confirm_frame.destroy()
+    frame.pack(
+        pady=25,
+        padx=150,
+        fill ='both', 
+        expand = 1
+    )
 
 #back/quit button functions
 def back_to_menu(frame, button_or_label):
@@ -1096,6 +1406,11 @@ def back_to_login(frame, quit):
     quit.destroy()
     aa_app.geometry('800x600')      
     login_screen()
+def back_to_edit_task_gui(frame):
+    frame.pack_forget()
+    frame.destroy()
+    aa_app.geometry('800x700')
+    edit_task_gui(aa_app)
 
 #helper method for empty values
 def check_not_empty_gui(course, task, hours):
