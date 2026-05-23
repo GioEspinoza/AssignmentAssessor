@@ -1,7 +1,11 @@
 import customtkinter as ctk
 from aa_gui import back_to_login
 from backend import storage
-from gui_logic import add_task
+from gui_logic.add_task import add_task_gui
+from gui_logic.view_task import view_tasks_gui
+from gui_logic.view_urgent import view_urgents_gui
+from gui_logic.study_plan import study_plan_gui
+from gui_logic.edit_task import edit_task_gui
 #will show menu after authencation
 def menu_screen(aa_app):
 
@@ -25,35 +29,35 @@ def menu_screen(aa_app):
         menu_frame,
         font=('Terminal', 20),
         text="Add Task",
-        command= lambda: add_task.add_task_gui(menu_frame, quit_button, aa_app)
+        command= lambda: add_task_gui(menu_frame, quit_button, aa_app)
     )
 
     view_task_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
         text="View Task(s)",
-        command= lambda: view_tasks_gui(menu_frame, quit_button, tasks)
+        command= lambda: view_tasks_gui(menu_frame, quit_button, tasks, aa_app)
         )
     
     view_urgent_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
         text="View Urgent(s)",
-        command= lambda: view_urgents_gui(menu_frame, quit_button)
+        command= lambda: view_urgents_gui(menu_frame, quit_button, aa_app)
         )
     
     study_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
         text="Study Plan",
-        command= lambda: study_plan_gui(menu_frame, quit_button)
+        command= lambda: study_plan_gui(menu_frame, quit_button, aa_app)
         )
     
     edit_task_button = ctk.CTkButton(
         menu_frame,
         font=('Terminal', 20),
         text="Edit Task",
-        command= lambda: edit_task_gui(menu_frame, quit_button)
+        command= lambda: edit_task_gui(menu_frame, quit_button, aa_app)
         )
 
     #pack frame
