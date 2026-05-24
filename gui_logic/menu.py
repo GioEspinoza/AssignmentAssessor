@@ -1,15 +1,14 @@
 import customtkinter as ctk
-from aa_gui import back_to_login
-from backend import storage
 from gui_logic.add_task import add_task_gui
+from gui_logic.navigation import back_to_login, set_aa_title
 from gui_logic.view_task import view_tasks_gui
 from gui_logic.view_urgent import view_urgents_gui
 from gui_logic.study_plan import study_plan_gui
 from gui_logic.edit_task import edit_task_gui
 #will show menu after authencation
-def menu_screen(aa_app):
+def menu_screen(aa_app, aa_title=None):
 
-    tasks = storage.load_data()
+    set_aa_title(aa_title)
     #instantiate menu frame
     menu_frame = ctk.CTkFrame(
         aa_app,
@@ -21,7 +20,7 @@ def menu_screen(aa_app):
         aa_app,
         font=('Terminal', 20),
         text="Exit",
-        command=lambda:back_to_login(menu_frame, quit_button)
+        command=lambda: back_to_login(aa_app, aa_title, menu_frame, quit_button)
         )
 
     #instantiate menu buttons
@@ -36,7 +35,7 @@ def menu_screen(aa_app):
         menu_frame,
         font=('Terminal', 20),
         text="View Task(s)",
-        command= lambda: view_tasks_gui(menu_frame, quit_button, tasks, aa_app)
+        command= lambda: view_tasks_gui(menu_frame, quit_button, aa_app)
         )
     
     view_urgent_button = ctk.CTkButton(

@@ -3,7 +3,6 @@
 from backend import storage
 import customtkinter as ctk
 from backend import auth
-from gui_logic.aa_gui import menu
 
 def login_screen(aa_app, aa_title, menu):
     user_data = storage.load_user_prof()
@@ -156,7 +155,7 @@ def new_user(username_entry, password_entry, invalid_label, authentication_frame
     authentication_frame.destroy()
     aa_title.pack_forget()
     aa_subtitle.pack_forget()
-    menu(aa_app)
+    menu(aa_app, aa_title)
                 
 #function that will authenticate old user
 def log_in(password_entry, invalid_label, authentication_frame, aa_subtitle, aa_app, menu, aa_title):
@@ -180,4 +179,4 @@ def log_in(password_entry, invalid_label, authentication_frame, aa_subtitle, aa_
         pady=5
     )
     aa_subtitle.pack_forget()
-    menu(aa_app)
+    menu(aa_app, aa_title)

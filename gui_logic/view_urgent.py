@@ -1,7 +1,7 @@
 import customtkinter as ctk
-from aa_gui import back_to_menu
 from backend import storage
 from backend import aa_logic
+from gui_logic.navigation import back_to_menu
 
 #display only incomplete tasks that are urgent in order of priority (overdue first, then by least amount of days left) and display if they are overdue or not. If there are no incomplete tasks, display that there are no incomplete tasks.
 def view_urgents_gui(frame, button_or_label, aa_app):
@@ -56,7 +56,7 @@ def view_urgents_gui(frame, button_or_label, aa_app):
         aa_app,
         text="Cancel",
         font=('Terminal', 15),
-        command= lambda: back_to_menu(view_urgents_frame, inner_quit_button)
+        command= lambda: back_to_menu(aa_app, view_urgents_frame, inner_quit_button)
     )  
     view_urgents_frame.pack(
         pady=25,

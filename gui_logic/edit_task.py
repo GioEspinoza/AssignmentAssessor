@@ -1,8 +1,7 @@
 import customtkinter as ctk
-from aa_gui import back_to_edit_task_gui, back_to_menu, check_not_empty_gui
 from backend import storage
-from aa_gui import update_checkbox_text
 from backend import aa_logic
+from gui_logic.navigation import back_to_menu, check_not_empty_gui, update_checkbox_text
 
 
 #edit task function
@@ -24,7 +23,7 @@ def edit_task_gui(frame, button_or_label=None, aa_app=None):
         aa_app,
         text="Cancel",
         font=('Terminal', 15),
-        command= lambda: back_to_menu(mark_completed_frame, inner_quit_button)
+        command= lambda: back_to_menu(aa_app, mark_completed_frame, inner_quit_button)
     )
     
     mark_completed_frame.pack(
@@ -70,7 +69,7 @@ def edit_task_gui(frame, button_or_label=None, aa_app=None):
             font=('Terminal', 25),
             corner_radius=10,
             hover_color='white',
-            command= lambda index=i-1, selected_task=task: edit_task_handle(selected_task, index, mark_completed_frame, inner_quit_button)
+            command= lambda index=i-1, selected_task=task: edit_task_handle(selected_task, index, mark_completed_frame, inner_quit_button, aa_app)
         )
         inner_task_button.pack(
             side="right",
@@ -230,7 +229,7 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
                 hours_entry.get(),
                 date_entry.get(),
                 edit_task_handle_frame,
-                button_frame
+                aa_app
             )
         )
         save_button.pack(
@@ -247,7 +246,8 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
             command= lambda: delete_task_handle(
                 index,
                 edit_task_handle_frame,
-                button_frame
+                button_frame,
+                aa_app
             )
         )
         delete_button.pack(
@@ -261,7 +261,7 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
             button_frame,
             text="Cancel",
             font=('Terminal', 15),
-            command= lambda: back_to_edit_task_gui(edit_task_handle_frame)
+            command= lambda: back_to_edit_task_gui(edit_task_handle_frame, aa_app)
         )
         cancel_button.pack(
             side='left',
@@ -390,7 +390,7 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
                 hours_entry.get(),
                 date_entry.get(),
                 edit_task_handle_frame,
-                button_frame
+                aa_app
             )
         )
         save_button.pack(
@@ -407,7 +407,8 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
             command= lambda: delete_task_handle(
                 index,
                 edit_task_handle_frame,
-                button_frame
+                button_frame,
+                aa_app
             )
         )
         delete_button.pack(
@@ -421,7 +422,7 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
             button_frame,
             text="Cancel",
             font=('Terminal', 15),
-            command= lambda: back_to_edit_task_gui(edit_task_handle_frame)
+            command= lambda: back_to_edit_task_gui(edit_task_handle_frame, aa_app)
         )
         cancel_button.pack(
             side='left',
@@ -430,7 +431,7 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
         )
 
 #handle save button for edits
-def save_task_handle(index, is_comp, course, task, difficulty, hours, date, frame, button_or_label, aa_app):
+def save_task_handle(index, is_comp, course, task, difficulty, hours, date, frame, aa_app):
     tasks = storage.load_data()
     if check_not_empty_gui(course, task, hours) is False:
         invalid_label = ctk.CTkLabel(
@@ -499,7 +500,7 @@ def save_task_handle(index, is_comp, course, task, difficulty, hours, date, fram
     }
     tasks[index] = updated_task
     storage.save_data(tasks)
-    back_to_edit_task_gui(frame)
+    back_to_edit_task_gui(frame, aa_app)
 
 #handle delete button for edits with confirmation popup
 def delete_task_handle(index, frame, button_or_label, aa_app):
@@ -536,7 +537,7 @@ def delete_task_handle(index, frame, button_or_label, aa_app):
         font=('Terminal', 15),
         fg_color='red',
         hover_color='white',
-        command=lambda: confirm_delete(index, confirm_frame, frame, button_or_label)
+        command=lambda: confirm_delete(index, confirm_frame, frame, aa_app)
     )
     yes_button.pack(
         side='left',
@@ -547,20 +548,21 @@ def delete_task_handle(index, frame, button_or_label, aa_app):
         button_frame,
         text="No",
         font=('Terminal', 15),
-        command=lambda: cancel_delete(frame, confirm_frame, button_or_label)
+        command=lambda: cancel_delete(frame, confirm_frame)
     )
     no_button.pack(
         side='left',
         padx=10
     )
 
+
 #confirm delete function to delete task and update storage
-def confirm_delete(index, confirm_frame, frame):
+def confirm_delete(index, confirm_frame, frame, aa_app):
     tasks = storage.load_data()
     del tasks[index]
     storage.save_data(tasks)
     confirm_frame.destroy()
-    back_to_edit_task_gui(frame)
+    back_to_edit_task_gui(frame, aa_app)
 def cancel_delete(frame, confirm_frame):
     confirm_frame.destroy()
     frame.pack(
@@ -570,3 +572,9 @@ def cancel_delete(frame, confirm_frame):
         expand = 1
     )
 
+def back_to_edit_task_gui(frame, aa_app):
+    frame.pack_forget()
+    frame.destroy()
+    aa_app.geometry('800x700')
+    edit_task_gui(aa_app, aa_app=aa_app)
+    
