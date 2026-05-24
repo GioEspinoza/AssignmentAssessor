@@ -1,8 +1,7 @@
 import customtkinter as ctk
-from aa_gui import back_to_menu
 from backend import storage
 from backend import aa_logic
-from gui_logic.aa_gui import check_not_empty_gui
+from gui_logic.navigation import back_to_menu, check_not_empty_gui
 
 #add task function
 def add_task_gui(frame, button_or_label, aa_app):
@@ -109,7 +108,8 @@ def add_task_gui(frame, button_or_label, aa_app):
             date_entry.get(),
             invalid_label,
             add_task_frame,
-            inner_quit_button
+            inner_quit_button,
+            aa_app
         )
     )
     #quit button back to menu
@@ -117,7 +117,7 @@ def add_task_gui(frame, button_or_label, aa_app):
         add_task_frame,
         text="Cancel",
         font=('Terminal', 15),
-        command= lambda: back_to_menu(add_task_frame, inner_quit_button)
+        command= lambda: back_to_menu(aa_app, add_task_frame, inner_quit_button)
     )
 
     #unshow menu frame  if coming from menu and then show task frame
@@ -198,7 +198,7 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
             aa_app.after(2500, invalid_label.pack_forget)
             return
         
-        rev_task_gui(aa_logic.add_task(is_comp, course, task, difficulty, None, hours, None, date), frame, quit_button)
+        rev_task_gui(aa_logic.add_task(is_comp, course, task, difficulty, None, hours, None, date), frame, quit_button, aa_app)
         return
     
     if check_not_empty_gui(course, task, hours) is False:
@@ -231,7 +231,7 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
         aa_app.after(2500, invalid_label.pack_forget)
         return
 
-    rev_task_gui(aa_logic.add_task(is_comp, course, task, difficulty, hours, None, date, None), frame, quit_button)
+    rev_task_gui(aa_logic.add_task(is_comp, course, task, difficulty, hours, None, date, None), frame, quit_button, aa_app)
     return
 #review task logic for gui
 def rev_task_gui(task, frame, quit_button, aa_app):
@@ -279,7 +279,7 @@ def rev_task_gui(task, frame, quit_button, aa_app):
         font=('Terminal', 15),
         corner_radius=10,
         hover_color='white',
-        command= lambda: add_task_gui(rev_task_frame, task_recognized_label)
+        command= lambda: add_task_gui(rev_task_frame, task_recognized_label, aa_app)
     )
     yes_button = ctk.CTkButton(
     yes_no_frame,
@@ -290,7 +290,7 @@ def rev_task_gui(task, frame, quit_button, aa_app):
     text_color='white',
     corner_radius=10,
     hover_color='white',
-    command= lambda: submit_task(tasks, task, rev_task_frame, task_recognized_label)
+    command= lambda: submit_task(tasks, task, rev_task_frame, task_recognized_label, aa_app)
     )
   
     #label to let user know the task was valid
@@ -328,7 +328,7 @@ def rev_task_gui(task, frame, quit_button, aa_app):
         padx=10
     )
 #logic for yes and no buttons
-def submit_task(tasks, task, frame, button_or_label):
+def submit_task(tasks, task, frame, button_or_label, aa_app):
     tasks.append(task)
     storage.save_data(tasks)
-    back_to_menu(frame, button_or_label)
+    back_to_menu(aa_app, frame, button_or_label)

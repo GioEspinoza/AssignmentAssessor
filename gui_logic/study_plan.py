@@ -1,7 +1,7 @@
 import customtkinter as ctk
-from aa_gui import back_to_menu
 from backend import storage
 from backend import aa_logic
+from gui_logic.navigation import back_to_menu
 
 #study plan function
 def study_plan_gui(frame, button_or_label, aa_app): 
@@ -26,7 +26,7 @@ def study_plan_gui(frame, button_or_label, aa_app):
         aa_app,
         text="Cancel",
         font=('Terminal', 15),
-        command= lambda: back_to_menu(study_plan_frame, inner_quit_button)
+        command= lambda: back_to_menu(aa_app, study_plan_frame, inner_quit_button)
     )
     
     study_plan_frame.pack(
