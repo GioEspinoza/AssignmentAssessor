@@ -33,47 +33,57 @@ def edit_task_gui(frame, button_or_label=None, aa_app=None):
         expand = 1
     )
     
-    for i, task in enumerate(tasks, start=1): 
+    if tasks:
+        for i, task in enumerate(tasks, start=1): 
 
-        #instantiate a frame for each task label and button to be formatted in
-        inner_tasks_frame = ctk.CTkFrame(
-            mark_completed_frame
+            #instantiate a frame for each task label and button to be formatted in
+            inner_tasks_frame = ctk.CTkFrame(
+                mark_completed_frame
+            )
+            inner_tasks_frame.pack(
+            padx=20,
+            pady=20,
+            fill='x'
+            )
+            
+            #instantiate task label and pack for the task details
+            inner_task_label = ctk.CTkLabel(
+                inner_tasks_frame,
+                justify='left',
+                anchor='w',
+                font=('Terminal', 25),
+                text=f"[{i}] {task['course']} - {task['task']}"
+            )
+            inner_task_label.pack(
+                side="left",
+                padx=10,
+                fill='x',
+                expand=True,
+                anchor='w'
+            )
+            
+            #instantiate edit button for each task
+            inner_task_button = ctk.CTkButton(
+                inner_tasks_frame,
+                text="Edit",
+                fg_color='#1f6aa5',
+                font=('Terminal', 25),
+                corner_radius=10,
+                hover_color='white',
+                command= lambda index=i-1, selected_task=task: edit_task_handle(selected_task, index, mark_completed_frame, inner_quit_button, aa_app)
+            )
+            inner_task_button.pack(
+                side="right",
+                padx=10
+            )
+    else:
+        task_label=ctk.CTkLabel(
+            mark_completed_frame,
+            text="No tasks found!",
+            font=("Terminal", 35, "bold")
         )
-        inner_tasks_frame.pack(
-        padx=20,
-        pady=20,
-        fill='x'
-        )
-        
-        #instantiate task label and pack for the task details
-        inner_task_label = ctk.CTkLabel(
-            inner_tasks_frame,
-            justify='left',
-            anchor='w',
-            font=('Terminal', 25),
-            text=f"[{i}] {task['course']} - {task['task']}"
-        )
-        inner_task_label.pack(
-            side="left",
-            padx=10,
-            fill='x',
-            expand=True,
-            anchor='w'
-        )
-        
-        #instantiate edit button for each task
-        inner_task_button = ctk.CTkButton(
-            inner_tasks_frame,
-            text="Edit",
-            fg_color='#1f6aa5',
-            font=('Terminal', 25),
-            corner_radius=10,
-            hover_color='white',
-            command= lambda index=i-1, selected_task=task: edit_task_handle(selected_task, index, mark_completed_frame, inner_quit_button, aa_app)
-        )
-        inner_task_button.pack(
-            side="right",
-            padx=10
+        task_label.pack(
+            pady=200
         )
     if button_or_label:
         button_or_label.destroy()
