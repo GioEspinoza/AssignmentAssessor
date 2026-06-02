@@ -5,7 +5,7 @@ from gui_logic.navigation import back_to_menu, check_not_empty_gui, update_check
 
 
 #edit task function
-def edit_task_gui(frame, button_or_label=None, aa_app=None):
+def edit_task_gui(frame,aa_app, button_or_label=None):
     aa_app.geometry('800x600')
     tasks = storage.load_data()
 
