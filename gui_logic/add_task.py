@@ -2,6 +2,10 @@ import customtkinter as ctk
 from backend import storage
 from backend import aa_logic
 from gui_logic.navigation import back_to_menu, check_not_empty_gui
+from database.task_queries import add_task
+from database.user_queries import get_user
+
+user_id = get_user()
 
 #add task function
 def add_task_gui(frame, button_or_label, aa_app):
@@ -231,7 +235,7 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
         aa_app.after(2500, invalid_label.pack_forget)
         return
 
-    rev_task_gui(aa_logic.add_task(is_comp, course, task, difficulty, hours, None, date, None), frame, quit_button, aa_app)
+    rev_task_gui(aa_logic.return_task(is_comp, course, task, difficulty, hours, None, date, None), frame, quit_button, aa_app)
     return
 #review task logic for gui
 def rev_task_gui(task, frame, quit_button, aa_app):
@@ -330,5 +334,6 @@ def rev_task_gui(task, frame, quit_button, aa_app):
 #logic for yes and no buttons
 def submit_task(tasks, task, frame, button_or_label, aa_app):
     tasks.append(task)
+    add_task(user_id, task)
     storage.save_data(tasks)
     back_to_menu(aa_app, frame, button_or_label)
