@@ -513,7 +513,7 @@ def save_task_handle(index, is_comp, course, task, difficulty, hours, date, fram
     back_to_edit_task_gui(frame, aa_app)
 
 #handle delete button for edits with confirmation popup
-def delete_task_handle(index, frame, button_or_label, aa_app):
+def delete_task_handle(index, frame, button_frame, aa_app):
     frame.pack_forget()
     #popup window to confirm delete
     confirm_frame = ctk.CTkFrame(aa_app)

@@ -1,8 +1,8 @@
-from aa_logic import is_in_range, valid_due_date
-from aa_logic import is_positive_int
-from aa_logic import valid_due_date
-from aa_logic import valid_comp_date
-from aa_logic import round_down_to_two_decimals
+from backend.aa_logic import is_in_range
+from backend.aa_logic import is_positive_float
+from backend.aa_logic import valid_due_date
+from backend.aa_logic import valid_comp_date
+from backend.aa_logic import round_down_to_two_decimals
 from datetime import datetime
 
 
@@ -11,17 +11,17 @@ def test_in_range():
     assert is_in_range("1", 1, 5) == True
     assert is_in_range("0", 1, 5) == False
     assert is_in_range("6", 1, 5) == False
-    assert is_positive_int("") == False
-    assert is_positive_int("abc") == False
+    assert is_positive_float("") == False
+    assert is_positive_float("abc") == False
 
 
 def test_pos_int():
-    assert is_positive_int("5") == True
-    assert is_positive_int("8") == True
-    assert is_positive_int("-1") == False
-    assert is_positive_int("-7") == False
-    assert is_positive_int("") == False
-    assert is_positive_int("abc") == False
+    assert is_positive_float("5") == True
+    assert is_positive_float("8") == True
+    assert is_positive_float("-1") == False
+    assert is_positive_float("-7") == False
+    assert is_positive_float("") == False
+    assert is_positive_float("abc") == False
 
 
 def test_due():

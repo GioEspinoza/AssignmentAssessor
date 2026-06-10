@@ -47,6 +47,6 @@ def back_to_login(aa_app, aa_title, frame, quit_button):
     frame.destroy()
     quit_button.destroy()
     aa_app.geometry('800x600')
-    if aa_title is not None and not aa_title.winfo_manager():
+    if aa_title is not None:
         aa_title.pack(pady=30)
     login_screen(aa_app, aa_title, menu_screen)
