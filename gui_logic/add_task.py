@@ -251,7 +251,7 @@ def rev_task_gui(task, frame, quit_button, aa_app):
         corner_radius=10
     )
     
-    #isntatiate label that will display task
+    #instantiate label that will display task
     task_label= ctk.CTkLabel(
             rev_task_frame,
             font=('Terminal', 20),
@@ -335,5 +335,4 @@ def rev_task_gui(task, frame, quit_button, aa_app):
 def submit_task(tasks, task, frame, button_or_label, aa_app):
     tasks.append(task)
     add_task(user_id, task)
-    storage.save_data(tasks)
     back_to_menu(aa_app, frame, button_or_label)
