@@ -1,12 +1,12 @@
 import customtkinter as ctk
-from backend import storage
-from backend import aa_logic
+from backend import aa_logic, session
+from database import task_queries
 from gui_logic.navigation import back_to_menu
 
 #display only incomplete tasks that are urgent in order of priority (overdue first, then by least amount of days left) and display if they are overdue or not. If there are no incomplete tasks, display that there are no incomplete tasks.
 def view_urgents_gui(frame, button_or_label, aa_app):
     aa_app.geometry('900x800')
-    tasks = storage.load_data()
+    tasks = task_queries.get_tasks(session.get_current_user_id())
 
     frame.destroy()
     view_urgents_frame = ctk.CTkScrollableFrame(

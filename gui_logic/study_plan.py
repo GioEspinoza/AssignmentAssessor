@@ -1,12 +1,12 @@
 import customtkinter as ctk
-from backend import storage
-from backend import aa_logic
+from database import task_queries
+from backend import aa_logic, session
 from gui_logic.navigation import back_to_menu
 
 #study plan function
 def study_plan_gui(frame, button_or_label, aa_app): 
     aa_app.geometry('900x800')
-    tasks = storage.load_data()
+    tasks = task_queries.get_tasks(session.get_current_user_id())
 
     frame.destroy()
     study_plan_frame = ctk.CTkScrollableFrame(
