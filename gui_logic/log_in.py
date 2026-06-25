@@ -1,11 +1,10 @@
 #encapsulate login screen
-
-from backend import storage
+from backend import session
+from database import user_queries
 import customtkinter as ctk
 from backend import auth
 
 def login_screen(aa_app, aa_title, menu):
-    user_data = storage.load_user_prof()
 
     #instantiate welcoming substitute
     aa_subtitle = ctk.CTkLabel(aa_app)
@@ -54,6 +53,7 @@ def login_screen(aa_app, aa_title, menu):
         text='Log in',
         font=("Terminal", 25),
         command = lambda: log_in(
+            username_entry.get().strip(),
             password_entry.get(),
             invalid_label,
             authentication_frame,
@@ -81,47 +81,25 @@ def login_screen(aa_app, aa_title, menu):
         )
         )
 
-    #if user data is none, set up registration page
-    if user_data is None:
-        aa_subtitle.configure(
-            text='Welcome new User! Please register',
-            font=('Terminal',25))
-        aa_subtitle.pack(pady=10)
+    aa_subtitle.configure(
+    text="Welcome to AssignmentAssessor",
+    font=("Terminal", 25)
+    )
 
-        username_entry.pack(
-            pady=20
-        )
-        password_entry.pack(
-            pady=10    
-        )
-        register_button.pack(
-            pady=30
-        )
+    aa_subtitle.pack(pady=10)
 
-    #if user has data, set up log in page
-    else:
-        aa_subtitle.configure(
-            text=f"Welcome {user_data.get('username')}, Please log in",
-            font=('Terminal',25)
-        )
-        aa_subtitle.pack(pady=10)
-
-        password_entry.pack(
-            pady=70
-        )
-
-        log_in_button.pack(
-            pady=20
-        )
+    username_entry.pack(pady=20)
+    password_entry.pack(pady=10)
+    log_in_button.pack(pady=10)
+    register_button.pack(pady=10)
     authentication_frame.pack(pady=20, expand=True)
     authentication_frame.pack_propagate(False)
     
 #function that will register new user
 def new_user(username_entry, password_entry, invalid_label, authentication_frame, aa_subtitle, aa_app, menu, aa_title):
-    global user_data
     #check if user and password are valid
-    valid, message = auth.check_new_name(username_entry)
-    passvalid, passmessage = auth.check_new_pass(password_entry)
+    valid, message = auth.validate_username(username_entry)
+    passvalid, passmessage = auth.validate_password(password_entry)
     
     if not valid:
         #if not refresh label for invalid inputs
@@ -145,12 +123,24 @@ def new_user(username_entry, password_entry, invalid_label, authentication_frame
         aa_app.after(2500, invalid_label.pack_forget)
         return
         
-    storage.save_user_prof(
-            username_entry,
-            auth.hash_password(password_entry)
-            )
+    password_hash = auth.hash_password(password_entry)
+
+
+    existing_user = user_queries.get_user_by_username(username_entry)
+
+    if existing_user is not None:
+        invalid_label.configure(text="Username already exists")
+        invalid_label.pack(pady=10)
+        aa_app.after(2500, invalid_label.pack_forget)
+        return
     
-    user_data = storage.load_user_prof()
+    created_user = user_queries.create_user(
+        username_entry,
+        None,
+        password_hash
+    )
+    
+    session.current_user = created_user
 
     authentication_frame.destroy()
     aa_title.pack_forget()
@@ -158,11 +148,18 @@ def new_user(username_entry, password_entry, invalid_label, authentication_frame
     menu(aa_app, aa_title)
                 
 #function that will authenticate old user
-def log_in(password_entry, invalid_label, authentication_frame, aa_subtitle, aa_app, menu, aa_title):
+def log_in(username_entry, password_entry, invalid_label, authentication_frame, aa_subtitle, aa_app, menu, aa_title):
     #load in saved password
-    user_data = storage.load_user_prof()
+    user_data = user_queries.get_user_by_username(username_entry)
     
-    if not auth.check_hpassword(user_data.get('hpassword'), password_entry):
+    if user_data is None:
+        invalid_label.configure(text="User not found")
+        invalid_label.pack(pady=10)
+        aa_app.after(2500, invalid_label.pack_forget)
+        return
+    print(type(user_data["password_hash"]))
+    print(repr(user_data["password_hash"]))
+    if not auth.check_password(user_data["password_hash"], password_entry):
         #if not refresh label for invalid inputs
         invalid_label.configure(
             text="Incorrect password"
@@ -173,6 +170,7 @@ def log_in(password_entry, invalid_label, authentication_frame, aa_subtitle, aa_
         aa_app.after(2500, invalid_label.pack_forget)
         return
     
+    session.current_user = user_data
     authentication_frame.destroy()
     aa_title.configure(
         font=("Terminal", 40),

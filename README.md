@@ -1,24 +1,150 @@
-    # AssignmentAssessor: the smart planner for Students!!
-    ## Video Demo:
-    ## Description: 
-    ###AssignmentAssessor is a python program that will work through the command line to help students maintain order in their assignments by keeping track of tasks and there due dates, accounting for difficulty and estimated study time. AssignmentAssessor will calculate task priorities and help students by providing recommended study plans so students can get the most important assignments off the table! The goal is to help students stop procrastinating and have an assistant to the side that keeps track of the assignments we all lose track of by identifying how important which tasks are. AssignmentAssessor calculates this through a priority score for each task by multiplying the difficulty by hours needed divided by days remaining before due date. The program offers user friendly menus with all the options.
-    
-    ##assignment addition
-    ### when adding an incomplete assignment Assignment Assessor will need a few things, such as course name, assignment name, due date, difficulty rating(1-5), and the estimated hours needed to complete. My input validation functions make sure all input given is correct and maintain order in AssignmentAssessor. 
+# AssignmentAssessor: Smart Academic Planner
 
-    ##Priority calculation
-    ###As stated previosly, assignment assessor will determine how important tasks are using the following formula: Priority = (difficulty x hours req)/days left. Ensuring that the assignments that are the hardest and most time consuming, but also with the closest due dates, are given the most priority helping Assignment Assessor provide the user with the most important reliably!
+## Video Demo
 
-    ##Study plans
-    ### AssignmentAssessor will generate study plans by listing all assignments based off priority score and then using the formula: Hours per day = total hours req / days remaining. Assignment Assessor will also suggest how many hours a day the student should put aside for the assignment and will also account for whether or not the assignment is overdue or not. Marking them as OVERDUE.
+## Description
 
-    ##Task completions
-    ###in assignment assessor students can also mark tasks that were due and are now completed to maintain organization. ASsignment assessor will not only mark them as completed but will also record the date the student completed them. in future updates the program may analyze this data and further personalize study plans for the student.
+AssignmentAssessor is a desktop application built with **Python**, **CustomTkinter**, and **PostgreSQL** that helps students organize coursework, prioritize assignments, and generate personalized study plans. The application provides a graphical user interface where users can securely create an account, manage assignments, and view recommendations based on workload and upcoming deadlines.
 
-    ##tests
-    ###alongside the assignment assessor program, this project includes several automated tests using pytest which helps confirm that assignment assessor is properly validating range for the difficulty values, validating the integers given for any numeric input, validating due dates based off format and whether or not its in the future or not as vice versa for completion dates, and validating if the decimal rounding used for study plan is valid logic. These thorough automated tests have helped ensure that important parts of Assignment Assessor are working or not! 
+Unlike a traditional to-do list, AssignmentAssessor evaluates each assignment using a custom priority algorithm that considers assignment difficulty, estimated completion time, and the number of days remaining before the due date. This allows students to focus on the assignments that require the most attention first.
 
-    ##Libraries
-    ###assignment assessors only requires 2 libraries which can be found in the requirements.txt file.
+The application follows a layered architecture that separates the graphical interface from the business logic and database operations. Authentication, task management, validation, and database queries are organized into separate modules, making the project easier to maintain and expand.
 
-    ##Note: tasks.json and user_prof.json are not included. They will be created automatically when you run the program.
+---
+
+## User Accounts
+
+AssignmentAssessor supports multiple users through PostgreSQL.
+
+Users can:
+
+* Register a new account with a securely hashed password
+* Log in to an existing account
+* Maintain their own independent assignment list
+
+Passwords are hashed before being stored in the database, ensuring that plaintext passwords are never saved.
+
+---
+
+## Adding Assignments
+
+Users can create both incomplete and completed assignments.
+
+For incomplete assignments, the application records:
+
+* Course name
+* Assignment name
+* Difficulty (1–5)
+* Estimated hours required
+* Due date
+
+For completed assignments, the application records:
+
+* Course name
+* Assignment name
+* Difficulty (1–5)
+* Hours used
+* Date completed
+
+Extensive validation ensures that all user input is properly formatted before it is written to the database.
+
+---
+
+## Viewing Assignments
+
+Assignments are displayed alphabetically and clearly indicate whether they are completed or incomplete.
+
+Incomplete assignments automatically display if they are overdue, while completed assignments display the date they were finished.
+
+---
+
+## Editing and Deleting Assignments
+
+Users can modify existing assignments through the graphical interface.
+
+Assignments may be:
+
+* Updated
+* Marked as completed or incomplete
+* Deleted
+
+All changes are immediately synchronized with the PostgreSQL database using CRUD operations.
+
+---
+
+## Priority Calculation
+
+AssignmentAssessor prioritizes incomplete assignments using the following formula:
+
+Priority = (Difficulty × Estimated Hours) / Days Remaining
+
+Assignments with higher priority scores appear before less urgent assignments. Overdue assignments are automatically placed at the top of the priority list.
+
+---
+
+## Study Plan Generation
+
+The application generates personalized study recommendations based on assignment priority.
+
+For each incomplete assignment, AssignmentAssessor calculates:
+
+Hours Per Day = Estimated Hours / Days Remaining
+
+This helps students distribute their workload more effectively while ensuring that approaching deadlines receive the most attention.
+
+---
+
+## Database Design
+
+AssignmentAssessor uses PostgreSQL as its persistent data store.
+
+The project implements full CRUD functionality through dedicated query modules:
+
+* Create users and assignments
+* Retrieve user-specific assignments
+* Update assignment information
+* Delete assignments
+
+Database access is separated from the GUI using dedicated `user_queries.py` and `task_queries.py` modules.
+
+---
+
+## Testing
+
+The project includes automated tests using **pytest**.
+
+Tests verify important application logic including:
+
+* Difficulty validation
+* Numeric input validation
+* Due date validation
+* Completion date validation
+* Priority calculations
+* Study plan calculations
+
+These tests help ensure that AssignmentAssessor behaves correctly as new features are added.
+
+---
+
+## Technologies Used
+
+* Python
+* CustomTkinter
+* PostgreSQL
+* Psycopg
+* python-dotenv
+* pytest
+
+---
+
+## Future Improvements
+
+Future versions of AssignmentAssessor may include:
+
+* Assignment categories and tags
+* GPA and grade tracking
+* Calendar integration
+* Email or desktop reminders
+* Study history analytics
+* Data visualizations showing workload over time
+* Cloud synchronization across devices

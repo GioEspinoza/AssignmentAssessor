@@ -26,8 +26,12 @@ def hash_password(password): #takes the plain password from the user to convert 
     return salt + key #return both salt and key together, original salt is needed for verification
     # output: first 16 bytes - og salt, remaining bytes will be acutal hash key
 
+def check_password(hpassword, attempt): #will check password attempt
+    if isinstance(hpassword, str):
+        if hpassword.startswith('\\x'):
+            hpassword = hpassword[2:]
+        hpassword = bytes.fromhex(hpassword)
 
-def check_hpassword(hpassword, attempt): #will check password attempt
     salt = hpassword[:16] #will get salt by taking first 16 letters from stored hpassword
     stored_key = hpassword[16:] #rest must be the hash password
 
@@ -44,14 +48,14 @@ def check_hpassword(hpassword, attempt): #will check password attempt
 ######################################################################################
 
 # ensuring name is not empty, no numbers, and no double spaces. Looping if name isnt valid, welcoming if it is valid.
-def check_new_name(name):
+def validate_username(name):
     user = name.strip()
     if not user or any(char.isdigit() for char in user) or "  " in user:
         return False, "Not valid name! Please try again"
     return True, ""
 
 #ensures new password meets criteria
-def check_new_pass(password):
+def validate_password(password):
     if not password or len(password) < 8 or "  " in password:
         return False, "Not valid password! Please try again"
     return True, "Valid password"

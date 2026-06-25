@@ -1,13 +1,11 @@
 import customtkinter as ctk
-from backend import storage
-from backend import aa_logic
+from database import task_queries
+from backend import aa_logic, session
 from gui_logic.navigation import back_to_menu, check_not_empty_gui, update_checkbox_text
-
 
 #edit task function
 def edit_task_gui(frame,aa_app, button_or_label=None):
     aa_app.geometry('800x600')
-    tasks = storage.load_data()
 
     if frame != aa_app:
         frame.destroy()
@@ -33,8 +31,8 @@ def edit_task_gui(frame,aa_app, button_or_label=None):
         expand = 1
     )
     
-    if tasks:
-        for i, task in enumerate(tasks, start=1): 
+    if task_queries.get_tasks(session.get_current_user_id()):
+        for i, task in enumerate(task_queries.get_tasks(session.get_current_user_id()), start=1): 
 
             #instantiate a frame for each task label and button to be formatted in
             inner_tasks_frame = ctk.CTkFrame(
@@ -70,7 +68,7 @@ def edit_task_gui(frame,aa_app, button_or_label=None):
                 font=('Terminal', 25),
                 corner_radius=10,
                 hover_color='white',
-                command= lambda index=i-1, selected_task=task: edit_task_handle(selected_task, index, mark_completed_frame, inner_quit_button, aa_app)
+                command= lambda selected_task=task: edit_task_handle(selected_task, mark_completed_frame, inner_quit_button, aa_app)
             )
             inner_task_button.pack(
                 side="right",
@@ -93,7 +91,7 @@ def edit_task_gui(frame,aa_app, button_or_label=None):
     )
 
 #handle edit frame for selected task
-def edit_task_handle(task, index, frame, quit_button, aa_app):
+def edit_task_handle(task, frame, quit_button, aa_app):
     #clear previous frame
     aa_app.geometry('800x700')
     frame.pack_forget()
@@ -231,7 +229,7 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
             text="Save Changes",
             font=('Terminal', 15),
             command= lambda: save_task_handle(
-                index,
+                task['task_id'],
                 completion_status_check.get() == "True",
                 course_name_entry.get().strip(),
                 task_name_entry.get().strip(),
@@ -248,13 +246,13 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
             pady=10
         )
 
-        #delete button that will delete task from tasks and update storage
+        #delete button that will delete task from tasks and update database
         delete_button = ctk.CTkButton(
             button_frame,
             text="Delete Task",
             font=('Terminal', 15),
             command= lambda: delete_task_handle(
-                index,
+                task['task_id'],
                 edit_task_handle_frame,
                 button_frame,
                 aa_app
@@ -392,7 +390,7 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
             text="Save Changes",
             font=('Terminal', 15),
             command= lambda: save_task_handle(
-                index,
+                task['task_id'],
                 completion_status_check.get() == "True",
                 course_name_entry.get().strip(),
                 task_name_entry.get().strip(),
@@ -409,13 +407,13 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
             pady=10
         )
 
-        #delete button that will delete task from tasks and update storage
+        #delete button that will delete task from tasks and update database
         delete_button = ctk.CTkButton(
             button_frame,
             text="Delete Task",
             font=('Terminal', 15),
             command= lambda: delete_task_handle(
-                index,
+                task['task_id'],
                 edit_task_handle_frame,
                 button_frame,
                 aa_app
@@ -441,8 +439,8 @@ def edit_task_handle(task, index, frame, quit_button, aa_app):
         )
 
 #handle save button for edits
-def save_task_handle(index, is_comp, course, task, difficulty, hours, date, frame, aa_app):
-    tasks = storage.load_data()
+def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, frame, aa_app):
+    tasks = task_queries.get_tasks(session.get_current_user_id())
     if check_not_empty_gui(course, task, hours) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
@@ -500,6 +498,7 @@ def save_task_handle(index, is_comp, course, task, difficulty, hours, date, fram
         return
 
     updated_task = {
+        "task_id": task_id,
         "course": course,
         "task": task,
         "completed": is_comp,
@@ -508,12 +507,12 @@ def save_task_handle(index, is_comp, course, task, difficulty, hours, date, fram
         "due_date": date if not is_comp else None,
         "date_completed": date if is_comp else None
     }
-    tasks[index] = updated_task
-    storage.save_data(tasks)
+
+    task_queries.update_task(task_id, updated_task)
     back_to_edit_task_gui(frame, aa_app)
 
 #handle delete button for edits with confirmation popup
-def delete_task_handle(index, frame, button_frame, aa_app):
+def delete_task_handle(task_id, frame, button_frame, aa_app):
     frame.pack_forget()
     #popup window to confirm delete
     confirm_frame = ctk.CTkFrame(aa_app)
@@ -547,7 +546,7 @@ def delete_task_handle(index, frame, button_frame, aa_app):
         font=('Terminal', 15),
         fg_color='red',
         hover_color='white',
-        command=lambda: confirm_delete(index, confirm_frame, frame, aa_app)
+        command=lambda: confirm_delete(task_id, confirm_frame, frame, aa_app)
     )
     yes_button.pack(
         side='left',
@@ -566,11 +565,9 @@ def delete_task_handle(index, frame, button_frame, aa_app):
     )
 
 
-#confirm delete function to delete task and update storage
-def confirm_delete(index, confirm_frame, frame, aa_app):
-    tasks = storage.load_data()
-    del tasks[index]
-    storage.save_data(tasks)
+#confirm delete function to delete task and update database
+def confirm_delete(task_id, confirm_frame, frame, aa_app):
+    task_queries.delete_task(task_id)
     confirm_frame.destroy()
     back_to_edit_task_gui(frame, aa_app)
 def cancel_delete(frame, confirm_frame):

@@ -1,11 +1,9 @@
 import customtkinter as ctk
-from backend import storage
+from database import task_queries
 from backend import aa_logic
+from backend import session
 from gui_logic.navigation import back_to_menu, check_not_empty_gui
-from database.task_queries import add_task
-from database.user_queries import get_user
 
-user_id = get_user()
 
 #add task function
 def add_task_gui(frame, button_or_label, aa_app):
@@ -202,7 +200,7 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
             aa_app.after(2500, invalid_label.pack_forget)
             return
         
-        rev_task_gui(aa_logic.add_task(is_comp, course, task, difficulty, None, hours, None, date), frame, quit_button, aa_app)
+        rev_task_gui(aa_logic.return_task(is_comp, course, task, difficulty, None, hours, None, date), frame, quit_button, aa_app)
         return
     
     if check_not_empty_gui(course, task, hours) is False:
@@ -239,7 +237,7 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
     return
 #review task logic for gui
 def rev_task_gui(task, frame, quit_button, aa_app):
-    tasks = storage.load_data()
+    
     #minimize window
     aa_app.geometry('800x600')
     #destroy previous frame to make space for frame to review task
@@ -294,7 +292,7 @@ def rev_task_gui(task, frame, quit_button, aa_app):
     text_color='white',
     corner_radius=10,
     hover_color='white',
-    command= lambda: submit_task(tasks, task, rev_task_frame, task_recognized_label, aa_app)
+    command= lambda: submit_task(task, rev_task_frame, task_recognized_label, aa_app)
     )
   
     #label to let user know the task was valid
@@ -332,7 +330,6 @@ def rev_task_gui(task, frame, quit_button, aa_app):
         padx=10
     )
 #logic for yes and no buttons
-def submit_task(tasks, task, frame, button_or_label, aa_app):
-    tasks.append(task)
-    add_task(user_id, task)
+def submit_task(task, frame, button_or_label, aa_app):
+    task_queries.add_task(session.get_current_user_id(), task)
     back_to_menu(aa_app, frame, button_or_label)
