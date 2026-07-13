@@ -1,180 +1,281 @@
-#encapsulate login screen
 from backend import session
 from database import user_queries
 import customtkinter as ctk
 from backend import auth
+import webbrowser
 
-def login_screen(aa_app, aa_title, menu):
+def open_forgot_password_user_link():
+    webbrowser.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
-    #instantiate welcoming substitute
-    aa_subtitle = ctk.CTkLabel(aa_app)
+def login_screen(parent, aa_title, menu):
+    parent.grid_rowconfigure(0, weight=1)
+    parent.grid_columnconfigure(0, weight=1)
 
-    #instatiante authentication frame
-    authentication_frame = ctk.CTkFrame(
-        aa_app, 
-        width=400, 
-        height=300,
-        corner_radius=15
+    login_container = ctk.CTkFrame(parent, fg_color="transparent")
+    login_container.grid(row=0, column=0, sticky="nsew")
+    login_container.grid_rowconfigure(0, weight=1)
+    login_container.grid_columnconfigure(0, weight=1)
+
+    authentication_frame = ctk.CTkTabview(
+        login_container,
+        width=700,
+        height=570,
+        corner_radius=19,
+        anchor="nw"
     )
 
-    #instantiate and configure username and password text boxes
-    password_entry = ctk.CTkEntry(
-        authentication_frame
-    )
-    password_entry.configure(
-            placeholder_text="Password",
-            placeholder_text_color='white',
-            font=('Terminal', 15),
-            show="*"
-        )
+    authentication_frame.add("Log in")
+    login_tab = authentication_frame.tab("Log in")
+    login_tab.grid_columnconfigure(0, weight=1)
+    login_tab.configure(fg_color="transparent")
 
-    username_entry = ctk.CTkEntry(
-        authentication_frame
-    )
-    username_entry.configure(
-        placeholder_text='Username',
-        placeholder_text_color='white',
-        font=('Terminal', 15)
+    authentication_frame.add("Register")
+    register_tab = authentication_frame.tab("Register")
+    register_tab.grid_columnconfigure(0, weight=1)
+    register_tab.configure(fg_color="transparent")
+
+    authentication_frame.set("Log in")
+    # Keep both pages fixed and blend the tab control into the tab body.
+    authentication_frame.grid_propagate(False)
+    tab_color = authentication_frame.cget("fg_color")
+    authentication_frame._segmented_button.configure(
+        width=220,
+        height=34,
+        corner_radius=8,
+        border_width=0,
+        font=("Terminal", 15),
+        fg_color=tab_color,
+        unselected_color=tab_color,
+        unselected_hover_color=tab_color
     )
 
-    #instantiate label for invalid password/usernames
-    invalid_label = ctk.CTkLabel(
-            authentication_frame,
-            font=('Terminal', 15),
-            bg_color='transparent',
-            text_color='red',
-            text=''        
-        )
-
-    #instantiate buttons for register and log in
+    # Log-in tab widgets
+    login_subtitle = ctk.CTkLabel(
+        login_tab,
+        text="Welcome back",
+        font=("Terminal", 25, "bold")
+    )
+    login_instruction = ctk.CTkLabel(
+        login_tab,
+        text="Sign in to manage your assignments",
+        font=("Terminal", 15),
+        text_color="gray70"
+    )
+    login_username_label = ctk.CTkLabel(
+        login_tab,
+        text="Username",
+        font=("Terminal", 15)
+    )
+    login_username_entry = ctk.CTkEntry(
+        login_tab,
+        placeholder_text="Enter your username or email",
+        font=("Terminal", 15),
+        height=42
+    )
+    login_password_label = ctk.CTkLabel(
+        login_tab,
+        text="Password",
+        font=("Terminal", 15)
+    )
+    login_password_entry = ctk.CTkEntry(
+        login_tab,
+        placeholder_text="Enter your password",
+        font=("Terminal", 15),
+        show="*",
+        height=42
+    )
+    forgot_login_link = ctk.CTkLabel(
+        login_tab,
+        text="Forgot username or password?",
+        font=("Terminal", 13, "underline"),
+        text_color=("#2563eb", "#60a5fa"),
+        cursor="hand2"
+    )
+    forgot_login_link.bind(
+        "<Button-1>",
+        lambda event: open_forgot_password_user_link()
+    )
+    login_invalid_label = ctk.CTkLabel(
+        login_tab,
+        font=("Terminal", 15),
+        text_color="#ef4444",
+        text=""
+    )
     log_in_button = ctk.CTkButton(
-        authentication_frame,
+        login_tab,
         corner_radius=10,
-        text='Log in',
+        text="Log in",
         font=("Terminal", 25),
-        command = lambda: log_in(
-            username_entry.get().strip(),
-            password_entry.get(),
-            invalid_label,
-            authentication_frame,
-            aa_subtitle,
-            aa_app,
+        command=lambda: log_in(
+            login_username_entry.get().strip(),
+            login_password_entry.get(),
+            login_invalid_label,
+            login_container,
+            parent,
             menu,
             aa_title
         )
     )
 
+    login_subtitle.grid(row=0, column=0, padx=50, pady=(30, 6))
+    login_instruction.grid(row=1, column=0, padx=50, pady=(0, 30))
+    login_username_label.grid(row=2, column=0, padx=50, pady=(0, 8), sticky="w")
+    login_username_entry.grid(row=3, column=0, padx=50, sticky="ew")
+    login_password_label.grid(row=4, column=0, padx=50, pady=(22, 8), sticky="w")
+    login_password_entry.grid(row=5, column=0, padx=50, sticky="ew")
+    forgot_login_link.grid(row=6, column=0, padx=50, pady=(6, 0), sticky="w")
+    login_invalid_label.grid(row=7, column=0, padx=50, pady=16, sticky="w")
+    log_in_button.grid(row=8, column=0, padx=50, pady=(0, 30), sticky="ew")
+
+    # Registration tab widgets
+    register_subtitle = ctk.CTkLabel(
+        register_tab,
+        text="Create an account",
+        font=("Terminal", 25, "bold")
+    )
+    register_instruction = ctk.CTkLabel(
+        register_tab,
+        text="Register to start managing your assignments",
+        font=("Terminal", 15),
+        text_color="gray70"
+    )
+    register_username_label = ctk.CTkLabel(
+        register_tab,
+        text="Username",
+        font=("Terminal", 15)
+    )
+    register_username_entry = ctk.CTkEntry(
+        register_tab,
+        placeholder_text="Choose a username",
+        font=("Terminal", 15),
+        height=42
+    )
+    register_email_label = ctk.CTkLabel(
+        register_tab,
+        text="Email",
+        font=("Terminal", 15)
+    )
+    register_email_entry = ctk.CTkEntry(
+        register_tab,
+        placeholder_text="Enter your email",
+        font=("Terminal", 15),
+        height=42
+    )
+    register_password_label = ctk.CTkLabel(
+        register_tab,
+        text="Password",
+        font=("Terminal", 15)
+    )
+    register_password_entry = ctk.CTkEntry(
+        register_tab,
+        placeholder_text="Create a password",
+        font=("Terminal", 15),
+        show="*",
+        height=42
+    )
+    register_invalid_label = ctk.CTkLabel(
+        register_tab,
+        font=("Terminal", 15),
+        text_color="#ef4444",
+        text=""
+    )
     register_button = ctk.CTkButton(
-        authentication_frame,
-        corner_radius=20,
-        text= 'Register',
+        register_tab,
+        corner_radius=10,
+        text="Register",
         font=("Terminal", 25),
-        command= lambda: new_user(
-            username_entry.get(),
-            password_entry.get(),
-            invalid_label,
-            authentication_frame,
-            aa_subtitle,
-            aa_app,
+        command=lambda: new_user(
+            register_username_entry.get().strip(),
+            register_email_entry.get().strip(),
+            register_password_entry.get(),
+            register_invalid_label,
+            login_container,
+            parent,
             menu,
             aa_title
         )
-        )
-
-    aa_subtitle.configure(
-    text="Welcome to AssignmentAssessor",
-    font=("Terminal", 25)
     )
 
-    aa_subtitle.pack(pady=10)
+    register_subtitle.grid(row=0, column=0, padx=50, pady=(22, 6))
+    register_instruction.grid(row=1, column=0, padx=50, pady=(0, 20))
+    register_username_label.grid(row=2, column=0, padx=50, pady=(0, 6), sticky="w")
+    register_username_entry.grid(row=3, column=0, padx=50, sticky="ew")
+    register_email_label.grid(row=4, column=0, padx=50, pady=(14, 6), sticky="w")
+    register_email_entry.grid(row=5, column=0, padx=50, sticky="ew")
+    register_password_label.grid(row=6, column=0, padx=50, pady=(14, 6), sticky="w")
+    register_password_entry.grid(row=7, column=0, padx=50, sticky="ew")
+    register_invalid_label.grid(row=8, column=0, padx=50, pady=10)
+    register_button.grid(row=9, column=0, padx=50, pady=(0, 22), sticky="ew")
 
-    username_entry.pack(pady=20)
-    password_entry.pack(pady=10)
-    log_in_button.pack(pady=10)
-    register_button.pack(pady=10)
-    authentication_frame.pack(pady=20, expand=True)
-    authentication_frame.pack_propagate(False)
-    
+    authentication_frame.grid(row=0, column=0, padx=50, pady=32)
+
+    login_username_entry.focus()
+    login_password_entry.bind("<Return>", lambda event: log_in_button.invoke())
+    register_password_entry.bind("<Return>", lambda event: register_button.invoke())
+
+def show_error(parent, invalid_label, message):
+    invalid_label.configure(text=message)
+    parent.after(
+        2500,
+        lambda: invalid_label.configure(text="")
+    )
+
+
 #function that will register new user
-def new_user(username_entry, password_entry, invalid_label, authentication_frame, aa_subtitle, aa_app, menu, aa_title):
+def new_user(username_entry, email_entry, password_entry, invalid_label, login_container, parent, menu, aa_title):
     #check if user and password are valid
     valid, message = auth.validate_username(username_entry)
     passvalid, passmessage = auth.validate_password(password_entry)
-    
+
     if not valid:
         #if not refresh label for invalid inputs
-        invalid_label.configure(
-            text=message
-        )
-        invalid_label.pack(
-            pady=10
-        )
-        aa_app.after(2500, invalid_label.pack_forget)
+        show_error(parent, invalid_label, message)
         return
-    
+
     if not passvalid:
         #if not refresh label for invalid inputs
-        invalid_label.configure(
-            text=passmessage
-        )
-        invalid_label.pack(
-            pady=10
-        )
-        aa_app.after(2500, invalid_label.pack_forget)
+        show_error(parent, invalid_label, passmessage)
         return
-        
+
     password_hash = auth.hash_password(password_entry)
 
 
     existing_user = user_queries.get_user_by_username(username_entry)
 
     if existing_user is not None:
-        invalid_label.configure(text="Username already exists")
-        invalid_label.pack(pady=10)
-        aa_app.after(2500, invalid_label.pack_forget)
+        show_error(parent, invalid_label, "Username already exists")
         return
-    
+
     created_user = user_queries.create_user(
         username_entry,
-        None,
+        email_entry,
         password_hash
     )
-    
+
     session.current_user = created_user
 
-    authentication_frame.destroy()
-    aa_title.pack_forget()
-    aa_subtitle.pack_forget()
-    menu(aa_app, aa_title)
-                
+    login_container.destroy()
+    menu(parent, aa_title)
+
 #function that will authenticate old user
-def log_in(username_entry, password_entry, invalid_label, authentication_frame, aa_subtitle, aa_app, menu, aa_title):
+def log_in(username_entry, password_entry, invalid_label, login_container, parent, menu, aa_title):
     #load in saved password
     user_data = user_queries.get_user_by_username(username_entry)
-    
+
     if user_data is None:
-        invalid_label.configure(text="User not found")
-        invalid_label.pack(pady=10)
-        aa_app.after(2500, invalid_label.pack_forget)
+        show_error(parent, invalid_label, "User not found")
         return
-    print(type(user_data["password_hash"]))
-    print(repr(user_data["password_hash"]))
+
     if not auth.check_password(user_data["password_hash"], password_entry):
-        #if not refresh label for invalid inputs
-        invalid_label.configure(
-            text="Incorrect password"
-         )
-        invalid_label.pack(
-            pady=10
-        )
-        aa_app.after(2500, invalid_label.pack_forget)
+        show_error(parent, invalid_label, "Incorrect password")
         return
-    
+
     session.current_user = user_data
-    authentication_frame.destroy()
+    login_container.destroy()
     aa_title.configure(
         font=("Terminal", 40),
         pady=5
     )
-    aa_subtitle.pack_forget()
-    menu(aa_app, aa_title)
+
+
+    menu(parent, aa_title)

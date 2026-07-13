@@ -96,8 +96,8 @@ def is_diff(value):
 def is_positive_float(value):
     """check if pos and float"""
     try:
-        float(value)
-        return True
+        if float(value) > 0:
+            return True
     except ValueError:
         return False
     

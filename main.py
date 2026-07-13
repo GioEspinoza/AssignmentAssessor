@@ -7,7 +7,12 @@ aa_app = ctk.CTk()
 
 #set title and window size
 aa_app.title('Assignment Assessor')
-aa_app.geometry('800x600')
+aa_app.geometry('900x800')
+aa_app.minsize(820, 740)
+
+aa_app.grid_rowconfigure(0, weight=0)
+aa_app.grid_columnconfigure(0, weight=1)
+aa_app.grid_rowconfigure(1, weight=1)
 
 #set title text
 aa_title = ctk.CTkLabel(
@@ -15,11 +20,21 @@ aa_title = ctk.CTkLabel(
     pady=25,
     text='Assignment Assessor',
     font=('Terminal',50),
-    fg_color='grey',
+    fg_color='transparent',
     corner_radius=10
 )
+aa_title.grid(row=0, column=0, padx=10, pady=10)
 
 set_aa_title(aa_title)
-aa_title.pack(pady=30)
-login_screen(aa_app, aa_title, menu_screen)
+
+content_frame = ctk.CTkFrame(
+    aa_app,
+    fg_color='transparent'
+)
+content_frame.grid(row=1, column=0, sticky='nsew')
+
+content_frame.grid_rowconfigure(0, weight=1)
+content_frame.grid_columnconfigure(0, weight=1)
+
+login_screen(content_frame, aa_title, menu_screen)
 aa_app.mainloop()
