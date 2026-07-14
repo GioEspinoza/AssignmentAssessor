@@ -4,7 +4,7 @@ from backend import aa_logic, session
 from gui_logic.navigation import back_to_menu, check_not_empty_gui, update_checkbox_text
 
 #edit task function
-def edit_task_gui(frame,aa_app, button_or_label=None):
+def edit_task_gui(frame, aa_app, fonts, button_or_label=None):
     aa_app.geometry('800x600')
 
     if frame != aa_app:
@@ -20,8 +20,8 @@ def edit_task_gui(frame,aa_app, button_or_label=None):
     inner_quit_button = ctk.CTkButton(
         aa_app,
         text="Cancel",
-        font=('Terminal', 15),
-        command= lambda: back_to_menu(aa_app, mark_completed_frame, inner_quit_button)
+        font=fonts["button"],
+        command= lambda: back_to_menu(aa_app, mark_completed_frame, inner_quit_button, fonts)
     )
     
     mark_completed_frame.pack(
@@ -49,7 +49,7 @@ def edit_task_gui(frame,aa_app, button_or_label=None):
                 inner_tasks_frame,
                 justify='left',
                 anchor='w',
-                font=('Terminal', 25),
+                font=fonts["card_title"],
                 text=f"[{i}] {task['course']} - {task['task']}"
             )
             inner_task_label.pack(
@@ -65,10 +65,10 @@ def edit_task_gui(frame,aa_app, button_or_label=None):
                 inner_tasks_frame,
                 text="Edit",
                 fg_color='#1f6aa5',
-                font=('Terminal', 25),
+                font=fonts["button"],
                 corner_radius=10,
                 hover_color='white',
-                command= lambda selected_task=task: edit_task_handle(selected_task, mark_completed_frame, inner_quit_button, aa_app)
+                command= lambda selected_task=task: edit_task_handle(selected_task, mark_completed_frame, inner_quit_button, aa_app, fonts)
             )
             inner_task_button.pack(
                 side="right",
@@ -78,7 +78,7 @@ def edit_task_gui(frame,aa_app, button_or_label=None):
         task_label=ctk.CTkLabel(
             mark_completed_frame,
             text="No tasks found!",
-            font=("Terminal", 35, "bold")
+            font=fonts["section_title"]
         )
         task_label.pack(
             pady=200
@@ -91,7 +91,7 @@ def edit_task_gui(frame,aa_app, button_or_label=None):
     )
 
 #handle edit frame for selected task
-def edit_task_handle(task, frame, quit_button, aa_app):
+def edit_task_handle(task, frame, quit_button, aa_app, fonts):
     #clear previous frame
     aa_app.geometry('800x700')
     frame.pack_forget()
@@ -117,13 +117,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         course_name_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text="Course Name:",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         course_name_label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
         
         course_name_entry=ctk.CTkEntry(
             edit_task_handle_frame,
-            font=('Terminal', 20),
+            font=fonts["input"],
             placeholder_text=f"{task['course']}"
         )
         course_name_entry.grid(row=0, column=1, padx=20, pady=20)
@@ -132,13 +132,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         task_name_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text="Task Name:",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         task_name_label.grid(row=1, column=0, padx=20, pady=20, sticky="w")
         
         task_name_entry=ctk.CTkEntry(
             edit_task_handle_frame,
-            font=('Terminal', 20),
+            font=fonts["input"],
             placeholder_text=f"{task['task']}"
         )
         task_name_entry.grid(row=1, column=1, padx=20, pady=20)
@@ -148,14 +148,15 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         completion_status_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text="Completion Status:",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         completion_status_label.grid(row=2, column=0, padx=20, pady=20, sticky="w")
 
         completion_status_check = ctk.CTkCheckBox(
             edit_task_handle_frame,
-            text=f"{task['completed']}", 
-            command=lambda: update_checkbox_text(completion_status_check),
+            text=f"{task['completed']}",
+            font=fonts["body"],
+            command=lambda: update_checkbox_text(completion_status_check, fonts),
             onvalue="True", 
             offvalue="False"
         )
@@ -166,7 +167,7 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         difficulty_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text=f"Difficulty: {task['difficulty']}",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         difficulty_label.grid(row=3, column=0, padx=20, pady=20, sticky="w")
         
@@ -190,13 +191,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         hours_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text="Hours Needed:",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         hours_label.grid(row=4, column=0, padx=20, pady=20, sticky="w")
         
         hours_entry=ctk.CTkEntry(
             edit_task_handle_frame,
-            font=('Terminal', 20),
+            font=fonts["input"],
             placeholder_text=f"{task['hours']}"
         )
         hours_entry.grid(row=4, column=1, padx=20, pady=20)
@@ -205,13 +206,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         date_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text=f"Due Date:",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         date_label.grid(row=5, column=0, padx=20, pady=20, sticky="w")
 
         date_entry=ctk.CTkEntry(
             edit_task_handle_frame,
-            font=('Terminal', 20),
+            font=fonts["input"],
             placeholder_text=f"{task['due_date']}"
         )
         date_entry.grid(row=5, column=1, padx=20, pady=20)
@@ -227,7 +228,7 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         save_button = ctk.CTkButton(
             button_frame,
             text="Save Changes",
-            font=('Terminal', 15),
+            font=fonts["button"],
             command= lambda: save_task_handle(
                 task['task_id'],
                 completion_status_check.get() == "True",
@@ -237,7 +238,8 @@ def edit_task_handle(task, frame, quit_button, aa_app):
                 hours_entry.get(),
                 date_entry.get(),
                 edit_task_handle_frame,
-                aa_app
+                aa_app,
+                fonts
             )
         )
         save_button.pack(
@@ -250,12 +252,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         delete_button = ctk.CTkButton(
             button_frame,
             text="Delete Task",
-            font=('Terminal', 15),
+            font=fonts["button"],
             command= lambda: delete_task_handle(
                 task['task_id'],
                 edit_task_handle_frame,
                 button_frame,
-                aa_app
+                aa_app,
+                fonts
             )
         )
         delete_button.pack(
@@ -268,8 +271,8 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         cancel_button = ctk.CTkButton(
             button_frame,
             text="Cancel",
-            font=('Terminal', 15),
-            command= lambda: back_to_edit_task_gui(edit_task_handle_frame, aa_app)
+            font=fonts["button"],
+            command= lambda: back_to_edit_task_gui(edit_task_handle_frame, aa_app, fonts)
         )
         cancel_button.pack(
             side='left',
@@ -283,13 +286,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         course_name_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text="Course Name:",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         course_name_label.grid(row=0, column=0, padx=20, pady=20, sticky="w")
         
         course_name_entry=ctk.CTkEntry(
             edit_task_handle_frame,
-            font=('Terminal', 20),
+            font=fonts["input"],
             placeholder_text=f"{task['course']}"
         )
         course_name_entry.grid(row=0, column=1, padx=20, pady=20)
@@ -297,13 +300,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         task_name_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text="Task Name:",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         task_name_label.grid(row=1, column=0, padx=20, pady=20, sticky="w")
         
         task_name_entry=ctk.CTkEntry(
             edit_task_handle_frame,
-            font=('Terminal', 20),
+            font=fonts["input"],
             placeholder_text=f"{task['task']}"
         )
         task_name_entry.grid(row=1, column=1, padx=20, pady=20)
@@ -311,14 +314,15 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         completion_status_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text="Completion Status:",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         completion_status_label.grid(row=2, column=0, padx=20, pady=20, sticky="w")
 
         completion_status_check = ctk.CTkCheckBox(
             edit_task_handle_frame,
-            text=f"{task['completed']}", 
-            command=lambda: update_checkbox_text(completion_status_check),
+            text=f"{task['completed']}",
+            font=fonts["body"],
+            command=lambda: update_checkbox_text(completion_status_check, fonts),
             onvalue="True", 
             offvalue="False"
         )
@@ -328,7 +332,7 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         difficulty_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text=f"Difficulty: {task['difficulty']}",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         difficulty_label.grid(row=3, column=0, padx=20, pady=20, sticky="w")
         
@@ -352,13 +356,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         hours_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text=f"Hours Used: {task['hours']}",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         hours_label.grid(row=4, column=0, padx=20, pady=20, sticky="w")
 
         hours_entry=ctk.CTkEntry(
             edit_task_handle_frame,
-            font=('Terminal', 20),
+            font=fonts["input"],
             placeholder_text=f"{task['hours']}"
         )
         hours_entry.grid(row=4, column=1, padx=20, pady=20)
@@ -366,13 +370,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         date_label=ctk.CTkLabel(
             edit_task_handle_frame,
             text=f"Date Completed: {task['date_completed']}",
-            font=('Terminal', 20)
+            font=fonts["body_bold"]
         )
         date_label.grid(row=5, column=0, padx=20, pady=20, sticky="w")
 
         date_entry=ctk.CTkEntry(
             edit_task_handle_frame,
-            font=('Terminal', 20),
+            font=fonts["input"],
             placeholder_text=f"{task['date_completed']}"
         )
         date_entry.grid(row=5, column=1, padx=20, pady=20)
@@ -388,7 +392,7 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         save_button = ctk.CTkButton(
             button_frame,
             text="Save Changes",
-            font=('Terminal', 15),
+            font=fonts["button"],
             command= lambda: save_task_handle(
                 task['task_id'],
                 completion_status_check.get() == "True",
@@ -398,7 +402,8 @@ def edit_task_handle(task, frame, quit_button, aa_app):
                 hours_entry.get(),
                 date_entry.get(),
                 edit_task_handle_frame,
-                aa_app
+                aa_app,
+                fonts
             )
         )
         save_button.pack(
@@ -411,12 +416,13 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         delete_button = ctk.CTkButton(
             button_frame,
             text="Delete Task",
-            font=('Terminal', 15),
+            font=fonts["button"],
             command= lambda: delete_task_handle(
                 task['task_id'],
                 edit_task_handle_frame,
                 button_frame,
-                aa_app
+                aa_app,
+                fonts
             )
         )
         delete_button.pack(
@@ -429,8 +435,8 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         cancel_button = ctk.CTkButton(
             button_frame,
             text="Cancel",
-            font=('Terminal', 15),
-            command= lambda: back_to_edit_task_gui(edit_task_handle_frame, aa_app)
+            font=fonts["button"],
+            command= lambda: back_to_edit_task_gui(edit_task_handle_frame, aa_app, fonts)
         )
         cancel_button.pack(
             side='left',
@@ -439,12 +445,12 @@ def edit_task_handle(task, frame, quit_button, aa_app):
         )
 
 #handle save button for edits
-def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, frame, aa_app):
+def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, frame, aa_app, fonts):
     tasks = task_queries.get_tasks(session.get_current_user_id())
     if check_not_empty_gui(course, task, hours) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
-            font=('Terminal', 20),
+            font=fonts["small_bold"],
             bg_color='transparent',
             text_color='red',
             text='Empty inputs detected!'        
@@ -458,7 +464,7 @@ def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, fr
     if aa_logic.is_hours(hours) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
-            font=('Terminal', 20),
+            font=fonts["small_bold"],
             bg_color='transparent',
             text_color='red',
             text='Invalid hour input!'        
@@ -472,7 +478,7 @@ def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, fr
     if is_comp is False and aa_logic.valid_due_date(date) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
-            font=('Terminal', 20),
+            font=fonts["small_bold"],
             bg_color='transparent',
             text_color='red',
             text='Invalid date input - (MM-DD-YYYY)!'        
@@ -486,7 +492,7 @@ def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, fr
     if is_comp is True and aa_logic.valid_comp_date(date) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
-            font=('Terminal', 20),
+            font=fonts["small_bold"],
             bg_color='transparent',
             text_color='red',
             text='Invalid date input - (MM-DD-YYYY)!'        
@@ -509,10 +515,10 @@ def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, fr
     }
 
     task_queries.update_task(task_id, updated_task)
-    back_to_edit_task_gui(frame, aa_app)
+    back_to_edit_task_gui(frame, aa_app, fonts)
 
 #handle delete button for edits with confirmation popup
-def delete_task_handle(task_id, frame, button_frame, aa_app):
+def delete_task_handle(task_id, frame, button_frame, aa_app, fonts):
     frame.pack_forget()
     #popup window to confirm delete
     confirm_frame = ctk.CTkFrame(aa_app)
@@ -525,7 +531,7 @@ def delete_task_handle(task_id, frame, button_frame, aa_app):
     confirm_label = ctk.CTkLabel(
         confirm_frame,
         text="Are you sure you want to delete this task?",
-        font=('Terminal', 15)
+        font=fonts["body"]
     )
     confirm_label.pack(
         pady=20
@@ -543,10 +549,10 @@ def delete_task_handle(task_id, frame, button_frame, aa_app):
     yes_button = ctk.CTkButton(
         button_frame,
         text="Yes",
-        font=('Terminal', 15),
+        font=fonts["button"],
         fg_color='red',
         hover_color='white',
-        command=lambda: confirm_delete(task_id, confirm_frame, frame, aa_app)
+        command=lambda: confirm_delete(task_id, confirm_frame, frame, aa_app, fonts)
     )
     yes_button.pack(
         side='left',
@@ -556,7 +562,7 @@ def delete_task_handle(task_id, frame, button_frame, aa_app):
     no_button = ctk.CTkButton(
         button_frame,
         text="No",
-        font=('Terminal', 15),
+        font=fonts["button"],
         command=lambda: cancel_delete(frame, confirm_frame)
     )
     no_button.pack(
@@ -566,10 +572,10 @@ def delete_task_handle(task_id, frame, button_frame, aa_app):
 
 
 #confirm delete function to delete task and update database
-def confirm_delete(task_id, confirm_frame, frame, aa_app):
+def confirm_delete(task_id, confirm_frame, frame, aa_app, fonts):
     task_queries.delete_task(task_id)
     confirm_frame.destroy()
-    back_to_edit_task_gui(frame, aa_app)
+    back_to_edit_task_gui(frame, aa_app, fonts)
 def cancel_delete(frame, confirm_frame):
     confirm_frame.destroy()
     frame.pack(
@@ -579,9 +585,9 @@ def cancel_delete(frame, confirm_frame):
         expand = 1
     )
 
-def back_to_edit_task_gui(frame, aa_app):
+def back_to_edit_task_gui(frame, aa_app, fonts):
     frame.pack_forget()
     frame.destroy()
     aa_app.geometry('800x700')
-    edit_task_gui(aa_app, aa_app=aa_app)
+    edit_task_gui(aa_app, aa_app=aa_app, fonts=fonts)
     

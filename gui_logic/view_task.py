@@ -4,7 +4,7 @@ from database import task_queries
 from gui_logic.navigation import back_to_menu
 
 #view task function
-def view_tasks_gui(frame, button_or_label, aa_app):
+def view_tasks_gui(frame, button_or_label, aa_app, fonts):
     aa_app.geometry('900x800')
     tasks = task_queries.get_tasks(user_id=session.get_current_user_id())
 
@@ -19,7 +19,7 @@ def view_tasks_gui(frame, button_or_label, aa_app):
         for i, task in enumerate(sorted_tasks, start=1):
             task_label= ctk.CTkLabel(
                 view_tasks_frame,
-                font=('Terminal', 20),
+                font=fonts["body"],
             )
         
             if task['completed'] is False:
@@ -51,7 +51,7 @@ def view_tasks_gui(frame, button_or_label, aa_app):
         task_label=ctk.CTkLabel(
             view_tasks_frame,
             text="No tasks found!",
-            font=("Terminal", 35, "bold")
+            font=fonts["section_title"]
         )
         task_label.pack(
             pady=200
@@ -60,8 +60,8 @@ def view_tasks_gui(frame, button_or_label, aa_app):
     inner_quit_button = ctk.CTkButton(
         aa_app,
         text="Cancel",
-        font=('Terminal', 15),
-        command= lambda: back_to_menu(aa_app, view_tasks_frame, inner_quit_button)
+        font=fonts["button"],
+        command= lambda: back_to_menu(aa_app, view_tasks_frame, inner_quit_button, fonts)
     )
     
     view_tasks_frame.pack(

@@ -4,7 +4,7 @@ from database import task_queries
 from gui_logic.navigation import back_to_menu
 
 #display only incomplete tasks that are urgent in order of priority (overdue first, then by least amount of days left) and display if they are overdue or not. If there are no incomplete tasks, display that there are no incomplete tasks.
-def view_urgents_gui(frame, button_or_label, aa_app):
+def view_urgents_gui(frame, button_or_label, aa_app, fonts):
     aa_app.geometry('900x800')
     tasks = task_queries.get_tasks(session.get_current_user_id())
 
@@ -24,7 +24,7 @@ def view_urgents_gui(frame, button_or_label, aa_app):
             if aa_logic.days_left(task["due_date"]) > 0:
                 task_label=ctk.CTkLabel(
                 view_urgents_frame,
-                font=('Terminal', 20),
+                font=fonts["body"],
                 text_color='white',
                     text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nPriority Rating: {task['priority']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
                 )
@@ -34,7 +34,7 @@ def view_urgents_gui(frame, button_or_label, aa_app):
             else:
                 task_label=ctk.CTkLabel(
                     view_urgents_frame,
-                    font=('Terminal', 20),
+                    font=fonts["body"],
                     text_color='red',
                     text=f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: OVERDUE\n\n"
                 )
@@ -44,7 +44,7 @@ def view_urgents_gui(frame, button_or_label, aa_app):
     else:
         task_label=ctk.CTkLabel(
             view_urgents_frame,
-            font=("Terminal", 35, "bold"),
+            font=fonts["section_title"],
             text_color='white',
             text="No incomplete tasks found!",
             
@@ -55,8 +55,8 @@ def view_urgents_gui(frame, button_or_label, aa_app):
     inner_quit_button = ctk.CTkButton(
         aa_app,
         text="Cancel",
-        font=('Terminal', 15),
-        command= lambda: back_to_menu(aa_app, view_urgents_frame, inner_quit_button)
+        font=fonts["button"],
+        command= lambda: back_to_menu(aa_app, view_urgents_frame, inner_quit_button, fonts)
     )  
     view_urgents_frame.pack(
         pady=25,
