@@ -7,7 +7,7 @@ import webbrowser
 def open_forgot_password_user_link():
     webbrowser.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
-def login_screen(parent, aa_title, menu):
+def login_screen(parent, aa_title, menu, fonts):
     parent.grid_rowconfigure(0, weight=1)
     parent.grid_columnconfigure(0, weight=1)
 
@@ -43,7 +43,7 @@ def login_screen(parent, aa_title, menu):
         height=34,
         corner_radius=8,
         border_width=0,
-        font=("Terminal", 15),
+        font=fonts["button"],
         fg_color=tab_color,
         unselected_color=tab_color,
         unselected_hover_color=tab_color
@@ -53,41 +53,41 @@ def login_screen(parent, aa_title, menu):
     login_subtitle = ctk.CTkLabel(
         login_tab,
         text="Welcome back",
-        font=("Terminal", 25, "bold")
+        font=fonts["page_title"]
     )
     login_instruction = ctk.CTkLabel(
         login_tab,
         text="Sign in to manage your assignments",
-        font=("Terminal", 15),
+        font=fonts["body"],
         text_color="gray70"
     )
     login_username_label = ctk.CTkLabel(
         login_tab,
         text="Username",
-        font=("Terminal", 15)
+        font=fonts["body_bold"]
     )
     login_username_entry = ctk.CTkEntry(
         login_tab,
         placeholder_text="Enter your username or email",
-        font=("Terminal", 15),
+        font=fonts["input"],
         height=42
     )
     login_password_label = ctk.CTkLabel(
         login_tab,
         text="Password",
-        font=("Terminal", 15)
+        font=fonts["body_bold"]
     )
     login_password_entry = ctk.CTkEntry(
         login_tab,
         placeholder_text="Enter your password",
-        font=("Terminal", 15),
+        font=fonts["input"],
         show="*",
         height=42
     )
     forgot_login_link = ctk.CTkLabel(
         login_tab,
         text="Forgot username or password?",
-        font=("Terminal", 13, "underline"),
+        font=fonts["small"],
         text_color=("#2563eb", "#60a5fa"),
         cursor="hand2"
     )
@@ -97,7 +97,7 @@ def login_screen(parent, aa_title, menu):
     )
     login_invalid_label = ctk.CTkLabel(
         login_tab,
-        font=("Terminal", 15),
+        font=fonts["small_bold"],
         text_color="#ef4444",
         text=""
     )
@@ -105,7 +105,7 @@ def login_screen(parent, aa_title, menu):
         login_tab,
         corner_radius=10,
         text="Log in",
-        font=("Terminal", 25),
+        font=fonts["button"],
         command=lambda: log_in(
             login_username_entry.get().strip(),
             login_password_entry.get(),
@@ -113,11 +113,12 @@ def login_screen(parent, aa_title, menu):
             login_container,
             parent,
             menu,
-            aa_title
+            aa_title,
+            fonts
         )
     )
 
-    login_subtitle.grid(row=0, column=0, padx=50, pady=(30, 6))
+    login_subtitle.grid(row=0, column=0, padx=50, pady=(30, 2))
     login_instruction.grid(row=1, column=0, padx=50, pady=(0, 30))
     login_username_label.grid(row=2, column=0, padx=50, pady=(0, 8), sticky="w")
     login_username_entry.grid(row=3, column=0, padx=50, sticky="ew")
@@ -131,51 +132,51 @@ def login_screen(parent, aa_title, menu):
     register_subtitle = ctk.CTkLabel(
         register_tab,
         text="Create an account",
-        font=("Terminal", 25, "bold")
+        font=fonts["page_title"]
     )
     register_instruction = ctk.CTkLabel(
         register_tab,
         text="Register to start managing your assignments",
-        font=("Terminal", 15),
+        font=fonts["body"],
         text_color="gray70"
     )
     register_username_label = ctk.CTkLabel(
         register_tab,
         text="Username",
-        font=("Terminal", 15)
+        font=fonts["body_bold"]
     )
     register_username_entry = ctk.CTkEntry(
         register_tab,
         placeholder_text="Choose a username",
-        font=("Terminal", 15),
+        font=fonts["input"],
         height=42
     )
     register_email_label = ctk.CTkLabel(
         register_tab,
         text="Email",
-        font=("Terminal", 15)
+        font=fonts["body_bold"]
     )
     register_email_entry = ctk.CTkEntry(
         register_tab,
         placeholder_text="Enter your email",
-        font=("Terminal", 15),
+        font=fonts["input"],
         height=42
     )
     register_password_label = ctk.CTkLabel(
         register_tab,
         text="Password",
-        font=("Terminal", 15)
+        font=fonts["body_bold"]
     )
     register_password_entry = ctk.CTkEntry(
         register_tab,
         placeholder_text="Create a password",
-        font=("Terminal", 15),
+        font=fonts["input"],
         show="*",
         height=42
     )
     register_invalid_label = ctk.CTkLabel(
         register_tab,
-        font=("Terminal", 15),
+        font=fonts["small_bold"],
         text_color="#ef4444",
         text=""
     )
@@ -183,7 +184,7 @@ def login_screen(parent, aa_title, menu):
         register_tab,
         corner_radius=10,
         text="Register",
-        font=("Terminal", 25),
+        font=fonts["button"],
         command=lambda: new_user(
             register_username_entry.get().strip(),
             register_email_entry.get().strip(),
@@ -192,11 +193,12 @@ def login_screen(parent, aa_title, menu):
             login_container,
             parent,
             menu,
-            aa_title
+            aa_title,
+            fonts
         )
     )
 
-    register_subtitle.grid(row=0, column=0, padx=50, pady=(22, 6))
+    register_subtitle.grid(row=0, column=0, padx=50, pady=(22, 2))
     register_instruction.grid(row=1, column=0, padx=50, pady=(0, 20))
     register_username_label.grid(row=2, column=0, padx=50, pady=(0, 6), sticky="w")
     register_username_entry.grid(row=3, column=0, padx=50, sticky="ew")
@@ -222,7 +224,7 @@ def show_error(parent, invalid_label, message):
 
 
 #function that will register new user
-def new_user(username_entry, email_entry, password_entry, invalid_label, login_container, parent, menu, aa_title):
+def new_user(username_entry, email_entry, password_entry, invalid_label, login_container, parent, menu, aa_title, fonts):
     #check if user and password are valid
     valid, message = auth.validate_username(username_entry)
     passvalid, passmessage = auth.validate_password(password_entry)
@@ -254,11 +256,13 @@ def new_user(username_entry, email_entry, password_entry, invalid_label, login_c
 
     session.current_user = created_user
 
+    if aa_title is not None:
+        aa_title.grid_remove()
     login_container.destroy()
-    menu(parent, aa_title)
+    menu(parent, fonts, session.current_user["username"])
 
 #function that will authenticate old user
-def log_in(username_entry, password_entry, invalid_label, login_container, parent, menu, aa_title):
+def log_in(username_entry, password_entry, invalid_label, login_container, parent, menu, aa_title, fonts):
     #load in saved password
     user_data = user_queries.get_user_by_username(username_entry)
 
@@ -271,11 +275,8 @@ def log_in(username_entry, password_entry, invalid_label, login_container, paren
         return
 
     session.current_user = user_data
+
+    if aa_title is not None:
+        aa_title.grid_remove()
     login_container.destroy()
-    aa_title.configure(
-        font=("Terminal", 40),
-        pady=5
-    )
-
-
-    menu(parent, aa_title)
+    menu(parent, fonts, session.current_user["username"])

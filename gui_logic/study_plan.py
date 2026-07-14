@@ -4,7 +4,7 @@ from backend import aa_logic, session
 from gui_logic.navigation import back_to_menu
 
 #study plan function
-def study_plan_gui(frame, button_or_label, aa_app): 
+def study_plan_gui(frame, button_or_label, aa_app, fonts): 
     aa_app.geometry('900x800')
     tasks = task_queries.get_tasks(session.get_current_user_id())
 
@@ -18,15 +18,15 @@ def study_plan_gui(frame, button_or_label, aa_app):
     study_plan_label = ctk.CTkLabel(
         study_plan_frame,
         text='Study Plan',
-        font=('Terminal', 25, 'bold')
+        font=fonts["page_title"]
     )
 
     #quit button back to menu
     inner_quit_button = ctk.CTkButton(
         aa_app,
         text="Cancel",
-        font=('Terminal', 15),
-        command= lambda: back_to_menu(aa_app, study_plan_frame, inner_quit_button)
+        font=fonts["button"],
+        command= lambda: back_to_menu(aa_app, study_plan_frame, inner_quit_button, fonts)
     )
     
     study_plan_frame.pack(
@@ -52,7 +52,7 @@ def study_plan_gui(frame, button_or_label, aa_app):
             if aa_logic.days_left(task["due_date"]) > 0:
                 task_label=ctk.CTkLabel(
                 study_plan_frame,
-                font=('Terminal', 20),
+                font=fonts["body"],
                 text_color='white',
                 text = f"[{i}] - Course: {task['course']}\n\nTask: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nAmount of Days Left: {aa_logic.days_left(task["due_date"])}\n\nSuggested Hours Per Day: {hours_day}\n\n"
                 )
@@ -62,7 +62,7 @@ def study_plan_gui(frame, button_or_label, aa_app):
             else:
                 task_label=ctk.CTkLabel(
                     study_plan_frame,
-                    font=('Terminal', 20),
+                    font=fonts["body"],
                     text_color='red',
                     text=f"[{i}] - Course: {task['course']}\n\nTask: {task['task']}\n\nDifficulty: {task['difficulty']}\n\nDays left: OVERDUE\n\nHours per day: ASAP\n\n"
                 )
@@ -73,7 +73,7 @@ def study_plan_gui(frame, button_or_label, aa_app):
         task_label=ctk.CTkLabel(
             study_plan_frame,
             text="No incomplete tasks found!",
-            font=("Terminal", 35, "bold")
+            font=fonts["section_title"]
         )
         task_label.pack(
             pady=200

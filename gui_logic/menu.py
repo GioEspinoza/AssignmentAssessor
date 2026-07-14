@@ -1,90 +1,62 @@
 import customtkinter as ctk
-from gui_logic.add_task import add_task_gui
-from gui_logic.navigation import back_to_login, set_aa_title
-from gui_logic.view_task import view_tasks_gui
-from gui_logic.view_urgent import view_urgents_gui
-from gui_logic.study_plan import study_plan_gui
-from gui_logic.edit_task import edit_task_gui
+from backend import session
+import datetime
 #will show menu after authencation
-def menu_screen(aa_app, aa_title=None):
 
-    set_aa_title(aa_title)
-    #instantiate menu frame
-    menu_frame = ctk.CTkFrame(
-        aa_app,
-        bg_color='transparent',
-        corner_radius=10
+def get_time_of_day():
+    current_hour = datetime.datetime.now().hour
+    if 5 <= current_hour < 12:
+        return "Good morning"
+    elif 12 <= current_hour < 18:
+        return "Good afternoon"
+    else:
+        return "Good evening"
+
+def menu_screen(parent, fonts, username=None):
+    if not isinstance(username, str):
+        if username is None:
+            if session.current_user is None:
+                 raise RuntimeError("No user is currently logged in.")
+            username = session.current_user["username"]
+        
+
+    for widget in parent.winfo_children():
+        widget.destroy()
+
+    dashboard_frame = ctk.CTkFrame(
+        parent,
+        fg_color='transparent'
     )
-    #instantiate exit button
-    quit_button = ctk.CTkButton(
-        aa_app,
-        font=('Terminal', 20),
-        text="Exit",
-        command=lambda: back_to_login(aa_app, aa_title, menu_frame, quit_button)
-        )
-
-    #instantiate menu buttons
-    add_task_button = ctk.CTkButton(
-        menu_frame,
-        font=('Terminal', 20),
-        text="Add Task",
-        command= lambda: add_task_gui(menu_frame, quit_button, aa_app)
+    title_label = ctk.CTkLabel(
+        dashboard_frame,
+        text=f"{get_time_of_day()}, {username}!",
+        font=fonts["display"],
+        fg_color='transparent'
     )
-
-    view_task_button = ctk.CTkButton(
-        menu_frame,
-        font=('Terminal', 20),
-        text="View Task(s)",
-        command= lambda: view_tasks_gui(menu_frame, quit_button, aa_app)
-        )
-    
-    view_urgent_button = ctk.CTkButton(
-        menu_frame,
-        font=('Terminal', 20),
-        text="View Urgent(s)",
-        command= lambda: view_urgents_gui(menu_frame, quit_button, aa_app)
-        )
-    
-    study_button = ctk.CTkButton(
-        menu_frame,
-        font=('Terminal', 20),
-        text="Study Plan",
-        command= lambda: study_plan_gui(menu_frame, quit_button, aa_app)
-        )
-    
-    edit_task_button = ctk.CTkButton(
-        menu_frame,
-        font=('Terminal', 20),
-        text="Edit Task",
-        command= lambda: edit_task_gui(menu_frame, quit_button, aa_app)
-        )
-
-    #pack frame
-    menu_frame.pack(
-        pady=20,
-        padx=250,
-        fill ='both', 
-        expand = 1
+    separator = ctk.CTkFrame(
+        dashboard_frame,
+        height=2,
+        corner_radius=0,
+        fg_color=("gray75", "gray30")
+    )
+    subtitle_label = ctk.CTkLabel(
+        dashboard_frame,
+        text="Dashboard",
+        font=fonts["subtitle"],
+        text_color='gray70',
+        fg_color='transparent'
     )
 
-    #pack buttons
-    add_task_button.pack(
-        pady=25
-    )
-    view_task_button.pack(
-        pady=25
-    )
-    view_urgent_button.pack(
-        pady=25
-    )
-    study_button.pack(
-        pady=25
-    )
-    edit_task_button.pack(
-        pady=25
-    )
+    parent.grid_rowconfigure(0, weight=1)
+    parent.grid_columnconfigure(0, weight=1)
 
-    #pack exit button
-    quit_button.pack(
-        pady=10
-    )
+    dashboard_frame.grid(row=0, column=0, sticky='nsew')
+    dashboard_frame.grid_rowconfigure((0, 1, 2), weight=0)
+    dashboard_frame.grid_rowconfigure(3, weight=1)
+    dashboard_frame.grid_columnconfigure(0, weight=1)
+
+    title_label.grid(row=0, column=0, padx=30, pady=(20, 12), sticky="nw")
+    separator.grid(row=1, column=0, sticky="ew")
+    subtitle_label.grid(row=2, column=0, padx=30, pady=(12, 20), sticky="nw")
+
+    return dashboard_frame

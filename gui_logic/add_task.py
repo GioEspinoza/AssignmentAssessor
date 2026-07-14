@@ -6,14 +6,14 @@ from gui_logic.navigation import back_to_menu, check_not_empty_gui
 
 
 #add task function
-def add_task_gui(frame, button_or_label, aa_app):
+def add_task_gui(frame, button_or_label, aa_app, fonts):
     #make window bigger
     aa_app.geometry('900x800')
 
     #instantiate label for invalid password/usernames
     invalid_label = ctk.CTkLabel(
             aa_app,
-            font=('Terminal', 25),
+            font=fonts["small_bold"],
             bg_color='transparent',
             text_color='red',
             text=''        
@@ -31,20 +31,21 @@ def add_task_gui(frame, button_or_label, aa_app):
         add_task_frame,
         placeholder_text="Course Name",
         placeholder_text_color='white',
-        font=('Terminal', 15)
+        font=fonts["input"]
     )
 
     task_entry = ctk.CTkEntry(
         add_task_frame,
         placeholder_text='Task Name',
         placeholder_text_color='white',
-        font=('Terminal', 15)
+        font=fonts["input"]
     )
 
     #instantiate compelted check box
     completed_box = ctk.CTkCheckBox(
         add_task_frame,
         text="Is task completed?",
+        font=fonts["body"],
         checkmark_color='green',
         fg_color='white',
         hover_color="white"
@@ -54,7 +55,7 @@ def add_task_gui(frame, button_or_label, aa_app):
     difficulty_label = ctk.CTkLabel(
         add_task_frame,
         text="On a scale of 1-5, how difficult?",
-        font=("Terminal", 15)
+        font=fonts["body"]
     )
     difficulty_slider = ctk.CTkSlider(
         add_task_frame,
@@ -74,33 +75,33 @@ def add_task_gui(frame, button_or_label, aa_app):
     hours_label = ctk.CTkLabel(
         add_task_frame,
         text="Input hours needed/used:",
-        font=("Terminal", 15)
+        font=fonts["body"]
     )
     hours_entry = ctk.CTkEntry(
         add_task_frame,
         placeholder_text='Hours',
         placeholder_text_color='white',
-        font=('Terminal', 15)
+        font=fonts["input"]
     )
 
     #instatiate data label and entry point
     date_label = ctk.CTkLabel(
         add_task_frame,
         text="Input date due/completed:",
-        font=("Terminal", 15)
+        font=fonts["body"]
     )
     date_entry = ctk.CTkEntry(
         add_task_frame,
         placeholder_text='Date',
         placeholder_text_color='white',
-        font=('Terminal', 15)
+        font=fonts["input"]
     )
     
     #instantiate submit button
     submit_button = ctk.CTkButton(
         add_task_frame,
         text='Submit Task',
-        font=('Terminal', 20),
+        font=fonts["button"],
         command= lambda: submit_task_handle(
             bool(completed_box.get()),
             course_entry.get().strip(),
@@ -111,15 +112,16 @@ def add_task_gui(frame, button_or_label, aa_app):
             invalid_label,
             add_task_frame,
             inner_quit_button,
-            aa_app
+            aa_app,
+            fonts
         )
     )
     #quit button back to menu
     inner_quit_button = ctk.CTkButton(
         add_task_frame,
         text="Cancel",
-        font=('Terminal', 15),
-        command= lambda: back_to_menu(aa_app, add_task_frame, inner_quit_button)
+        font=fonts["button"],
+        command= lambda: back_to_menu(aa_app, add_task_frame, inner_quit_button, fonts)
     )
 
     #unshow menu frame  if coming from menu and then show task frame
@@ -164,7 +166,7 @@ def add_task_gui(frame, button_or_label, aa_app):
         pady=10
     )
 #submit task handle function
-def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_label, frame, quit_button, aa_app):
+def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_label, frame, quit_button, aa_app, fonts):
     #check if task is completed or not
     if is_comp is False:
         #check if inputs for course and task are detected
@@ -200,7 +202,7 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
             aa_app.after(2500, invalid_label.pack_forget)
             return
         
-        rev_task_gui(aa_logic.return_task(is_comp, course, task, difficulty, None, hours, None, date), frame, quit_button, aa_app)
+        rev_task_gui(aa_logic.return_task(is_comp, course, task, difficulty, None, hours, None, date), frame, quit_button, aa_app, fonts)
         return
     
     if check_not_empty_gui(course, task, hours) is False:
@@ -233,10 +235,10 @@ def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_l
         aa_app.after(2500, invalid_label.pack_forget)
         return
 
-    rev_task_gui(aa_logic.return_task(is_comp, course, task, difficulty, hours, None, date, None), frame, quit_button, aa_app)
+    rev_task_gui(aa_logic.return_task(is_comp, course, task, difficulty, hours, None, date, None), frame, quit_button, aa_app, fonts)
     return
 #review task logic for gui
-def rev_task_gui(task, frame, quit_button, aa_app):
+def rev_task_gui(task, frame, quit_button, aa_app, fonts):
     
     #minimize window
     aa_app.geometry('800x600')
@@ -252,7 +254,7 @@ def rev_task_gui(task, frame, quit_button, aa_app):
     #instantiate label that will display task
     task_label= ctk.CTkLabel(
             rev_task_frame,
-            font=('Terminal', 20),
+            font=fonts["body"],
         )
     
     #label that will show task saved if completed
@@ -278,27 +280,27 @@ def rev_task_gui(task, frame, quit_button, aa_app):
         bg_color='transparent',
         fg_color='red',
         text_color='white',
-        font=('Terminal', 15),
+        font=fonts["button"],
         corner_radius=10,
         hover_color='white',
-        command= lambda: add_task_gui(rev_task_frame, task_recognized_label, aa_app)
+        command= lambda: add_task_gui(rev_task_frame, task_recognized_label, aa_app, fonts)
     )
     yes_button = ctk.CTkButton(
     yes_no_frame,
     text="Yes",
     bg_color='transparent',
     fg_color='green',
-    font=('Terminal', 15),
+    font=fonts["button"],
     text_color='white',
     corner_radius=10,
     hover_color='white',
-    command= lambda: submit_task(task, rev_task_frame, task_recognized_label, aa_app)
+    command= lambda: submit_task(task, rev_task_frame, task_recognized_label, aa_app, fonts)
     )
   
     #label to let user know the task was valid
     task_recognized_label = ctk.CTkLabel(
         aa_app,
-        font=('Terminal', 20),
+        font=fonts["body_bold"],
         text_color='green',
         text='Task valid! Please review'
     )
@@ -330,6 +332,6 @@ def rev_task_gui(task, frame, quit_button, aa_app):
         padx=10
     )
 #logic for yes and no buttons
-def submit_task(task, frame, button_or_label, aa_app):
+def submit_task(task, frame, button_or_label, aa_app, fonts):
     task_queries.add_task(session.get_current_user_id(), task)
-    back_to_menu(aa_app, frame, button_or_label)
+    back_to_menu(aa_app, frame, button_or_label, fonts)
