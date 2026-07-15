@@ -45,14 +45,10 @@ def get_time_of_day():
         return "Good evening"
 
 def menu_screen(parent, fonts, username=None):
-    if isinstance(username, str):
-        if username is not None:
-            if session.current_user is not None:
-                username = session.current_user["username"]
-            else:
-                raise RuntimeError("No user is currently logged in.")
-            
-        
+    if username is None:
+        if session.current_user is None:
+            raise RuntimeError("No user is currently logged in.")
+        username = session.current_user["username"]
 
     for widget in parent.winfo_children():
         widget.destroy()
