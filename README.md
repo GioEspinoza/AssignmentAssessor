@@ -88,12 +88,6 @@ venv\Scripts\activate
 
 ### Database
 
-Create a PostgreSQL database and initialize its tables:
-
-```bash
-psql -d assignment_assessor -f database/schema.sql
-```
-
 Copy the environment template and replace the example connection string:
 
 ```bash
@@ -103,6 +97,9 @@ cp .env.example .env
 ```dotenv
 DATABASE_URL=postgresql://username:password@localhost:5432/assignment_assessor
 ```
+
+The PostgreSQL schema is currently managed separately in DataGrip and is not
+included in this repository.
 
 ### Run the application
 
