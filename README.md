@@ -116,7 +116,7 @@ Install development dependencies and run the quality checks:
 
 ```bash
 pip install -r requirements-dev.txt
-pytest
+python -m pytest
 ruff check .
 python -m compileall -q backend database gui_logic gui_style gui_widgets main.py
 ```
