@@ -88,11 +88,14 @@ venv\Scripts\activate
 
 ### Database
 
-The repository includes an export of the authoritative DataGrip-managed schema.
-Create a PostgreSQL database and apply it with:
+The repository includes a generated snapshot of the authoritative
+DataGrip-managed schema. Make schema changes in DataGrip, then regenerate this
+snapshot from the live database; do not edit it manually.
+
+Create a PostgreSQL database and apply the snapshot with:
 
 ```bash
-psql -d assignment_assessor -f database/schema.sql
+psql -d assignment_assessor -f database/schema_snapshot.sql
 ```
 
 Copy the environment template and replace the example connection string:
@@ -105,8 +108,8 @@ cp .env.example .env
 DATABASE_URL=postgresql://username:password@localhost:5432/assignment_assessor
 ```
 
-When the database design changes in DataGrip, regenerate the schema export so
-the repository remains synchronized with the live design.
+The snapshot is documentation and a reproducible setup aid, not the primary
+schema-editing workflow.
 
 ### Run the application
 

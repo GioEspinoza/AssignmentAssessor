@@ -1,5 +1,6 @@
+-- GENERATED SNAPSHOT — DO NOT EDIT MANUALLY.
 -- Exported from the authoritative DataGrip-connected PostgreSQL database.
--- Keep this file synchronized with the database design; do not edit it independently.
+-- Make schema changes in DataGrip, then regenerate this file from the live database.
 
 CREATE TABLE public.tasks (
     task_id integer NOT NULL,
