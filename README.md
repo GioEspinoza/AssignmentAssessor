@@ -88,6 +88,13 @@ venv\Scripts\activate
 
 ### Database
 
+The repository includes an export of the authoritative DataGrip-managed schema.
+Create a PostgreSQL database and apply it with:
+
+```bash
+psql -d assignment_assessor -f database/schema.sql
+```
+
 Copy the environment template and replace the example connection string:
 
 ```bash
@@ -98,8 +105,8 @@ cp .env.example .env
 DATABASE_URL=postgresql://username:password@localhost:5432/assignment_assessor
 ```
 
-The PostgreSQL schema is currently managed separately in DataGrip and is not
-included in this repository.
+When the database design changes in DataGrip, regenerate the schema export so
+the repository remains synchronized with the live design.
 
 ### Run the application
 
