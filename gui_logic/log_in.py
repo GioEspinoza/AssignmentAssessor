@@ -103,6 +103,7 @@ def login_screen(parent, aa_title, menu, fonts):
     )
     log_in_button = ctk.CTkButton(
         login_tab,
+        height=42,
         corner_radius=10,
         text="Log in",
         font=fonts["button"],
@@ -183,6 +184,7 @@ def login_screen(parent, aa_title, menu, fonts):
     register_button = ctk.CTkButton(
         register_tab,
         corner_radius=10,
+        height=42,
         text="Register",
         font=fonts["button"],
         command=lambda: new_user(
