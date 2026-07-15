@@ -1,8 +1,32 @@
-venv
+# Virtual environments
+venv/
+.venv/
+
+# Python artifacts
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Legacy local data files
 tasks.json
 user_prof.json
 .user_prof.json
 .tasks.json
-.vscode/

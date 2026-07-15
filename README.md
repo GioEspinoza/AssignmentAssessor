@@ -1,150 +1,143 @@
-# AssignmentAssessor: Smart Academic Planner
+# Assignment Assessor
 
-## Video Demo
+[![CI](https://github.com/GioEspinoza/AssignmentAssessor/actions/workflows/ci.yml/badge.svg)](https://github.com/GioEspinoza/AssignmentAssessor/actions/workflows/ci.yml)
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![CustomTkinter](https://img.shields.io/badge/UI-CustomTkinter-1f6aa5)](https://github.com/TomSchimansky/CustomTkinter)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
-## Description
+Assignment Assessor is a desktop academic planner that helps students decide
+what to work on next. It combines assignment difficulty, estimated effort, and
+time remaining into a priority score, then turns that information into a daily
+study recommendation.
 
-AssignmentAssessor is a desktop application built with **Python**, **CustomTkinter**, and **PostgreSQL** that helps students organize coursework, prioritize assignments, and generate personalized study plans. The application provides a graphical user interface where users can securely create an account, manage assignments, and view recommendations based on workload and upcoming deadlines.
+The project demonstrates layered Python application design, secure credential
+storage, PostgreSQL CRUD operations, automated tests, and a reusable
+CustomTkinter design system.
 
-Unlike a traditional to-do list, AssignmentAssessor evaluates each assignment using a custom priority algorithm that considers assignment difficulty, estimated completion time, and the number of days remaining before the due date. This allows students to focus on the assignments that require the most attention first.
+> The dashboard UI is being redesigned. The authentication flow, assignment
+> workflows, prioritization logic, and PostgreSQL persistence are implemented;
+> the new reusable dashboard cards are intentionally still in progress.
 
-The application follows a layered architecture that separates the graphical interface from the business logic and database operations. Authentication, task management, validation, and database queries are organized into separate modules, making the project easier to maintain and expand.
+## Highlights
 
----
+- Multi-user registration and login with salted PBKDF2 password hashes
+- User-scoped assignment storage backed by PostgreSQL
+- Create, read, update, complete, and delete assignment workflows
+- Priority ranking for incomplete and overdue work
+- Daily study-hour recommendations
+- Shared typography, color, and spacing tokens for consistent UI styling
+- Unit-tested business and authentication logic
+- GitHub Actions checks for tests, linting, and syntax
 
-## User Accounts
+## How prioritization works
 
-AssignmentAssessor supports multiple users through PostgreSQL.
+For each incomplete assignment:
 
-Users can:
+```text
+priority = (difficulty × estimated hours) / days remaining
+```
 
-* Register a new account with a securely hashed password
-* Log in to an existing account
-* Maintain their own independent assignment list
+Assignments due today or already overdue use one day as the denominator. This
+keeps the result finite while ensuring urgent work receives a high score.
 
-Passwords are hashed before being stored in the database, ensuring that plaintext passwords are never saved.
+Study-plan recommendations use:
 
----
+```text
+recommended hours per day = estimated hours / days remaining
+```
 
-## Adding Assignments
+## Architecture
 
-Users can create both incomplete and completed assignments.
+```text
+AssignmentAssessor/
+├── backend/          # validation, authentication, session, and priority logic
+├── database/         # PostgreSQL connection and query modules
+├── gui_logic/        # CustomTkinter screens and navigation
+├── gui_style/        # typography, color, and spacing design tokens
+├── gui_widgets/      # reusable UI component package
+├── tests/            # database-independent business-logic tests
+└── main.py           # desktop application entry point
+```
 
-For incomplete assignments, the application records:
+The UI calls the business and database layers through focused modules instead
+of embedding SQL or password logic directly in widgets.
 
-* Course name
-* Assignment name
-* Difficulty (1–5)
-* Estimated hours required
-* Due date
+## Local setup
 
-For completed assignments, the application records:
+### Prerequisites
 
-* Course name
-* Assignment name
-* Difficulty (1–5)
-* Hours used
-* Date completed
+- Python 3.12 or newer
+- PostgreSQL 14 or newer
 
-Extensive validation ensures that all user input is properly formatted before it is written to the database.
+### Installation
 
----
+```bash
+git clone https://github.com/GioEspinoza/AssignmentAssessor.git
+cd AssignmentAssessor
+python -m venv venv
+source venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-## Viewing Assignments
+On Windows, activate the environment with:
 
-Assignments are displayed alphabetically and clearly indicate whether they are completed or incomplete.
+```powershell
+venv\Scripts\activate
+```
 
-Incomplete assignments automatically display if they are overdue, while completed assignments display the date they were finished.
+### Database
 
----
+Create a PostgreSQL database and initialize its tables:
 
-## Editing and Deleting Assignments
+```bash
+psql -d assignment_assessor -f database/schema.sql
+```
 
-Users can modify existing assignments through the graphical interface.
+Copy the environment template and replace the example connection string:
 
-Assignments may be:
+```bash
+cp .env.example .env
+```
 
-* Updated
-* Marked as completed or incomplete
-* Deleted
+```dotenv
+DATABASE_URL=postgresql://username:password@localhost:5432/assignment_assessor
+```
 
-All changes are immediately synchronized with the PostgreSQL database using CRUD operations.
+### Run the application
 
----
+```bash
+python main.py
+```
 
-## Priority Calculation
+## Development
 
-AssignmentAssessor prioritizes incomplete assignments using the following formula:
+Install development dependencies and run the quality checks:
 
-Priority = (Difficulty × Estimated Hours) / Days Remaining
+```bash
+pip install -r requirements-dev.txt
+pytest
+ruff check .
+python -m compileall -q backend database gui_logic gui_style gui_widgets main.py
+```
 
-Assignments with higher priority scores appear before less urgent assignments. Overdue assignments are automatically placed at the top of the priority list.
+Database integration requires a configured PostgreSQL instance. The unit test
+suite is intentionally database-independent and runs without a `.env` file.
 
----
+## Security
 
-## Study Plan Generation
+Passwords are stored as salted PBKDF2-HMAC-SHA256 hashes, never as plaintext.
+Local environment files are excluded from version control. See
+[SECURITY.md](SECURITY.md) for responsible disclosure guidance.
 
-The application generates personalized study recommendations based on assignment priority.
+## Roadmap
 
-For each incomplete assignment, AssignmentAssessor calculates:
+- Finish the reusable dashboard card component and responsive dashboard
+- Replace free-text dates with a calendar date picker
+- Add password recovery and account-management flows
+- Add database integration tests
+- Add reminders and workload visualizations
 
-Hours Per Day = Estimated Hours / Days Remaining
+## Author
 
-This helps students distribute their workload more effectively while ensuring that approaching deadlines receive the most attention.
-
----
-
-## Database Design
-
-AssignmentAssessor uses PostgreSQL as its persistent data store.
-
-The project implements full CRUD functionality through dedicated query modules:
-
-* Create users and assignments
-* Retrieve user-specific assignments
-* Update assignment information
-* Delete assignments
-
-Database access is separated from the GUI using dedicated `user_queries.py` and `task_queries.py` modules.
-
----
-
-## Testing
-
-The project includes automated tests using **pytest**.
-
-Tests verify important application logic including:
-
-* Difficulty validation
-* Numeric input validation
-* Due date validation
-* Completion date validation
-* Priority calculations
-* Study plan calculations
-
-These tests help ensure that AssignmentAssessor behaves correctly as new features are added.
-
----
-
-## Technologies Used
-
-* Python
-* CustomTkinter
-* PostgreSQL
-* Psycopg
-* python-dotenv
-* pytest
-
----
-
-## Future Improvements
-
-Future versions of AssignmentAssessor may include:
-
-* Assignment categories and tags
-* GPA and grade tracking
-* Calendar integration
-* Email or desktop reminders
-* Study history analytics
-* Data visualizations showing workload over time
-* Cloud synchronization across devices
+Built by [Gio Espinoza](https://github.com/GioEspinoza).
