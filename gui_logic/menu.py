@@ -9,29 +9,40 @@ from gui_style import colors, spacing
 # Presentation data only. A future card widget can iterate over this collection.
 DASHBOARD_CARD_CONFIG = (
     {
-        "key": "add_task",
-        "title": "Add assignment",
-        "description": "Create a new assignment and set its due date.",
+        "key": "assignments",
+        "title": "Assignments",
+        "description": "Create a new assignment and set its due date. Manage your coursework and deadlines.",
+        "accent_color": colors.ASSIGNMENTS_ACCENT,
     },
     {
-        "key": "view_tasks",
-        "title": "All assignments",
-        "description": "Review assignments and their completion status.",
+        "key": "urgent",
+        "title": "Urgent",
+        "description": "Review assignments and their completion status. Focus on overdue and approaching work.",
+        "accent_color": colors.URGENT_ACCENT,
     },
     {
-        "key": "urgent_tasks",
-        "title": "Urgent assignments",
-        "description": "Focus on overdue and approaching work.",
+        "key": "calendar",
+        "title": "Calendar",
+        "description": "View your assignments and events in a monthly calendar.",
+        "accent_color": colors.CALENDAR_ACCENT,
     },
     {
-        "key": "study_plan",
-        "title": "Study plan",
-        "description": "See suggested daily effort for upcoming work.",
+        "key": "study_planner",
+        "title": "Study planner",
+        "description": "Build and manage your study schedule.",
+        "accent_color": colors.PLANNER_ACCENT,
     },
     {
-        "key": "edit_tasks",
-        "title": "Manage assignments",
-        "description": "Edit, complete, or remove an assignment.",
+        "key": "analytics",
+        "title": "Analytics",
+        "description": "View your progress and performance metrics.",
+        "accent_color": colors.ANALYTICS_ACCENT,
+    },
+    {
+        "key": "lock_in",
+        "title": "Lock-in",
+        "description": "Start a focused study session.",
+        "accent_color": colors.LOCK_IN_ACCENT,
     },
 )
 
@@ -111,8 +122,16 @@ def menu_screen(parent, fonts, username=None):
         pady=(0, spacing.PAGE_Y),
         sticky="nsew",
     )
-    cards_container.grid_columnconfigure((0, 1), weight=1, uniform="dashboard_cards")
+    cards_container.grid_columnconfigure(
+        (0, 1, 2),
+        weight=1,
+        uniform="dashboard_cards",
+        )
 
-    # Intentionally empty until the reusable card widget is implemented.
+    cards_container.grid_rowconfigure(
+        (0, 1),
+        weight=1,
+        uniform="dashboard_cards",
+    )
 
     return dashboard_frame

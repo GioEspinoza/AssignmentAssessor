@@ -1,5 +1,3 @@
-"""Shared spacing and sizing tokens for UI layout."""
-
 SPACE_1 = 4
 SPACE_2 = 8
 SPACE_3 = 12
@@ -16,8 +14,15 @@ SECTION_GAP = SPACE_6
 GRID_GAP = SPACE_4
 CARD_PADDING = SPACE_5
 
-RADIUS_SMALL = 8
+RADIUS_SMALL = 9
 RADIUS_MEDIUM = 12
 RADIUS_LARGE = 16
+
+CARD_BORDER_WIDTH = 1
+CARD_MIN_WIDTH = 220
+CARD_MIN_HEIGHT = 150
+CARD_ACCENT_WIDTH = 5
+CARD_ICON_SIZE = 36
+
 
 __all__ = [name for name in globals() if name.isupper()]
