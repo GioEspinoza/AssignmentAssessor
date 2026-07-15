@@ -1,0 +1,2 @@
+# The generated snapshot represents the project's authoritative SQL design.
+database/schema_snapshot.sql -linguist-generated linguist-detectable=true
