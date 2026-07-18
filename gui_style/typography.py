@@ -1,7 +1,5 @@
 from tkinter import font as tkfont
-
 import customtkinter as ctk
-
 
 _fonts_cache: dict[str, ctk.CTkFont] | None = None
 
@@ -9,7 +7,6 @@ __all__ = ["create_fonts"]
 
 
 def create_fonts(root: ctk.CTk) -> dict[str, ctk.CTkFont]:
-    """Create and cache the application's shared typography styles."""
 
     global _fonts_cache
 

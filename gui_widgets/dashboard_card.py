@@ -19,8 +19,6 @@ class DashboardCard(ctk.CTkFrame):
             border_color=colors.BORDER,
         )
 
-        self.command = command
-
         self.title_label = ctk.CTkLabel(
             self,
             text=title,
@@ -46,6 +44,29 @@ class DashboardCard(ctk.CTkFrame):
             corner_radius=spacing.RADIUS_LARGE,
         )
 
+        self.title_label.grid(
+            row=0,
+            column=1,
+            padx=(spacing.CARD_PADDING, spacing.CARD_PADDING),
+            pady=(spacing.CARD_PADDING, 0),
+            sticky="nw",
+        )
+        self.description_label.grid(
+            row=1,
+            column=1,
+            padx=(spacing.CARD_PADDING, spacing.CARD_PADDING),
+            pady=(spacing.SPACE_2, spacing.CARD_PADDING),
+            sticky="nw",
+        )
+        self.accent_frame.grid(
+            row=0,
+            column=0,
+            rowspan=2,
+            sticky="nsw",
+        )
+
+        self.command = command
+
         self.bind("<Button-1>", self._on_click)
         self.bind("<Enter>", self._on_hover_enter)
         self.bind("<Leave>", self._on_hover_leave)
@@ -56,14 +77,11 @@ class DashboardCard(ctk.CTkFrame):
         if self.command:
             self.configure(cursor="hand2")
 
-
-
     def _on_hover_leave(self, event):
         self.configure(fg_color=colors.SURFACE)
 
         if self.command:
             self.configure(cursor="")
-
 
     def _on_click(self, event):
         if self.command:

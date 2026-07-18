@@ -2,8 +2,9 @@ import customtkinter as ctk
 from backend import session
 import datetime
 from gui_style import colors, spacing
+from gui_widgets.dashboard_card import DashboardCard
 
-#will show menu after authencation
+# will show menu after authencation
 
 
 # Presentation data only. A future card widget can iterate over this collection.
@@ -107,7 +108,13 @@ def menu_screen(parent, fonts, username=None):
         pady=(spacing.PAGE_Y, spacing.SPACE_3),
         sticky="nw",
     )
-    separator.grid(row=1, column=0, sticky="ew")
+
+    separator.grid(
+        row=1,
+        column=0,
+        sticky="ew"
+    )
+
     subtitle_label.grid(
         row=2,
         column=0,
@@ -132,6 +139,108 @@ def menu_screen(parent, fonts, username=None):
         (0, 1),
         weight=1,
         uniform="dashboard_cards",
+    )
+
+    assignment_card = DashboardCard(
+        cards_container,
+        fonts=fonts,
+        title=DASHBOARD_CARD_CONFIG[0]["title"],
+        description=DASHBOARD_CARD_CONFIG[0]["description"],
+        accent_color=DASHBOARD_CARD_CONFIG[0]["accent_color"],
+        command=lambda: print("Assignments card clicked"),
+    )
+
+    assignment_card.grid(
+        row=0,
+        column=0,
+        padx=(0, spacing.SPACE_3),
+        pady=(0, spacing.SPACE_3),
+        sticky="nsew"
+    )
+
+    urgent_card = DashboardCard(
+        cards_container,
+        fonts=fonts,
+        title=DASHBOARD_CARD_CONFIG[1]["title"],
+        description=DASHBOARD_CARD_CONFIG[1]["description"],
+        accent_color=DASHBOARD_CARD_CONFIG[1]["accent_color"],
+        command=lambda: print("Urgent card clicked"),
+    )
+
+    urgent_card.grid(
+        row=0,
+        column=1,
+        padx=(spacing.SPACE_3, spacing.SPACE_3),
+        pady=(0, spacing.SPACE_3),
+        sticky="nsew"
+    )
+
+    calendar_card = DashboardCard(
+        cards_container,
+        fonts=fonts,
+        title=DASHBOARD_CARD_CONFIG[2]["title"],
+        description=DASHBOARD_CARD_CONFIG[2]["description"],
+        accent_color=DASHBOARD_CARD_CONFIG[2]["accent_color"],
+        command=lambda: print("Calendar card clicked"),
+    )
+
+    calendar_card.grid(
+        row=0,
+        column=2,
+        padx=(spacing.SPACE_3, 0),
+        pady=(0, spacing.SPACE_3),
+        sticky="nsew"
+    )
+
+    study_planner_card = DashboardCard(
+        cards_container,
+        fonts=fonts,
+        title=DASHBOARD_CARD_CONFIG[3]["title"],
+        description=DASHBOARD_CARD_CONFIG[3]["description"],
+        accent_color=DASHBOARD_CARD_CONFIG[3]["accent_color"],
+        command=lambda: print("Study planner card clicked"),
+    )
+
+    study_planner_card.grid(
+        row=1,
+        column=0,
+        padx=(0, spacing.SPACE_3),
+        pady=(spacing.SPACE_3, 0),
+        sticky="nsew"
+    )
+
+    analytics_card = DashboardCard(
+        cards_container,
+        fonts=fonts,
+        title=DASHBOARD_CARD_CONFIG[4]["title"],
+        description=DASHBOARD_CARD_CONFIG[4]["description"],
+        accent_color=DASHBOARD_CARD_CONFIG[4]["accent_color"],
+        command=lambda: print("Analytics card clicked"),
+    )
+
+    analytics_card.grid(
+        row=1,
+        column=1,
+        padx=(spacing.SPACE_3, spacing.SPACE_3),
+        pady=(spacing.SPACE_3, 0),
+        sticky="nsew"
+    )
+
+    lock_in_card = DashboardCard(
+        cards_container,
+        fonts=fonts,
+        title=DASHBOARD_CARD_CONFIG[5]["title"],
+        description=DASHBOARD_CARD_CONFIG[5]["description"],
+        accent_color=DASHBOARD_CARD_CONFIG[5]["accent_color"],
+        command=lambda: print("Lock-in card clicked"),
+    )
+
+    lock_in_card.grid(
+        row=1,
+        column=2,
+        padx=(spacing.SPACE_3, 0),
+        pady=(spacing.SPACE_3, 0),
+        sticky="nsew"
     )
 
     return dashboard_frame
