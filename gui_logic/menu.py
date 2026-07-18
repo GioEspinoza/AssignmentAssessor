@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from backend import session
+from database import task_queries
 import datetime
 from gui_style import colors, spacing
 from gui_widgets.dashboard_card import DashboardCard
@@ -14,36 +15,42 @@ DASHBOARD_CARD_CONFIG = (
         "title": "Assignments",
         "description": "Create a new assignment and set its due date. Manage your coursework and deadlines.",
         "accent_color": colors.ASSIGNMENTS_ACCENT,
+        "icon": "✓",
     },
     {
         "key": "urgent",
         "title": "Urgent",
         "description": "Review assignments and their completion status. Focus on overdue and approaching work.",
         "accent_color": colors.URGENT_ACCENT,
+        "icon": "!",
     },
     {
         "key": "calendar",
         "title": "Calendar",
         "description": "View your assignments and events in a monthly calendar.",
         "accent_color": colors.CALENDAR_ACCENT,
+        "icon": "▦",
     },
     {
         "key": "study_planner",
         "title": "Study planner",
         "description": "Build and manage your study schedule.",
         "accent_color": colors.PLANNER_ACCENT,
+        "icon": "✎",
     },
     {
         "key": "analytics",
         "title": "Analytics",
         "description": "View your progress and performance metrics.",
         "accent_color": colors.ANALYTICS_ACCENT,
+        "icon": "↗",
     },
     {
         "key": "lock_in",
         "title": "Lock-in",
         "description": "Start a focused study session.",
         "accent_color": colors.LOCK_IN_ACCENT,
+        "icon": "◉",
     },
 )
 
@@ -55,6 +62,43 @@ def get_time_of_day():
         return "Good afternoon"
     else:
         return "Good evening"
+
+def parse_due_date(due_date):
+    if isinstance(due_date, datetime.datetime):
+        return due_date.date()
+    elif isinstance(due_date, datetime.date):
+        return due_date
+
+    for date_format in ("%m-%d-%Y", "%Y-%m-%d"):
+        try:
+            return datetime.datetime.strptime(str(due_date), date_format).date()
+        except ValueError:
+            continue
+
+    return datetime.date.max
+
+def get_upcoming_tasks():
+    tasks = task_queries.get_tasks(session.get_current_user_id())
+    incomplete_tasks = [
+        task
+        for task in tasks
+        if not task["completed"] and task.get("due_date") is not None
+    ]
+
+    return sorted(
+        incomplete_tasks,
+        key=lambda task: parse_due_date(task["due_date"]),
+    )[:3]
+
+def get_due_status(due_date):
+    days_remaining = (parse_due_date(due_date) - datetime.date.today()).days
+
+    if days_remaining < 0:
+        return "Overdue", colors.DANGER
+    elif days_remaining <= 7:
+        return "Due soon", colors.WARNING
+    else:
+        return "Upcoming", colors.ACCENT
 
 def menu_screen(parent, fonts, username=None):
     if username is None:
@@ -72,7 +116,14 @@ def menu_screen(parent, fonts, username=None):
     title_label = ctk.CTkLabel(
         dashboard_frame,
         text=f"{get_time_of_day()}, {username}!",
-        font=fonts["display"],
+        font=fonts["page_title"],
+        fg_color=colors.TRANSPARENT
+    )
+    greeting_subtitle = ctk.CTkLabel(
+        dashboard_frame,
+        text="Here’s what needs your attention today.",
+        font=fonts["body"],
+        text_color=colors.TEXT_SECONDARY,
         fg_color=colors.TRANSPARENT
     )
     separator = ctk.CTkFrame(
@@ -81,11 +132,22 @@ def menu_screen(parent, fonts, username=None):
         corner_radius=0,
         fg_color=colors.DIVIDER
     )
-    subtitle_label = ctk.CTkLabel(
+    at_a_glance_label = ctk.CTkLabel(
         dashboard_frame,
-        text="Dashboard",
-        font=fonts["subtitle"],
-        text_color=colors.TEXT_SECONDARY,
+        text="At a glance",
+        font=fonts["section_title"],
+        text_color=colors.TEXT_PRIMARY,
+        fg_color=colors.TRANSPARENT
+    )
+    stats_container = ctk.CTkFrame(
+        dashboard_frame,
+        fg_color=colors.TRANSPARENT,
+    )
+    quick_actions_label = ctk.CTkLabel(
+        dashboard_frame,
+        text="Quick actions",
+        font=fonts["section_title"],
+        text_color=colors.TEXT_PRIMARY,
         fg_color=colors.TRANSPARENT
     )
     cards_container = ctk.CTkFrame(
@@ -97,37 +159,118 @@ def menu_screen(parent, fonts, username=None):
     parent.grid_columnconfigure(0, weight=1)
 
     dashboard_frame.grid(row=0, column=0, sticky='nsew')
-    dashboard_frame.grid_rowconfigure((0, 1, 2), weight=0)
-    dashboard_frame.grid_rowconfigure(3, weight=1)
     dashboard_frame.grid_columnconfigure(0, weight=1)
 
     title_label.grid(
         row=0,
         column=0,
         padx=spacing.PAGE_X,
-        pady=(spacing.PAGE_Y, spacing.SPACE_3),
+        pady=(spacing.PAGE_Y, 0),
+        sticky="nw",
+    )
+
+    greeting_subtitle.grid(
+        row=1,
+        column=0,
+        padx=spacing.PAGE_X,
+        pady=(spacing.SPACE_1, spacing.SPACE_4),
         sticky="nw",
     )
 
     separator.grid(
-        row=1,
+        row=2,
         column=0,
         sticky="ew"
     )
 
-    subtitle_label.grid(
-        row=2,
-        column=0,
-        padx=spacing.PAGE_X,
-        pady=(spacing.SPACE_3, spacing.SPACE_5),
-        sticky="nw",
-    )
-    cards_container.grid(
+    at_a_glance_label.grid(
         row=3,
         column=0,
         padx=spacing.PAGE_X,
-        pady=(0, spacing.PAGE_Y),
-        sticky="nsew",
+        pady=(spacing.SPACE_4, spacing.SPACE_2),
+        sticky="nw",
+    )
+
+    stats_container.grid(
+        row=4,
+        column=0,
+        padx=spacing.PAGE_X,
+        sticky="ew"
+    )
+    stats_container.grid_columnconfigure(
+        (0, 1, 2),
+        weight=1,
+        uniform="dashboard_stats",
+    )
+
+    stats = (
+        ("0", "Due soon"),
+        ("0", "In progress"),
+        ("0", "Completed"),
+    )
+
+    for column, (count, label) in enumerate(stats):
+        stat_card = ctk.CTkFrame(
+            stats_container,
+            height=64,
+            fg_color=colors.SURFACE,
+            corner_radius=spacing.RADIUS_MEDIUM,
+            border_width=spacing.CARD_BORDER_WIDTH,
+            border_color=colors.BORDER,
+        )
+        stat_card.grid_propagate(False)
+        stat_card.grid_columnconfigure(1, weight=1)
+
+        count_label = ctk.CTkLabel(
+            stat_card,
+            text=count,
+            font=fonts["stat"],
+            text_color=colors.TEXT_PRIMARY,
+        )
+        stat_label = ctk.CTkLabel(
+            stat_card,
+            text=label,
+            font=fonts["small"],
+            text_color=colors.TEXT_SECONDARY,
+        )
+
+        left_padding = 0 if column == 0 else spacing.SPACE_2
+        right_padding = 0 if column == 2 else spacing.SPACE_2
+
+        stat_card.grid(
+            row=0,
+            column=column,
+            padx=(left_padding, right_padding),
+            sticky="ew",
+        )
+        count_label.grid(
+            row=0,
+            column=0,
+            padx=(spacing.SPACE_4, spacing.SPACE_3),
+            pady=spacing.SPACE_3,
+        )
+        stat_label.grid(
+            row=0,
+            column=1,
+            padx=(0, spacing.SPACE_4),
+            pady=spacing.SPACE_3,
+            sticky="w",
+        )
+
+    quick_actions_label.grid(
+        row=5,
+        column=0,
+        padx=spacing.PAGE_X,
+        pady=(spacing.SPACE_5, spacing.SPACE_2),
+        sticky="nw",
+    )
+
+    cards_container.grid(
+        row=6,
+        column=0,
+        padx=spacing.PAGE_X,
+        pady=0,
+        sticky="ew",
     )
     cards_container.grid_columnconfigure(
         (0, 1, 2),
@@ -137,9 +280,12 @@ def menu_screen(parent, fonts, username=None):
 
     cards_container.grid_rowconfigure(
         (0, 1),
-        weight=1,
+        weight=0,
+        minsize=spacing.CARD_MIN_HEIGHT,
         uniform="dashboard_cards",
     )
+
+    assignments_command = lambda: print("Assignments card clicked")
 
     assignment_card = DashboardCard(
         cards_container,
@@ -147,7 +293,8 @@ def menu_screen(parent, fonts, username=None):
         title=DASHBOARD_CARD_CONFIG[0]["title"],
         description=DASHBOARD_CARD_CONFIG[0]["description"],
         accent_color=DASHBOARD_CARD_CONFIG[0]["accent_color"],
-        command=lambda: print("Assignments card clicked"),
+        icon=DASHBOARD_CARD_CONFIG[0]["icon"],
+        command=assignments_command,
     )
 
     assignment_card.grid(
@@ -164,6 +311,7 @@ def menu_screen(parent, fonts, username=None):
         title=DASHBOARD_CARD_CONFIG[1]["title"],
         description=DASHBOARD_CARD_CONFIG[1]["description"],
         accent_color=DASHBOARD_CARD_CONFIG[1]["accent_color"],
+        icon=DASHBOARD_CARD_CONFIG[1]["icon"],
         command=lambda: print("Urgent card clicked"),
     )
 
@@ -181,6 +329,7 @@ def menu_screen(parent, fonts, username=None):
         title=DASHBOARD_CARD_CONFIG[2]["title"],
         description=DASHBOARD_CARD_CONFIG[2]["description"],
         accent_color=DASHBOARD_CARD_CONFIG[2]["accent_color"],
+        icon=DASHBOARD_CARD_CONFIG[2]["icon"],
         command=lambda: print("Calendar card clicked"),
     )
 
@@ -198,6 +347,7 @@ def menu_screen(parent, fonts, username=None):
         title=DASHBOARD_CARD_CONFIG[3]["title"],
         description=DASHBOARD_CARD_CONFIG[3]["description"],
         accent_color=DASHBOARD_CARD_CONFIG[3]["accent_color"],
+        icon=DASHBOARD_CARD_CONFIG[3]["icon"],
         command=lambda: print("Study planner card clicked"),
     )
 
@@ -215,6 +365,7 @@ def menu_screen(parent, fonts, username=None):
         title=DASHBOARD_CARD_CONFIG[4]["title"],
         description=DASHBOARD_CARD_CONFIG[4]["description"],
         accent_color=DASHBOARD_CARD_CONFIG[4]["accent_color"],
+        icon=DASHBOARD_CARD_CONFIG[4]["icon"],
         command=lambda: print("Analytics card clicked"),
     )
 
@@ -232,6 +383,7 @@ def menu_screen(parent, fonts, username=None):
         title=DASHBOARD_CARD_CONFIG[5]["title"],
         description=DASHBOARD_CARD_CONFIG[5]["description"],
         accent_color=DASHBOARD_CARD_CONFIG[5]["accent_color"],
+        icon=DASHBOARD_CARD_CONFIG[5]["icon"],
         command=lambda: print("Lock-in card clicked"),
     )
 
@@ -242,5 +394,172 @@ def menu_screen(parent, fonts, username=None):
         pady=(spacing.SPACE_3, 0),
         sticky="nsew"
     )
+
+    up_next_label = ctk.CTkLabel(
+        dashboard_frame,
+        text="Up next",
+        font=fonts["section_title"],
+        text_color=colors.TEXT_PRIMARY,
+        fg_color=colors.TRANSPARENT,
+    )
+    up_next_panel = ctk.CTkFrame(
+        dashboard_frame,
+        fg_color=colors.SURFACE,
+        corner_radius=spacing.RADIUS_LARGE,
+        border_width=spacing.CARD_BORDER_WIDTH,
+        border_color=colors.BORDER,
+    )
+    up_next_accent = ctk.CTkFrame(
+        up_next_panel,
+        width=spacing.CARD_ACCENT_WIDTH,
+        fg_color=colors.ACCENT,
+        corner_radius=0,
+    )
+
+    up_next_label.grid(
+        row=7,
+        column=0,
+        padx=spacing.PAGE_X,
+        pady=(spacing.SPACE_5, spacing.SPACE_2),
+        sticky="nw",
+    )
+    up_next_panel.grid(
+        row=8,
+        column=0,
+        padx=spacing.PAGE_X,
+        pady=(0, spacing.PAGE_Y),
+        sticky="ew",
+    )
+    up_next_panel.grid_columnconfigure(1, weight=1)
+
+    upcoming_tasks = get_upcoming_tasks()
+
+    if upcoming_tasks:
+        last_row = len(upcoming_tasks) * 2 - 2
+        up_next_accent.grid(
+            row=0,
+            column=0,
+            rowspan=last_row + 1,
+            sticky="nsw",
+        )
+
+        for index, task in enumerate(upcoming_tasks):
+            row = index * 2
+            task_row = ctk.CTkFrame(
+                up_next_panel,
+                fg_color=colors.TRANSPARENT,
+                cursor="hand2",
+            )
+            task_row.grid_columnconfigure(0, weight=2)
+            task_row.grid_columnconfigure(1, weight=1)
+
+            task_name = ctk.CTkLabel(
+                task_row,
+                text=task["task"],
+                font=fonts["body_bold"],
+                text_color=colors.TEXT_PRIMARY,
+            )
+            course_name = ctk.CTkLabel(
+                task_row,
+                text=task["course"],
+                font=fonts["small"],
+                text_color=colors.TEXT_SECONDARY,
+            )
+            due_date = ctk.CTkLabel(
+                task_row,
+                text=parse_due_date(task["due_date"]).strftime("%b %d, %Y"),
+                font=fonts["small"],
+                text_color=colors.TEXT_SECONDARY,
+            )
+            status_text, status_color = get_due_status(task["due_date"])
+            status_badge = ctk.CTkLabel(
+                task_row,
+                text=status_text,
+                width=76,
+                height=26,
+                corner_radius=spacing.RADIUS_SMALL,
+                font=fonts["small_bold"],
+                text_color=colors.TEXT_ON_ACCENT,
+                fg_color=status_color,
+            )
+
+            task_row.grid(
+                row=row,
+                column=1,
+                padx=spacing.CARD_PADDING,
+                pady=spacing.SPACE_2,
+                sticky="ew",
+            )
+            task_name.grid(row=0, column=0, sticky="w")
+            course_name.grid(row=0, column=1, padx=spacing.SPACE_3, sticky="w")
+            due_date.grid(row=0, column=2, padx=spacing.SPACE_3, sticky="e")
+            status_badge.grid(row=0, column=3, padx=(spacing.SPACE_3, 0), sticky="e")
+
+            if index < len(upcoming_tasks) - 1:
+                row_separator = ctk.CTkFrame(
+                    up_next_panel,
+                    height=1,
+                    corner_radius=0,
+                    fg_color=colors.DIVIDER,
+                )
+                row_separator.grid(
+                    row=row + 1,
+                    column=1,
+                    padx=spacing.CARD_PADDING,
+                    sticky="ew",
+                )
+    else:
+        up_next_panel.grid_rowconfigure(1, weight=1)
+        up_next_accent.grid(
+            row=0,
+            column=0,
+            rowspan=3,
+            sticky="nsw",
+        )
+
+        empty_title = ctk.CTkLabel(
+            up_next_panel,
+            text="You’re all caught up",
+            font=fonts["card_title"],
+            text_color=colors.TEXT_PRIMARY,
+        )
+        empty_description = ctk.CTkLabel(
+            up_next_panel,
+            text="Add an assignment to start building your plan.",
+            font=fonts["body"],
+            text_color=colors.TEXT_SECONDARY,
+        )
+        add_assignment_button = ctk.CTkButton(
+            up_next_panel,
+            text="Add assignment",
+            width=128,
+            height=32,
+            corner_radius=spacing.RADIUS_SMALL,
+            font=fonts["button"],
+            fg_color=colors.ACCENT,
+            hover_color=colors.ACCENT_HOVER,
+            command=assignments_command,
+        )
+
+        empty_title.grid(
+            row=0,
+            column=1,
+            padx=spacing.CARD_PADDING,
+            pady=(spacing.CARD_PADDING, spacing.SPACE_1),
+            sticky="w",
+        )
+        empty_description.grid(
+            row=1,
+            column=1,
+            padx=spacing.CARD_PADDING,
+            sticky="w",
+        )
+        add_assignment_button.grid(
+            row=2,
+            column=1,
+            padx=spacing.CARD_PADDING,
+            pady=(spacing.SPACE_3, spacing.CARD_PADDING),
+            sticky="w",
+        )
 
     return dashboard_frame
