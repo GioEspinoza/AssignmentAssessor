@@ -32,12 +32,9 @@ CustomTkinter design system.
 
 ## Screenshots
 
-Screenshots are coming soon. Add new images to `docs/screenshots/` and replace
-the placeholders below as the interface develops.
-
 | Dashboard | Authentication |
 | --- | --- |
-| _Dashboard screenshot coming soon_ | _Login screenshot coming soon_ |
+| <img src="docs/screenshots/dashboard.png" alt="Assignment Assessor dashboard" width="100%"> | <img src="docs/screenshots/authentication.png" alt="Assignment Assessor authentication screen" width="100%"> |
 
 ## How prioritization works
 
