@@ -14,9 +14,10 @@ The project demonstrates layered Python application design, secure credential
 storage, PostgreSQL CRUD operations, automated tests, and a reusable
 CustomTkinter design system.
 
-> The dashboard UI is being redesigned. The authentication flow, assignment
-> workflows, prioritization logic, and PostgreSQL persistence are implemented;
-> the new reusable dashboard cards are intentionally still in progress.
+> The dashboard now includes responsive navigation cards, summary panels,
+> upcoming assignments, search and account-action placeholders, and a
+> scrollable content area. Navigation wiring for the newest controls is still
+> in progress.
 
 ## Highlights
 
@@ -28,6 +29,15 @@ CustomTkinter design system.
 - Shared typography, color, and spacing tokens for consistent UI styling
 - Unit-tested business and authentication logic
 - GitHub Actions checks for tests, linting, and syntax
+
+## Screenshots
+
+Screenshots are coming soon. Add new images to `docs/screenshots/` and replace
+the placeholders below as the interface develops.
+
+| Dashboard | Authentication |
+| --- | --- |
+| _Dashboard screenshot coming soon_ | _Login screenshot coming soon_ |
 
 ## How prioritization works
 
@@ -50,8 +60,10 @@ recommended hours per day = estimated hours / days remaining
 
 ```text
 AssignmentAssessor/
+├── assets/           # light and dark interface icons
 ├── backend/          # validation, authentication, session, and priority logic
 ├── database/         # PostgreSQL connection and query modules
+├── docs/screenshots/ # application screenshots for project documentation
 ├── gui_logic/        # CustomTkinter screens and navigation
 ├── gui_style/        # typography, color, and spacing design tokens
 ├── gui_widgets/      # reusable UI component package
@@ -139,7 +151,7 @@ Local environment files are excluded from version control. See
 
 ## Roadmap
 
-- Finish the reusable dashboard card component and responsive dashboard
+- Wire dashboard search, notifications, profile, and quick-action navigation
 - Replace free-text dates with a calendar date picker
 - Add password recovery and account-management flows
 - Add database integration tests

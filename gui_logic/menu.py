@@ -1,4 +1,6 @@
 import customtkinter as ctk
+from PIL import Image
+
 from backend import session
 from database import task_queries
 import datetime
@@ -113,45 +115,116 @@ def menu_screen(parent, fonts, username=None):
         parent,
         fg_color=colors.TRANSPARENT
     )
-    title_label = ctk.CTkLabel(
+    header_frame = ctk.CTkFrame(
         dashboard_frame,
+        fg_color=colors.TRANSPARENT,
+    )
+    title_label = ctk.CTkLabel(
+        header_frame,
         text=f"{get_time_of_day()}, {username}!",
         font=fonts["page_title"],
         fg_color=colors.TRANSPARENT
     )
+
+    search_bar = ctk.CTkEntry(
+        header_frame,
+        placeholder_text="🔍  Search assignments, courses, and more...",
+        font=fonts["body"],
+        fg_color=colors.SURFACE,
+        border_width=spacing.CARD_BORDER_WIDTH,
+        border_color=colors.BORDER,
+        corner_radius=spacing.RADIUS_MEDIUM,
+        height=36,
+    )
+
+    header_actions = ctk.CTkFrame(
+        header_frame,
+        width=92,
+        height=40,
+        fg_color=colors.TRANSPARENT,
+    )
+
     greeting_subtitle = ctk.CTkLabel(
-        dashboard_frame,
+        header_frame,
         text="Here’s what needs your attention today.",
         font=fonts["body"],
         text_color=colors.TEXT_SECONDARY,
         fg_color=colors.TRANSPARENT
     )
+
+    notification_icon = ctk.CTkImage(
+        light_image=Image.open("assets/bell_light.png"),
+        dark_image=Image.open("assets/bell_dark.png"),
+        size=(22, 22)
+    )
+
+    profile_icon = ctk.CTkImage(
+        light_image=Image.open("assets/profile_light.png"),
+        dark_image=Image.open("assets/profile_dark.png"),
+        size=(22, 22)
+    )
+
+    notification_button = ctk.CTkButton(
+        header_actions,
+        image=notification_icon,
+        text="",
+        width=36,
+        height=36,
+        corner_radius=spacing.RADIUS_MEDIUM,
+        fg_color=colors.TRANSPARENT,
+        hover=False,
+        cursor="hand2",
+        border_width=0,
+        command=lambda: print("Notification button clicked"),
+    )
+
+    profile_button = ctk.CTkButton(
+        header_actions,
+        image=profile_icon,
+        text="",
+        width=36,
+        height=36,
+        corner_radius=spacing.RADIUS_MEDIUM,
+        fg_color=colors.TRANSPARENT,
+        hover=False,
+        cursor="hand2",
+        border_width=0,
+        command=lambda: print("Profile button clicked"),
+    )
+
     separator = ctk.CTkFrame(
         dashboard_frame,
         height=2,
         corner_radius=0,
         fg_color=colors.DIVIDER
     )
-    at_a_glance_label = ctk.CTkLabel(
+    content_frame = ctk.CTkScrollableFrame(
         dashboard_frame,
+        fg_color=colors.TRANSPARENT,
+        corner_radius=0,
+        scrollbar_button_color=colors.BORDER,
+        scrollbar_button_hover_color=colors.TEXT_SECONDARY,
+    )
+    at_a_glance_label = ctk.CTkLabel(
+        content_frame,
         text="At a glance",
         font=fonts["section_title"],
         text_color=colors.TEXT_PRIMARY,
         fg_color=colors.TRANSPARENT
     )
     stats_container = ctk.CTkFrame(
-        dashboard_frame,
+        content_frame,
         fg_color=colors.TRANSPARENT,
     )
     quick_actions_label = ctk.CTkLabel(
-        dashboard_frame,
+        content_frame,
         text="Quick actions",
         font=fonts["section_title"],
         text_color=colors.TEXT_PRIMARY,
         fg_color=colors.TRANSPARENT
     )
     cards_container = ctk.CTkFrame(
-        dashboard_frame,
+        content_frame,
         fg_color=colors.TRANSPARENT,
     )
 
@@ -160,31 +233,81 @@ def menu_screen(parent, fonts, username=None):
 
     dashboard_frame.grid(row=0, column=0, sticky='nsew')
     dashboard_frame.grid_columnconfigure(0, weight=1)
+    dashboard_frame.grid_rowconfigure(2, weight=1)
+
+    header_frame.grid(
+        row=0,
+        column=0,
+        padx=spacing.PAGE_X,
+        pady=(spacing.PAGE_Y, spacing.SPACE_4),
+        sticky="ew",
+    )
+    header_frame.grid_columnconfigure(0, weight=1, uniform="header_sides")
+    header_frame.grid_columnconfigure(1, weight=3)
+    header_frame.grid_columnconfigure(2, weight=1, uniform="header_sides")
+    header_actions.grid_propagate(False)
+    header_actions.grid_columnconfigure((0, 1), minsize=36)
 
     title_label.grid(
         row=0,
         column=0,
-        padx=spacing.PAGE_X,
-        pady=(spacing.PAGE_Y, 0),
+        pady=(0, spacing.SPACE_1),
         sticky="nw",
+    )
+
+    search_bar.grid(
+        row=0,
+        column=1,
+        rowspan=2,
+        padx=spacing.SPACE_4,
+        sticky="ew",
+    )
+
+    notification_button.grid(
+        row=0,
+        column=0,
+        padx=(0, spacing.SPACE_1),
+        pady=0,
+        sticky="e",
+    )
+
+    profile_button.grid(
+        row=0,
+        column=1,
+        padx=(0, spacing.SPACE_2),
+        pady=0,
+        sticky="e",
     )
 
     greeting_subtitle.grid(
         row=1,
         column=0,
-        padx=spacing.PAGE_X,
-        pady=(spacing.SPACE_1, spacing.SPACE_4),
         sticky="nw",
     )
 
+    header_actions.grid(
+        row=0,
+        column=2,
+        rowspan=2,
+        padx=(0, spacing.SPACE_2),
+        sticky="e",
+    )
+
     separator.grid(
-        row=2,
+        row=1,
         column=0,
         sticky="ew"
     )
 
+    content_frame.grid(
+        row=2,
+        column=0,
+        sticky="nsew",
+    )
+    content_frame.grid_columnconfigure(0, weight=1)
+
     at_a_glance_label.grid(
-        row=3,
+        row=0,
         column=0,
         padx=spacing.PAGE_X,
         pady=(spacing.SPACE_4, spacing.SPACE_2),
@@ -192,7 +315,7 @@ def menu_screen(parent, fonts, username=None):
     )
 
     stats_container.grid(
-        row=4,
+        row=1,
         column=0,
         padx=spacing.PAGE_X,
         sticky="ew"
@@ -258,7 +381,7 @@ def menu_screen(parent, fonts, username=None):
         )
 
     quick_actions_label.grid(
-        row=5,
+        row=2,
         column=0,
         padx=spacing.PAGE_X,
         pady=(spacing.SPACE_5, spacing.SPACE_2),
@@ -266,7 +389,7 @@ def menu_screen(parent, fonts, username=None):
     )
 
     cards_container.grid(
-        row=6,
+        row=3,
         column=0,
         padx=spacing.PAGE_X,
         pady=0,
@@ -396,14 +519,14 @@ def menu_screen(parent, fonts, username=None):
     )
 
     up_next_label = ctk.CTkLabel(
-        dashboard_frame,
+        content_frame,
         text="Up next",
         font=fonts["section_title"],
         text_color=colors.TEXT_PRIMARY,
         fg_color=colors.TRANSPARENT,
     )
     up_next_panel = ctk.CTkFrame(
-        dashboard_frame,
+        content_frame,
         fg_color=colors.SURFACE,
         corner_radius=spacing.RADIUS_LARGE,
         border_width=spacing.CARD_BORDER_WIDTH,
@@ -417,14 +540,14 @@ def menu_screen(parent, fonts, username=None):
     )
 
     up_next_label.grid(
-        row=7,
+        row=4,
         column=0,
         padx=spacing.PAGE_X,
         pady=(spacing.SPACE_5, spacing.SPACE_2),
         sticky="nw",
     )
     up_next_panel.grid(
-        row=8,
+        row=5,
         column=0,
         padx=spacing.PAGE_X,
         pady=(0, spacing.PAGE_Y),
