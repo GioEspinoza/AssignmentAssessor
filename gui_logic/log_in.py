@@ -212,8 +212,7 @@ def login_screen(parent, aa_title, menu, fonts):
     register_button.grid(row=9, column=0, padx=50, pady=(0, 22), sticky="ew")
 
     authentication_frame.grid(row=0, column=0, padx=50, pady=32)
-
-    login_username_entry.focus()
+    
     login_password_entry.bind("<Return>", lambda event: log_in_button.invoke())
     register_password_entry.bind("<Return>", lambda event: register_button.invoke())
 

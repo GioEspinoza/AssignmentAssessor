@@ -1,14 +1,13 @@
 import customtkinter as ctk
 from PIL import Image
-
 from backend import session
 from database import task_queries
 import datetime
 from gui_style import colors, spacing
+from gui_style.responsive import ResponsiveText
 from gui_widgets.dashboard_card import DashboardCard
-
-# will show menu after authencation
-
+from gui_widgets.widgets import enable_linux_mousewheel
+from gui_logic import assignments
 
 # Presentation data only. A future card widget can iterate over this collection.
 DASHBOARD_CARD_CONFIG = (
@@ -119,10 +118,34 @@ def menu_screen(parent, fonts, username=None):
         dashboard_frame,
         fg_color=colors.TRANSPARENT,
     )
+    header_fonts = {
+        "title": ctk.CTkFont(
+            family=fonts["page_title"].cget("family"),
+            size=fonts["page_title"].cget("size"),
+            weight=fonts["page_title"].cget("weight"),
+        ),
+        "subtitle": ctk.CTkFont(
+            family=fonts["body"].cget("family"),
+            size=fonts["body"].cget("size"),
+            weight=fonts["body"].cget("weight"),
+        ),
+    }
+    setattr(
+        header_frame,
+        "responsive_text",
+        ResponsiveText(
+            header_frame,
+            header_fonts,
+            base_width=836,
+            min_scale=0.8,
+            max_scale=1.25,
+        ),
+    )
     title_label = ctk.CTkLabel(
         header_frame,
         text=f"{get_time_of_day()}, {username}!",
-        font=fonts["page_title"],
+        font=header_fonts["title"],
+        text_color=colors.TEXT_PRIMARY,
         fg_color=colors.TRANSPARENT
     )
 
@@ -139,7 +162,7 @@ def menu_screen(parent, fonts, username=None):
 
     header_actions = ctk.CTkFrame(
         header_frame,
-        width=92,
+        width=144,
         height=40,
         fg_color=colors.TRANSPARENT,
     )
@@ -147,10 +170,33 @@ def menu_screen(parent, fonts, username=None):
     greeting_subtitle = ctk.CTkLabel(
         header_frame,
         text="Here’s what needs your attention today.",
-        font=fonts["body"],
+        font=header_fonts["subtitle"],
         text_color=colors.TEXT_SECONDARY,
         fg_color=colors.TRANSPARENT
     )
+
+    def change_appearance_mode():
+        appearance_mode = "dark" if dark_light_switch.get() else "light"
+        ctk.set_appearance_mode(appearance_mode)
+
+    dark_light_switch = ctk.CTkSwitch(
+        header_actions,
+        text="",
+        width=40,
+        height=36,
+        switch_width=36,
+        switch_height=18,
+        command=change_appearance_mode,
+        fg_color=colors.BORDER,
+        progress_color=colors.ACCENT,
+        button_color=colors.TEXT_PRIMARY,
+        button_hover_color=colors.SURFACE_HOVER,
+        corner_radius=spacing.RADIUS_SMALL,
+    )
+    if ctk.get_appearance_mode().casefold() == "dark":
+        dark_light_switch.select()
+    else:
+        dark_light_switch.deselect()
 
     notification_icon = ctk.CTkImage(
         light_image=Image.open("assets/bell_light.png"),
@@ -246,7 +292,7 @@ def menu_screen(parent, fonts, username=None):
     header_frame.grid_columnconfigure(1, weight=3)
     header_frame.grid_columnconfigure(2, weight=1, uniform="header_sides")
     header_actions.grid_propagate(False)
-    header_actions.grid_columnconfigure((0, 1), minsize=36)
+    header_actions.grid_columnconfigure((0, 1, 2), minsize=36)
 
     title_label.grid(
         row=0,
@@ -263,9 +309,17 @@ def menu_screen(parent, fonts, username=None):
         sticky="ew",
     )
 
-    notification_button.grid(
+    dark_light_switch.grid(
         row=0,
         column=0,
+        padx=(0, spacing.SPACE_2),
+        pady=0,
+        sticky="e",
+    )
+
+    notification_button.grid(
+        row=0,
+        column=1,
         padx=(0, spacing.SPACE_1),
         pady=0,
         sticky="e",
@@ -273,7 +327,7 @@ def menu_screen(parent, fonts, username=None):
 
     profile_button.grid(
         row=0,
-        column=1,
+        column=2,
         padx=(0, spacing.SPACE_2),
         pady=0,
         sticky="e",
@@ -408,7 +462,6 @@ def menu_screen(parent, fonts, username=None):
         uniform="dashboard_cards",
     )
 
-    assignments_command = lambda: print("Assignments card clicked")
 
     assignment_card = DashboardCard(
         cards_container,
@@ -417,7 +470,7 @@ def menu_screen(parent, fonts, username=None):
         description=DASHBOARD_CARD_CONFIG[0]["description"],
         accent_color=DASHBOARD_CARD_CONFIG[0]["accent_color"],
         icon=DASHBOARD_CARD_CONFIG[0]["icon"],
-        command=assignments_command,
+        command=lambda: assignments.assignments_screen(parent, fonts)
     )
 
     assignment_card.grid(
@@ -661,7 +714,7 @@ def menu_screen(parent, fonts, username=None):
             font=fonts["button"],
             fg_color=colors.ACCENT,
             hover_color=colors.ACCENT_HOVER,
-            command=assignments_command,
+            command=lambda: print("Add assignment button clicked"),
         )
 
         empty_title.grid(
@@ -684,5 +737,7 @@ def menu_screen(parent, fonts, username=None):
             pady=(spacing.SPACE_3, spacing.CARD_PADDING),
             sticky="w",
         )
+
+    enable_linux_mousewheel(content_frame)
 
     return dashboard_frame
