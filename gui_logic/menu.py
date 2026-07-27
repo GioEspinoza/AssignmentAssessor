@@ -564,7 +564,7 @@ def menu_screen(parent, fonts, username=None):
         up_next_panel,
         width=spacing.CARD_ACCENT_WIDTH,
         fg_color=colors.ACCENT,
-        corner_radius=0,
+        corner_radius=spacing.RADIUS_LARGE,
     )
 
     up_next_label.grid(

@@ -69,7 +69,7 @@ class DashboardCard(ctk.CTkFrame):
             self,
             width=spacing.CARD_ACCENT_WIDTH,
             fg_color=accent_color,
-            corner_radius=0,
+            corner_radius=spacing.RADIUS_LARGE,
         )
 
         self.grid_columnconfigure(1, weight=1)

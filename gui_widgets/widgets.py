@@ -1,7 +1,7 @@
 import sys
 
 
-def enable_linux_mousewheel(scrollable_frame, units=3):
+def enable_linux_mousewheel(scrollable_frame, units=1):
     """Add Linux/X11 wheel events to a CustomTkinter scrollable frame."""
     if not sys.platform.startswith("linux"):
         return
@@ -16,16 +16,21 @@ def enable_linux_mousewheel(scrollable_frame, units=3):
         return "break"
 
     def bind_widget_tree(widget):
-        widget.bind(
-            "<Button-4>",
-            lambda event: scroll(event, -1),
-            add="+",
-        )
-        widget.bind(
-            "<Button-5>",
-            lambda event: scroll(event, 1),
-            add="+",
-        )
+        try:
+            widget.bind(
+                "<Button-4>",
+                lambda event: scroll(event, -1),
+                add="+",
+            )
+            widget.bind(
+                "<Button-5>",
+                lambda event: scroll(event, 1),
+                add="+",
+            )
+        except NotImplementedError:
+            # Some composite CustomTkinter widgets, such as
+            # CTkSegmentedButton, intentionally disable direct bindings.
+            pass
 
         for child in widget.winfo_children():
             bind_widget_tree(child)
