@@ -40,12 +40,20 @@ Screen composition and event handling:
 Screens should not hash passwords, calculate priorities, parse database dates,
 or execute SQL.
 
+The Add Task screen uses a full-width scrollable form with nested layout
+sections. Status and assignment-name controls span the form, course and
+date/time controls share a compact row, and optional description and tag
+controls continue below. `tkcalendar.DateEntry` remains presentation-layer
+input; submission and date normalization belong in the service boundary.
+
 ### `gui_widgets`
 
 Reusable visual behavior:
 
-- `DashboardCard` encapsulates card layout, hover, click, and responsive text
-- `enable_linux_mousewheel` provides platform-specific scroll behavior
+- `DashboardCard` encapsulates card layout, parent-matched accent styling,
+  hover, click, and responsive text
+- `enable_linux_mousewheel` provides platform-specific scroll behavior and
+  safely traverses composite CustomTkinter widgets that reject direct bindings
 
 A component belongs here when it is reused or contains meaningful widget
 behavior. One-off screen layouts stay in `gui_logic`.

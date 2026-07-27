@@ -48,6 +48,7 @@ application engineering:
 
 - User-scoped courses and assignments
 - Three assignment states: **Not Started**, **In Progress**, and **Completed**
+- Course-aware assignment entry with calendar and due-time controls
 - Upcoming-deadline sorting and overdue detection
 - Search and status filtering
 - Remaining-workload and completion summaries
@@ -58,7 +59,9 @@ application engineering:
 
 - Light and dark appearance modes
 - Responsive typography without compounding font sizes
-- Reusable dashboard cards and Linux mouse-wheel behavior
+- Reusable dashboard cards with parent-matched accent styling
+- Scrollable forms with native Linux/X11 mouse-wheel behavior
+- Theme-aware calendar, hour, minute, and AM/PM controls
 - Shared color, spacing, radius, and typography tokens
 - Empty, selected, hover, and quick-view states
 
@@ -178,6 +181,7 @@ deleted, preserving historical assignments.
 | --- | --- | --- |
 | Language | Python 3.12+ | Clear domain modeling and rapid desktop development |
 | Desktop UI | CustomTkinter | Native desktop delivery with modern themed widgets |
+| Date input | tkcalendar | Themeable calendar selection for assignment deadlines |
 | Database | PostgreSQL | Relational integrity, constraints, and reliable querying |
 | Driver | Psycopg 3 | Modern PostgreSQL adapter with context-managed transactions |
 | Security | PBKDF2-HMAC-SHA256 | Salted, iterative password hashing |
@@ -261,18 +265,19 @@ feedback and every push.
 
 The current desktop build includes authentication, the responsive dashboard,
 course-aware persistence, assignment browsing, status filtering, quick views,
-and the service/domain foundation for assignment creation and editing.
+and a scrollable assignment-entry interface with status, course, date, time,
+description, and tag controls.
 
-Some dashboard controls and the newest assignment form are intentionally still
-being wired. The repository favors visible, accurate progress over presenting
-unfinished behavior as production-ready.
+Some dashboard controls and assignment-form submission actions are intentionally
+still being wired. The repository favors visible, accurate progress over
+presenting unfinished behavior as production-ready.
 
 ## Roadmap
 
 - Complete the remastered assignment creation and editing workflows
 - Add course management and archive/restore screens
 - Wire dashboard-wide search, profile, and notification actions
-- Add calendar-based date selection and reminder scheduling
+- Persist assignment due times and add reminder scheduling
 - Add PostgreSQL integration tests alongside the fast unit suite
 - Expand analytics with workload and completion visualizations
 - Package the desktop application for one-command installation
