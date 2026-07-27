@@ -41,3 +41,7 @@ python -m compileall -q backend database gui_logic gui_style gui_widgets main.py
 - Use parameterized SQL for every query.
 - Add or update tests for backend behavior.
 - Keep user-facing documentation accurate about unfinished functionality.
+- Keep README feature lists, technology choices, and roadmap items synchronized
+  when a user-facing capability changes.
+- Verify scrollable screens on Linux/X11 when changing shared mouse-wheel
+  bindings; some composite CustomTkinter widgets reject direct `.bind()` calls.
