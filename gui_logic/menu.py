@@ -1,8 +1,7 @@
 import customtkinter as ctk
+from datetime import datetime
 from PIL import Image
-from backend import session
-from database import task_queries
-import datetime
+from backend import session, task_service
 from gui_style import colors, spacing
 from gui_style.responsive import ResponsiveText
 from gui_widgets.dashboard_card import DashboardCard
@@ -56,7 +55,7 @@ DASHBOARD_CARD_CONFIG = (
 )
 
 def get_time_of_day():
-    current_hour = datetime.datetime.now().hour
+    current_hour = datetime.now().hour
     if 5 <= current_hour < 12:
         return "Good morning"
     elif 12 <= current_hour < 18:
@@ -64,48 +63,24 @@ def get_time_of_day():
     else:
         return "Good evening"
 
-def parse_due_date(due_date):
-    if isinstance(due_date, datetime.datetime):
-        return due_date.date()
-    elif isinstance(due_date, datetime.date):
-        return due_date
-
-    for date_format in ("%m-%d-%Y", "%Y-%m-%d"):
-        try:
-            return datetime.datetime.strptime(str(due_date), date_format).date()
-        except ValueError:
-            continue
-
-    return datetime.date.max
-
-def get_upcoming_tasks():
-    tasks = task_queries.get_tasks(session.get_current_user_id())
-    incomplete_tasks = [
-        task
-        for task in tasks
-        if not task["completed"] and task.get("due_date") is not None
-    ]
-
-    return sorted(
-        incomplete_tasks,
-        key=lambda task: parse_due_date(task["due_date"]),
-    )[:3]
-
 def get_due_status(due_date):
-    days_remaining = (parse_due_date(due_date) - datetime.date.today()).days
-
-    if days_remaining < 0:
-        return "Overdue", colors.DANGER
-    elif days_remaining <= 7:
-        return "Due soon", colors.WARNING
-    else:
-        return "Upcoming", colors.ACCENT
+    due_states = {
+        "overdue": ("Overdue", colors.DANGER),
+        "due_soon": ("Due soon", colors.WARNING),
+        "upcoming": ("Upcoming", colors.ACCENT),
+    }
+    return due_states[task_service.get_due_state(due_date)]
 
 def menu_screen(parent, fonts, username=None):
     if username is None:
         if session.current_user is None:
             raise RuntimeError("No user is currently logged in.")
         username = session.current_user["username"]
+
+    dashboard_data = task_service.get_dashboard_data(
+        session.get_current_user_id()
+    )
+    dashboard_summary = dashboard_data["summary"]
 
     for widget in parent.winfo_children():
         widget.destroy()
@@ -381,9 +356,9 @@ def menu_screen(parent, fonts, username=None):
     )
 
     stats = (
-        ("0", "Due soon"),
-        ("0", "In progress"),
-        ("0", "Completed"),
+        (str(dashboard_summary["due_soon"]), "Due soon"),
+        (str(dashboard_summary["in_progress_tasks"]), "In progress"),
+        (str(dashboard_summary["completed_tasks"]), "Completed"),
     )
 
     for column, (count, label) in enumerate(stats):
@@ -608,7 +583,7 @@ def menu_screen(parent, fonts, username=None):
     )
     up_next_panel.grid_columnconfigure(1, weight=1)
 
-    upcoming_tasks = get_upcoming_tasks()
+    upcoming_tasks = dashboard_data["upcoming_tasks"]
 
     if upcoming_tasks:
         last_row = len(upcoming_tasks) * 2 - 2
@@ -643,7 +618,9 @@ def menu_screen(parent, fonts, username=None):
             )
             due_date = ctk.CTkLabel(
                 task_row,
-                text=parse_due_date(task["due_date"]).strftime("%b %d, %Y"),
+                text=task_service.parse_task_date(
+                    task["due_date"]
+                ).strftime("%b %d, %Y"),
                 font=fonts["small"],
                 text_color=colors.TEXT_SECONDARY,
             )

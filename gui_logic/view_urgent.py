@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from backend import aa_logic, session
+from backend import session, task_rules, validation
 from database import task_queries
 from gui_logic.navigation import back_to_menu
 
@@ -14,14 +14,11 @@ def view_urgents_gui(frame, button_or_label, aa_app, fonts):
         bg_color='transparent',
         corner_radius=10
     )
-    if aa_logic.check_incomp_tasks(tasks):
-        sorted_urgent_tasks = aa_logic.urgent_sort(tasks)
+    if task_rules.check_incomp_tasks(tasks):
+        sorted_urgent_tasks = task_rules.urgent_sort(tasks)
 
-        #sorted_overdue_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) <= 0]
-        #sorted_urgent_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) > 0]
-
-        for i, task in enumerate([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0] + [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0], start=1):
-            if aa_logic.days_left(task["due_date"]) > 0:
+        for i, task in enumerate([task for task in sorted_urgent_tasks if validation.days_left(task["due_date"]) <= 0] + [task for task in sorted_urgent_tasks if validation.days_left(task["due_date"]) > 0], start=1):
+            if validation.days_left(task["due_date"]) > 0:
                 task_label=ctk.CTkLabel(
                 view_urgents_frame,
                 font=fonts["body"],

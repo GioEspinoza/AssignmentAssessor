@@ -1,5 +1,5 @@
 import customtkinter as ctk 
-from backend import aa_logic, session
+from backend import session, task_rules, validation
 from database import task_queries
 from gui_logic.navigation import back_to_menu
 
@@ -15,18 +15,18 @@ def view_tasks_gui(frame, button_or_label, aa_app, fonts):
         corner_radius=10
     )
     if tasks:
-        sorted_tasks = aa_logic.alphabetical_tasks(tasks)
+        sorted_tasks = task_rules.alphabetical_tasks(tasks)
         for i, task in enumerate(sorted_tasks, start=1):
             task_label= ctk.CTkLabel(
                 view_tasks_frame,
                 font=fonts["body"],
             )
         
-            if task['completed'] is False:
-                if aa_logic.days_left(task["due_date"]) > 0:
+            if task['status'] != "completed":
+                if validation.days_left(task["due_date"]) > 0:
                     task_label.configure(
                         text_color='white',
-                        text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
+                        text = f"[{i}] - Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nStatus: {task['status'].replace('_', ' ').title()}\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}\n"
                     )
                     task_label.pack(
                         pady=10

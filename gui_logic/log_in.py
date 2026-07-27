@@ -1,7 +1,5 @@
-from backend import session
-from database import user_queries
 import customtkinter as ctk
-from backend import auth
+from backend import auth_service
 import webbrowser
 
 def open_forgot_password_user_link():
@@ -226,58 +224,31 @@ def show_error(parent, invalid_label, message):
 
 #function that will register new user
 def new_user(username_entry, email_entry, password_entry, invalid_label, login_container, parent, menu, aa_title, fonts):
-    #check if user and password are valid
-    valid, message = auth.validate_username(username_entry)
-    passvalid, passmessage = auth.validate_password(password_entry)
-
-    if not valid:
-        #if not refresh label for invalid inputs
-        show_error(parent, invalid_label, message)
-        return
-
-    if not passvalid:
-        #if not refresh label for invalid inputs
-        show_error(parent, invalid_label, passmessage)
-        return
-
-    password_hash = auth.hash_password(password_entry)
-
-
-    existing_user = user_queries.get_user_by_username(username_entry)
-
-    if existing_user is not None:
-        show_error(parent, invalid_label, "Username already exists")
-        return
-
-    created_user = user_queries.create_user(
+    user, error = auth_service.register_user(
         username_entry,
         email_entry,
-        password_hash
+        password_entry,
     )
-
-    session.current_user = created_user
+    if error is not None:
+        show_error(parent, invalid_label, error)
+        return
 
     if aa_title is not None:
         aa_title.grid_remove()
     login_container.destroy()
-    menu(parent, fonts, session.current_user["username"])
+    menu(parent, fonts, user["username"])
 
 #function that will authenticate old user
 def log_in(username_entry, password_entry, invalid_label, login_container, parent, menu, aa_title, fonts):
-    #load in saved password
-    user_data = user_queries.get_user_by_username(username_entry)
-
-    if user_data is None:
-        show_error(parent, invalid_label, "User not found")
+    user, error = auth_service.authenticate_user(
+        username_entry,
+        password_entry,
+    )
+    if error is not None:
+        show_error(parent, invalid_label, error)
         return
-
-    if not auth.check_password(user_data["password_hash"], password_entry):
-        show_error(parent, invalid_label, "Incorrect password")
-        return
-
-    session.current_user = user_data
 
     if aa_title is not None:
         aa_title.grid_remove()
     login_container.destroy()
-    menu(parent, fonts, session.current_user["username"])
+    menu(parent, fonts, user["username"])

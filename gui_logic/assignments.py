@@ -1,25 +1,26 @@
 import customtkinter as ctk
-from datetime import date, datetime, timedelta
 from PIL import Image
-from datetime import datetime, timedelta
 
-from database.task_queries import get_tasks
+from backend import task_service
 from backend.session import get_current_user_id
 from gui_style import colors, spacing
-from gui_style.responsive import ResponsiveText
+from gui_style.responsive import clone_fonts, ResponsiveText
+from gui_widgets.widgets import enable_linux_mousewheel
+
+
+STATUS_FILTERS = {
+    'Not Started': 'not_started',
+    'In Progress': 'in_progress',
+    'Completed': 'completed',
+}
+
 
 def assignments_screen(parent, fonts):
-    user_task_list = get_tasks(user_id=get_current_user_id())
-    task_list = handle_filter_change(filter_value='All', task_list=user_task_list)
+    user_task_list = task_service.get_tasks(get_current_user_id())
+    task_list = user_task_list
+    base_fonts = fonts
 
-    fonts = {
-        name: ctk.CTkFont(
-            family=font.cget("family"),
-            size=font.cget("size"),
-            weight=font.cget("weight"),
-        )
-        for name, font in fonts.items()
-    }
+    fonts = clone_fonts(fonts)
     fonts["empty_message"] = ctk.CTkFont(
         family=fonts["body"].cget("family"),
         size=20,
@@ -78,7 +79,7 @@ def assignments_screen(parent, fonts):
         hover_color=colors.ACCENT_HOVER,
         text_color=colors.TEXT_ON_ACCENT,
         corner_radius=spacing.RADIUS_MEDIUM,
-        command=lambda: return_to_menu(parent, fonts)
+        command=lambda: return_to_menu(parent, base_fonts)
     )
     back_button.grid(
         row=0,
@@ -94,7 +95,7 @@ def assignments_screen(parent, fonts):
         font=fonts["page_title"],
         text_color=colors.TEXT_PRIMARY,
     )
-    title_label.grid(row=0, column=0, sticky='w')
+    title_label.grid(row=1, column=0, sticky='w')
     
     subtitle_label = ctk.CTkLabel(
         header_frame,
@@ -102,7 +103,7 @@ def assignments_screen(parent, fonts):
         font=fonts["subtitle"],
         text_color=colors.TEXT_SECONDARY,
     )
-    subtitle_label.grid(row=1, column=0, sticky='w', pady=(spacing.SPACE_1, 0))
+    subtitle_label.grid(row=2, column=0, sticky='w', pady=(spacing.SPACE_1, 0))
     
     add_assignment_button = ctk.CTkButton(
         header_frame,
@@ -112,13 +113,13 @@ def assignments_screen(parent, fonts):
         hover_color=colors.ACCENT_HOVER,
         text_color=colors.TEXT_ON_ACCENT,
         corner_radius=spacing.RADIUS_MEDIUM,
-        command=lambda: print("Add Assignment button clicked")
+        command=lambda: add_task(parent, base_fonts)
     )
     add_assignment_button.grid(
         row=0,
-        column=1,
-        rowspan=2,
+        column=2,
         padx=(spacing.SPACE_2, 0),
+        pady=(0, spacing.SPACE_2),
         sticky='e',
     )
     
@@ -204,7 +205,7 @@ def assignments_screen(parent, fonts):
     
     filter_dropdown = ctk.CTkOptionMenu(
         filter_frame,
-        values=['All', 'Completed', 'Pending'],
+        values=['All', 'Not Started', 'In Progress', 'Completed'],
         width=1,
         font=fonts["input"],
         dropdown_font=fonts["input"],
@@ -379,7 +380,7 @@ def assignments_screen(parent, fonts):
         )
         no_search_results_label.grid_remove()
 
-    quick_view_frame = ctk.CTkFrame(
+    quick_view_frame = ctk.CTkScrollableFrame(
         assignments_frame,
         fg_color=colors.SURFACE,
         corner_radius=spacing.RADIUS_LARGE,
@@ -460,19 +461,19 @@ def assignments_screen(parent, fonts):
             )
             return
 
-        completed = bool(task.get("completed"))
-        status_text = "Completed" if completed else "Pending"
-        status_color = colors.SUCCESS if completed else colors.WARNING
+        status = task.get("status", "not_started")
+        status_text = get_status_label(status)
+        status_color = get_status_color(status)
+        completed = status == "completed"
         date_text = task.get("date_completed") if completed else task.get("due_date")
         date_label = "Completed" if completed else "Due"
-        hours_label = "Hours used" if completed else "Estimated hours"
 
         detail_rows = (
             (task.get("task", "Untitled assignment"), fonts["card_title"], colors.TEXT_PRIMARY),
             (task.get("course", "No course"), fonts["body"], colors.TEXT_SECONDARY),
             (status_text, fonts["body_bold"], status_color),
             (f"{date_label}: {date_text or '—'}", fonts["body"], colors.TEXT_PRIMARY),
-            (f"{hours_label}: {task.get('hours') or '—'}", fonts["body"], colors.TEXT_PRIMARY),
+            (get_hours_text(task), fonts["body"], colors.TEXT_PRIMARY),
             (f"Difficulty: {task.get('difficulty') or '—'}/5", fonts["body"], colors.TEXT_PRIMARY),
         )
 
@@ -571,7 +572,7 @@ def assignments_screen(parent, fonts):
             pady=(0, spacing.CARD_PADDING),
         )
     else:
-        at_a_glance_data = update_at_a_glance(task_list)
+        at_a_glance_data = task_service.get_task_summary(task_list)
         
         due_this_week_label = ctk.CTkLabel(
             at_a_glance_frame,
@@ -634,13 +635,14 @@ def assignments_screen(parent, fonts):
         )
         
     def apply_list_controls():
-        filtered_tasks = handle_filter_change(
-            filter_dropdown.get(),
+        selected_status = STATUS_FILTERS.get(filter_dropdown.get())
+        filtered_tasks = task_service.filter_tasks_by_status(
             user_task_list,
+            selected_status,
         )
-        visible_tasks = handle_search(
-            search_entry.get(),
+        visible_tasks = task_service.search_tasks(
             filtered_tasks,
+            search_entry.get(),
         )
         visible_ids = {task["task_id"] for task in visible_tasks}
 
@@ -677,68 +679,50 @@ def assignments_screen(parent, fonts):
 
     search_entry.bind("<KeyRelease>", lambda event: apply_list_controls())
     filter_dropdown.configure(command=lambda selected: apply_list_controls())
+    enable_linux_mousewheel(assignments_frame)
+    enable_linux_mousewheel(quick_view_frame)
 
-    
-def update_at_a_glance(task_list):
-    due_this_week = sum(1 for task in task_list if task.get('due_date') and is_due_this_week(task['due_date']))
-    estimated_workload = sum(
-        float(task.get('hours') or 0)
-        for task in task_list
-        if not task.get('completed')
-    )
-    completed_tasks = sum(1 for task in task_list if task.get('completed'))
-    at_a_glance_data = {
-        "due_this_week": due_this_week,
-        "estimated_workload": estimated_workload,
-        "completed_tasks": completed_tasks,
-    }
-    return at_a_glance_data
 
-def handle_filter_change(filter_value, task_list):
-    # Placeholder function to handle filter changes and update the displayed task list
-    if filter_value == 'All':
-        return task_list
-    elif filter_value == 'Completed':
-        return [task for task in task_list if task.get('completed')]
-    elif filter_value == 'Pending':
-        return [task for task in task_list if not task.get('completed')]
-    else:
-        return task_list # Default to all tasks if unknown filter
-    
-    
-def handle_search(query, task_list):
-    # Placeholder function to handle search queries and update the displayed task list
-    return [task for task in task_list if query.lower() in task['task'].lower()]
-
-def is_due_this_week(due_date_value):
-    if isinstance(due_date_value, datetime):
-        due_date = due_date_value.date()
-    elif isinstance(due_date_value, date):
-        due_date = due_date_value
-    else:
-        due_date = None
-        for date_format in ("%Y-%m-%d", "%m-%d-%Y"):
-            try:
-                due_date = datetime.strptime(
-                    str(due_date_value),
-                    date_format,
-                ).date()
-                break
-            except ValueError:
-                continue
-
-        if due_date is None:
-            return False
-
-    today = date.today()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
-    return start_of_week <= due_date <= end_of_week
-    
 def update_quick_view(task):
-    task_details = f"Task: {task['task']}\nDue Date: {task['due_date']}\nEstimated Time: {task.get('estimated_time', 'N/A')} hrs\nCompleted: {'Yes' if task.get('completed') else 'No'}"
+    task_details = (
+        f"Task: {task['task']}\n"
+        f"Status: {get_status_label(task.get('status'))}\n"
+        f"Due Date: {task.get('due_date')}\n"
+        f"Estimated Time: {task.get('estimated_hours', 'N/A')} hrs"
+    )
     return task_details
+
+def get_status_label(status):
+    status_labels = {
+        'not_started': 'Not Started',
+        'in_progress': 'In Progress',
+        'completed': 'Completed',
+    }
+    return status_labels.get(status, 'Not Started')
+
+def get_status_color(status):
+    status_colors = {
+        'not_started': colors.WARNING,
+        'in_progress': colors.ACCENT,
+        'completed': colors.SUCCESS,
+    }
+    return status_colors.get(status, colors.WARNING)
+
+def get_hours_text(task):
+    if task.get('status') == 'completed':
+        return f"Hours used: {task.get('hours_used') or '—'}"
+
+    if task.get('status') == 'in_progress':
+        hours_used = task.get('hours_used') or 0
+        estimated_hours = task.get('estimated_hours') or '—'
+        return f"Hours: {hours_used} used / {estimated_hours} estimated"
+
+    return f"Estimated hours: {task.get('estimated_hours') or '—'}"
 
 def return_to_menu(parents, fonts):
     from gui_logic.menu import menu_screen
     menu_screen(parents, fonts)
+
+def add_task(parent, fonts):
+    from gui_logic.add_task import add_task
+    add_task(parent, fonts)

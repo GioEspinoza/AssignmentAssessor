@@ -1,3 +1,17 @@
+import customtkinter as ctk
+
+
+def clone_fonts(fonts):
+    return {
+        name: ctk.CTkFont(
+            family=font.cget("family"),
+            size=font.cget("size"),
+            weight=font.cget("weight"),
+        )
+        for name, font in fonts.items()
+    }
+
+
 class ResponsiveText:
     def __init__(
         self,

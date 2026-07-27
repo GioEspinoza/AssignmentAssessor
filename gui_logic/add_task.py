@@ -1,337 +1,249 @@
 import customtkinter as ctk
-from database import task_queries
-from backend import aa_logic
-from backend import session
-from gui_logic.navigation import back_to_menu, check_not_empty_gui
+from backend import course_service
+from backend.session import get_current_user_id
+from gui_style import colors, spacing
+from gui_style.responsive import clone_fonts, ResponsiveText
 
 
-#add task function
-def add_task_gui(frame, button_or_label, aa_app, fonts):
-    #make window bigger
-    aa_app.geometry('900x800')
+def add_task(parent, fonts):
+    base_fonts = fonts
+    fonts = clone_fonts(fonts)
 
-    #instantiate label for invalid password/usernames
-    invalid_label = ctk.CTkLabel(
-            aa_app,
-            font=fonts["small_bold"],
-            bg_color='transparent',
-            text_color='red',
-            text=''        
-        )
-   
-    #instatiate frame for add task inputs
+    for widget in parent.winfo_children():
+        widget.destroy()
+
+    parent.grid_rowconfigure(0, weight=1)
+    parent.grid_columnconfigure(0, weight=1)
+
     add_task_frame = ctk.CTkFrame(
-        aa_app,
-        bg_color='transparent',
-        corner_radius=10
+        parent,
+        fg_color=colors.TRANSPARENT,
     )
+    add_task_frame.grid(row=0, column=0, sticky="nsew")
+    add_task_frame.grid_rowconfigure(0, weight=0)
+    add_task_frame.grid_rowconfigure(1, weight=1)
+    add_task_frame.grid_columnconfigure(0, weight=1)
 
-    #instantiate and configure course text box
-    course_entry = ctk.CTkEntry(
+    setattr(
         add_task_frame,
-        placeholder_text="Course Name",
-        placeholder_text_color='white',
-        font=fonts["input"]
-    )
-
-    task_entry = ctk.CTkEntry(
-        add_task_frame,
-        placeholder_text='Task Name',
-        placeholder_text_color='white',
-        font=fonts["input"]
-    )
-
-    #instantiate compelted check box
-    completed_box = ctk.CTkCheckBox(
-        add_task_frame,
-        text="Is task completed?",
-        font=fonts["body"],
-        checkmark_color='green',
-        fg_color='white',
-        hover_color="white"
-    )
-
-    #instatiate difficulty label and slider
-    difficulty_label = ctk.CTkLabel(
-        add_task_frame,
-        text="On a scale of 1-5, how difficult?",
-        font=fonts["body"]
-    )
-    difficulty_slider = ctk.CTkSlider(
-        add_task_frame,
-        corner_radius=10,
-        fg_color='green',
-        button_color='white',
-        button_hover_color='white',
-        button_corner_radius=10,
-        border_color='transparent',
-        number_of_steps=4,
-        from_=1,
-        to=5,
-        progress_color='red',
-    )
-
-    #instantiate hours label and entry point
-    hours_label = ctk.CTkLabel(
-        add_task_frame,
-        text="Input hours needed/used:",
-        font=fonts["body"]
-    )
-    hours_entry = ctk.CTkEntry(
-        add_task_frame,
-        placeholder_text='Hours',
-        placeholder_text_color='white',
-        font=fonts["input"]
-    )
-
-    #instatiate data label and entry point
-    date_label = ctk.CTkLabel(
-        add_task_frame,
-        text="Input date due/completed:",
-        font=fonts["body"]
-    )
-    date_entry = ctk.CTkEntry(
-        add_task_frame,
-        placeholder_text='Date',
-        placeholder_text_color='white',
-        font=fonts["input"]
-    )
-    
-    #instantiate submit button
-    submit_button = ctk.CTkButton(
-        add_task_frame,
-        text='Submit Task',
-        font=fonts["button"],
-        command= lambda: submit_task_handle(
-            bool(completed_box.get()),
-            course_entry.get().strip(),
-            task_entry.get().strip(),
-            int(difficulty_slider.get()),            
-            hours_entry.get(),
-            date_entry.get(),
-            invalid_label,
+        "responsive_text",
+        ResponsiveText(
             add_task_frame,
-            inner_quit_button,
-            aa_app,
-            fonts
-        )
+            fonts,
+            base_width=900,
+            min_scale=0.8,
+            max_scale=1.25,
+        ),
     )
-    #quit button back to menu
-    inner_quit_button = ctk.CTkButton(
+
+    header_frame = ctk.CTkFrame(
         add_task_frame,
+        fg_color=colors.TRANSPARENT,
+    )
+    header_frame.grid_columnconfigure(0, weight=1)
+    header_frame.grid(
+        row=0,
+        column=0,
+        sticky="ew",
+        padx=spacing.PAGE_X,
+        pady=(spacing.PAGE_Y, spacing.SECTION_GAP),
+    )
+
+    title_label = ctk.CTkLabel(
+        header_frame,
+        text="Add Assignment",
+        font=fonts["page_title"],
+        text_color=colors.TEXT_PRIMARY,
+    )
+    subtitle_label = ctk.CTkLabel(
+        header_frame,
+        text="Fill out the form below to add a new assignment.",
+        font=fonts["body"],
+        text_color=colors.TEXT_SECONDARY,
+    )
+
+    title_label.grid(
+        row=0,
+        column=0,
+        sticky="w"
+        )
+
+    subtitle_label.grid(
+        row=1,
+        column=0,
+        sticky="w",
+        pady=(spacing.SPACE_1, 0),
+    )
+
+    cancel_button = ctk.CTkButton(
+        header_frame,
         text="Cancel",
-        font=fonts["button"],
-        command= lambda: back_to_menu(aa_app, add_task_frame, inner_quit_button, fonts)
+        font=fonts["body_bold"],
+        text_color=colors.TEXT_PRIMARY,
+        fg_color=colors.SURFACE,
+        hover_color=colors.SURFACE_HOVER,
+        corner_radius=spacing.RADIUS_MEDIUM,
+        command=lambda: back_to_assignments(parent, base_fonts),
+    )
+    cancel_button.grid(
+        row=0,
+        column=1,
+        sticky="e",
+        padx=(0, spacing.CARD_PADDING),
     )
 
-    #unshow menu frame  if coming from menu and then show task frame
-    frame.destroy()
-    add_task_frame.pack(
-        pady=100,
-        padx=200,
-        fill ='both', 
-        expand = 1
+    form_card = ctk.CTkFrame(
+        add_task_frame,
+        fg_color=colors.SURFACE,
+        border_width=spacing.CARD_BORDER_WIDTH,
+        border_color=colors.BORDER,
+        corner_radius=spacing.RADIUS_LARGE,
     )
-    
-    #show task frame inputs
-    course_entry.pack(
-        pady=20
+    form_card.grid(
+        row=1,
+        column=0,
+        sticky="new",
+        padx=spacing.PAGE_X,
+        pady=(0, spacing.PAGE_Y),
     )
-    task_entry.pack(
-        pady=5
+    form_card.grid_columnconfigure(0, weight=1)
+
+    status_label = ctk.CTkLabel(
+        form_card,
+        text="Assignment status",
+        font=fonts["body_bold"],
+        text_color=colors.TEXT_PRIMARY,
     )
-    completed_box.pack(
-        pady=5
-    )
-    difficulty_label.pack(
-        pady=10
-    )
-    difficulty_slider.pack(
-    )
-    hours_label.pack(
-        pady=10
-    )
-    hours_entry.pack()
-    date_label.pack(
-        pady=10
-    )
-    date_entry.pack()
-    submit_button.pack(
-        pady=5
+    status_label.grid(
+        row=0,
+        column=0,
+        sticky="w",
+        padx=spacing.CARD_PADDING,
+        pady=(spacing.CARD_PADDING, spacing.SPACE_2),
     )
 
-    #destroy outer quit button and show inner quit button
-    button_or_label.destroy()
-    inner_quit_button.pack(
-        pady=10
+    status_value = ctk.StringVar(value="Not Started")
+    status_control = ctk.CTkSegmentedButton(
+        form_card,
+        values=["Not Started", "In Progress", "Completed"],
+        variable=status_value,
+        font=fonts["body"],
+        text_color=colors.TEXT_PRIMARY,
+        selected_color=colors.ACCENT,
+        selected_hover_color=colors.ACCENT_HOVER,
+        unselected_color=colors.SURFACE_HOVER,
+        unselected_hover_color=colors.BORDER,
+        corner_radius=spacing.RADIUS_MEDIUM,
+        height=38,
     )
-#submit task handle function
-def submit_task_handle(is_comp, course, task, difficulty, hours, date, invalid_label, frame, quit_button, aa_app, fonts):
-    #check if task is completed or not
-    if is_comp is False:
-        #check if inputs for course and task are detected
-        if check_not_empty_gui(course, task, hours) is False:
-            invalid_label.configure(
-                text="Empty inputs detected"
-            )
-            invalid_label.pack(
-                pady=5
-            )
-            aa_app.after(2500, invalid_label.pack_forget)
-            return
-        
-        #check for invalid hour input
-        if aa_logic.is_hours(hours) is False:
-            invalid_label.configure(
-                text="Invalid hour input"
-            )
-            invalid_label.pack(
-                pady=5
-            )
-            aa_app.after(2500, invalid_label.pack_forget)
-            return
+    status_control.grid(
+        row=1,
+        column=0,
+        sticky="ew",
+        padx=spacing.CARD_PADDING,
+    )
 
-        #check for valid date format/input
-        if aa_logic.valid_due_date(date) is False:
-            invalid_label.configure(
-                text="Invalid date input - (MM-DD-YYYY)"
-            )
-            invalid_label.pack(
-                pady=5
-            )
-            aa_app.after(2500, invalid_label.pack_forget)
-            return
-        
-        rev_task_gui(aa_logic.return_task(is_comp, course, task, difficulty, None, hours, None, date), frame, quit_button, aa_app, fonts)
-        return
-    
-    if check_not_empty_gui(course, task, hours) is False:
-        invalid_label.configure(
-            text="Empty inputs detected"
-        )
-        invalid_label.pack(
-            pady=5
-        )
-        aa_app.after(2500, invalid_label.pack_forget)
-        return
-    
-    if aa_logic.is_hours(hours) is False:
-        invalid_label.configure(
-            text="Invalid hour input"
-        )
-        invalid_label.pack(
-            pady=5
-        )
-        aa_app.after(2500, invalid_label.pack_forget)
-        return
-    
-    if aa_logic.valid_comp_date(date) is False:
-        invalid_label.configure(
-            text="Invalid date input - (MM-DD-YYYY)"
-        )
-        invalid_label.pack(
-            pady=5
-        )
-        aa_app.after(2500, invalid_label.pack_forget)
-        return
-
-    rev_task_gui(aa_logic.return_task(is_comp, course, task, difficulty, hours, None, date, None), frame, quit_button, aa_app, fonts)
-    return
-#review task logic for gui
-def rev_task_gui(task, frame, quit_button, aa_app, fonts):
-    
-    #minimize window
-    aa_app.geometry('800x600')
-    #destroy previous frame to make space for frame to review task
-    frame.destroy()
-    quit_button.destroy()
-    rev_task_frame = ctk.CTkFrame(
-        aa_app,
-        bg_color='transparent',
-        corner_radius=10
+    status_helper = ctk.CTkLabel(
+        form_card,
+        text="Choose the assignment's current progress status.",
+        font=fonts["small"],
+        text_color=colors.TEXT_SECONDARY,
+    )
+    status_helper.grid(
+        row=2,
+        column=0,
+        sticky="w",
+        padx=spacing.CARD_PADDING,
+        pady=(spacing.SPACE_2, spacing.CARD_PADDING),
     )
     
-    #instantiate label that will display task
-    task_label= ctk.CTkLabel(
-            rev_task_frame,
-            font=fonts["body"],
-        )
+    course_label = ctk.CTkLabel(
+        form_card,
+        text="Course name",
+        font=fonts["body_bold"],
+        text_color=colors.TEXT_PRIMARY,
+    )
+    course_label.grid(
+        row=3,
+        column=0,
+        sticky="w",
+        padx=spacing.CARD_PADDING,
+        pady=(spacing.CARD_PADDING, spacing.SPACE_2),
+    )
+
+    courses = get_courses_for_user(get_current_user_id())
     
-    #label that will show task saved if completed
-    if task['completed'] is False:
-        task_label.configure(
-            text = f"Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Not Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDue Date: {task['due_date']}"
+    if not courses:
+        no_courses_label = ctk.CTkLabel(
+            form_card,
+            text="No active courses found. Please add a course first.",
+            font=fonts["small"],
+            text_color=colors.TEXT_SECONDARY,
+        )
+        no_courses_label.grid(
+            row=5,
+            column=0,
+            sticky="w",
+            padx=spacing.CARD_PADDING,
+            pady=(spacing.SPACE_2, spacing.CARD_PADDING),
+        )
+        add_course_button = ctk.CTkButton(
+            form_card,
+            text="Add Course",
+            font=fonts["body_bold"],
+            text_color=colors.TEXT_PRIMARY,
+            fg_color=colors.ACCENT,
+            hover_color=colors.SURFACE_HOVER,
+            border_color=colors.BORDER,
+            corner_radius=spacing.RADIUS_MEDIUM,
+            #command=lambda: add_course_screen(parent, base_fonts),
+        )
+
+        add_course_button.grid(
+            row=5,
+            column=1,
+            sticky="e",
+            padx=(0, spacing.CARD_PADDING),
         )
     else:
-        task_label.configure(
-                text = f"Course Name: {task['course']}\n\nTask Name: {task['task']}\n\nCompletion Status: Completed\n\nLevel of Difficulty: {task['difficulty']}\n\nDate Completed: {task['date_completed']}"
-            )
+        course_helper = ctk.CTkLabel(
+            form_card,
+            text="Select the course to which this assignment belongs.",
+            font=fonts["small"],
+            text_color=colors.TEXT_SECONDARY,
+        )
+        course_helper.grid(
+            row=4,
+            column=0,
+            sticky="w",
+            padx=spacing.CARD_PADDING,
+            pady=(spacing.SPACE_2, spacing.CARD_PADDING),
+        )
 
-    #construct frame for buttons
-    yes_no_frame = ctk.CTkFrame(
-        rev_task_frame,
-        fg_color='transparent'
-    )
+        course_dropdown = ctk.CTkOptionMenu(
+            form_card,
+            values=courses,
+            font=fonts["body"],
+            text_color=colors.TEXT_PRIMARY,
+            button_color=colors.SURFACE,
+            button_hover_color=colors.SURFACE_HOVER,
+            dropdown_fg_color=colors.SURFACE,
+            dropdown_hover_color=colors.SURFACE_HOVER,
+            corner_radius=spacing.RADIUS_MEDIUM,
+        )
+        course_dropdown.grid(
+            row=4,
+            column=0,
+            sticky="ew",
+            padx=spacing.CARD_PADDING,
+        )
 
-    #construct yes/no buttons
-    no_button = ctk.CTkButton(
-        yes_no_frame,
-        text='No',
-        bg_color='transparent',
-        fg_color='red',
-        text_color='white',
-        font=fonts["button"],
-        corner_radius=10,
-        hover_color='white',
-        command= lambda: add_task_gui(rev_task_frame, task_recognized_label, aa_app, fonts)
-    )
-    yes_button = ctk.CTkButton(
-    yes_no_frame,
-    text="Yes",
-    bg_color='transparent',
-    fg_color='green',
-    font=fonts["button"],
-    text_color='white',
-    corner_radius=10,
-    hover_color='white',
-    command= lambda: submit_task(task, rev_task_frame, task_recognized_label, aa_app, fonts)
-    )
-  
-    #label to let user know the task was valid
-    task_recognized_label = ctk.CTkLabel(
-        aa_app,
-        font=fonts["body_bold"],
-        text_color='green',
-        text='Task valid! Please review'
-    )
+
     
-    #packing all elements
-    task_recognized_label.pack(
-        pady=5
-    )
-    rev_task_frame.pack(
-        pady=25,
-        padx=150,
-        fill ='both', 
-        expand = 1
-    )
-    task_label.pack(
-        pady=50
-    )
+def back_to_assignments(parent, fonts):
+    from gui_logic.assignments import assignments_screen
+    assignments_screen(parent, fonts)
 
-    yes_no_frame.pack(
-        side="bottom",
-        pady=20
-    )
-    yes_button.pack(
-        side='left',
-        padx=10
-    )
-    no_button.pack( 
-        side='left',
-        padx=10
-    )
-#logic for yes and no buttons
-def submit_task(task, frame, button_or_label, aa_app, fonts):
-    task_queries.add_task(session.get_current_user_id(), task)
-    back_to_menu(aa_app, frame, button_or_label, fonts)
+def get_courses_for_user(user_id):
+    courses = course_service.get_active_courses(user_id)
+    return [course["course_name"] for course in courses]

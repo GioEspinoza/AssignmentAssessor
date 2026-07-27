@@ -1,0 +1,139 @@
+from datetime import date, timedelta
+
+from backend import auth_service, course_service, session, task_service
+
+
+def test_register_user_sets_session(monkeypatch):
+    created_user = {
+        "user_id": 7,
+        "username": "Gio",
+        "email": "gio@example.com",
+    }
+
+    monkeypatch.setattr(
+        auth_service.user_queries,
+        "get_user_by_username",
+        lambda username: None,
+    )
+    monkeypatch.setattr(
+        auth_service.auth,
+        "hash_password",
+        lambda password: b"hashed-password",
+    )
+    monkeypatch.setattr(
+        auth_service.user_queries,
+        "create_user",
+        lambda username, email, password_hash: created_user,
+    )
+    monkeypatch.setattr(session, "current_user", None)
+
+    user, error = auth_service.register_user(
+        "Gio",
+        "gio@example.com",
+        "password123",
+    )
+
+    assert error is None
+    assert user == created_user
+    assert session.current_user == created_user
+
+
+def test_authenticate_user_rejects_incorrect_password(monkeypatch):
+    monkeypatch.setattr(
+        auth_service.user_queries,
+        "get_user_by_username",
+        lambda username: {
+            "user_id": 7,
+            "username": username,
+            "password_hash": b"stored-password",
+        },
+    )
+    monkeypatch.setattr(
+        auth_service.auth,
+        "check_password",
+        lambda password_hash, password: False,
+    )
+
+    user, error = auth_service.authenticate_user("Gio", "wrong-password")
+
+    assert user is None
+    assert error == "Incorrect password"
+
+
+def test_task_service_filters_searches_and_summarizes():
+    tasks = [
+        {
+            "task": "Read chapter",
+            "course": "History",
+            "status": "not_started",
+            "estimated_hours": 4,
+            "hours_used": None,
+            "due_date": date.today(),
+        },
+        {
+            "task": "Build schema",
+            "course": "Databases",
+            "status": "in_progress",
+            "estimated_hours": 8,
+            "hours_used": 3,
+            "due_date": date.today() + timedelta(days=2),
+        },
+        {
+            "task": "Submit essay",
+            "course": "Writing",
+            "status": "completed",
+            "estimated_hours": 5,
+            "hours_used": 5,
+            "date_completed": date.today(),
+            "due_date": None,
+        },
+    ]
+
+    in_progress = task_service.filter_tasks_by_status(
+        tasks,
+        "in_progress",
+    )
+    search_results = task_service.search_tasks(tasks, "data")
+    summary = task_service.get_task_summary(tasks)
+
+    assert [task["task"] for task in in_progress] == ["Build schema"]
+    assert [task["task"] for task in search_results] == ["Build schema"]
+    assert summary["estimated_workload"] == 9
+    assert summary["in_progress_tasks"] == 1
+    assert summary["completed_tasks"] == 1
+
+
+def test_dashboard_data_queries_tasks_once(monkeypatch):
+    tasks = [
+        {
+            "task": "First",
+            "course": "Testing",
+            "status": "not_started",
+            "estimated_hours": 2,
+            "hours_used": None,
+            "due_date": date.today() + timedelta(days=1),
+        }
+    ]
+    calls = []
+
+    def fake_get_tasks(user_id):
+        calls.append(user_id)
+        return tasks
+
+    monkeypatch.setattr(task_service, "get_tasks", fake_get_tasks)
+
+    dashboard_data = task_service.get_dashboard_data(12)
+
+    assert calls == [12]
+    assert dashboard_data["upcoming_tasks"] == tasks
+    assert dashboard_data["summary"]["due_soon"] == 1
+
+
+def test_course_service_reports_active_courses(monkeypatch):
+    monkeypatch.setattr(
+        course_service.course_queries,
+        "get_active_courses",
+        lambda user_id: [{"course_id": 3, "course_name": "Databases"}],
+    )
+
+    assert course_service.user_has_active_courses(7)

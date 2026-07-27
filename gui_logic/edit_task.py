@@ -1,7 +1,14 @@
 import customtkinter as ctk
 from database import task_queries
-from backend import aa_logic, session
-from gui_logic.navigation import back_to_menu, check_not_empty_gui, update_checkbox_text
+from backend import session, validation
+from gui_logic.navigation import back_to_menu, check_not_empty_gui
+
+
+STATUS_VALUES = {
+    "Not Started": "not_started",
+    "In Progress": "in_progress",
+    "Completed": "completed",
+}
 
 #edit task function
 def edit_task_gui(frame, aa_app, fonts, button_or_label=None):
@@ -112,7 +119,7 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
     )
 
     #all elements in grid for incomp task
-    if task['completed'] is False:
+    if task['status'] != "completed":
         #course label with its entry following to edit
         course_name_label=ctk.CTkLabel(
             edit_task_handle_frame,
@@ -152,15 +159,14 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
         )
         completion_status_label.grid(row=2, column=0, padx=20, pady=20, sticky="w")
 
-        completion_status_check = ctk.CTkCheckBox(
+        completion_status_check = ctk.CTkSegmentedButton(
             edit_task_handle_frame,
-            text=f"{task['completed']}",
+            values=list(STATUS_VALUES),
             font=fonts["body"],
-            command=lambda: update_checkbox_text(completion_status_check, fonts),
-            onvalue="True", 
-            offvalue="False"
         )
-        completion_status_check.deselect()
+        completion_status_check.set(
+            task['status'].replace('_', ' ').title()
+        )
         completion_status_check.grid(row=2, column=1, padx=20, pady=20)
 
         #difficulty label with its entry following to edit
@@ -198,7 +204,7 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
         hours_entry=ctk.CTkEntry(
             edit_task_handle_frame,
             font=fonts["input"],
-            placeholder_text=f"{task['hours']}"
+            placeholder_text=f"{task['estimated_hours']}"
         )
         hours_entry.grid(row=4, column=1, padx=20, pady=20)
 
@@ -231,11 +237,13 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
             font=fonts["button"],
             command= lambda: save_task_handle(
                 task['task_id'],
-                completion_status_check.get() == "True",
+                completion_status_check.get(),
+                task['course_id'],
                 course_name_entry.get().strip(),
                 task_name_entry.get().strip(),
                 int(difficulty_slider.get()),            
                 hours_entry.get(),
+                task.get('hours_used'),
                 date_entry.get(),
                 edit_task_handle_frame,
                 aa_app,
@@ -318,15 +326,12 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
         )
         completion_status_label.grid(row=2, column=0, padx=20, pady=20, sticky="w")
 
-        completion_status_check = ctk.CTkCheckBox(
+        completion_status_check = ctk.CTkSegmentedButton(
             edit_task_handle_frame,
-            text=f"{task['completed']}",
+            values=list(STATUS_VALUES),
             font=fonts["body"],
-            command=lambda: update_checkbox_text(completion_status_check, fonts),
-            onvalue="True", 
-            offvalue="False"
         )
-        completion_status_check.select()
+        completion_status_check.set("Completed")
         completion_status_check.grid(row=2, column=1, padx=20, pady=20)
 
         difficulty_label=ctk.CTkLabel(
@@ -355,7 +360,7 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
 
         hours_label=ctk.CTkLabel(
             edit_task_handle_frame,
-            text=f"Hours Used: {task['hours']}",
+            text=f"Hours Used: {task['hours_used']}",
             font=fonts["body_bold"]
         )
         hours_label.grid(row=4, column=0, padx=20, pady=20, sticky="w")
@@ -363,7 +368,7 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
         hours_entry=ctk.CTkEntry(
             edit_task_handle_frame,
             font=fonts["input"],
-            placeholder_text=f"{task['hours']}"
+            placeholder_text=f"{task['hours_used']}"
         )
         hours_entry.grid(row=4, column=1, padx=20, pady=20)
         
@@ -395,10 +400,12 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
             font=fonts["button"],
             command= lambda: save_task_handle(
                 task['task_id'],
-                completion_status_check.get() == "True",
+                completion_status_check.get(),
+                task['course_id'],
                 course_name_entry.get().strip(),
                 task_name_entry.get().strip(),
                 int(difficulty_slider.get()),            
+                task.get('estimated_hours'),
                 hours_entry.get(),
                 date_entry.get(),
                 edit_task_handle_frame,
@@ -445,8 +452,24 @@ def edit_task_handle(task, frame, quit_button, aa_app, fonts):
         )
 
 #handle save button for edits
-def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, frame, aa_app, fonts):
+def save_task_handle(
+    task_id,
+    status_label,
+    course_id,
+    course,
+    task,
+    difficulty,
+    estimated_hours,
+    hours_used,
+    date,
+    frame,
+    aa_app,
+    fonts,
+):
     tasks = task_queries.get_tasks(session.get_current_user_id())
+    status = STATUS_VALUES[status_label]
+    hours = hours_used if status == "completed" else estimated_hours
+
     if check_not_empty_gui(course, task, hours) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
@@ -461,7 +484,7 @@ def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, fr
         aa_app.after(2500, invalid_label.pack_forget)
         return
     
-    if aa_logic.is_hours(hours) is False:
+    if validation.is_hours(hours) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
             font=fonts["small_bold"],
@@ -475,7 +498,7 @@ def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, fr
         aa_app.after(2500, invalid_label.pack_forget)
         return
     
-    if is_comp is False and aa_logic.valid_due_date(date) is False:
+    if status != "completed" and validation.valid_due_date(date) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
             font=fonts["small_bold"],
@@ -489,7 +512,7 @@ def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, fr
         aa_app.after(2500, invalid_label.pack_forget)
         return
     
-    if is_comp is True and aa_logic.valid_comp_date(date) is False:
+    if status == "completed" and validation.valid_comp_date(date) is False:
         invalid_label = ctk.CTkLabel(
             aa_app,
             font=fonts["small_bold"],
@@ -505,13 +528,15 @@ def save_task_handle(task_id, is_comp, course, task, difficulty, hours, date, fr
 
     updated_task = {
         "task_id": task_id,
+        "course_id": course_id,
         "course": course,
         "task": task,
-        "completed": is_comp,
+        "status": status,
         "difficulty": difficulty,
-        "hours": hours,
-        "due_date": date if not is_comp else None,
-        "date_completed": date if is_comp else None
+        "estimated_hours": estimated_hours,
+        "hours_used": hours_used,
+        "due_date": date if status != "completed" else None,
+        "date_completed": date if status == "completed" else None
     }
 
     task_queries.update_task(task_id, updated_task)

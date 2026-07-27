@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from database import task_queries
-from backend import aa_logic, session
+from backend import session, task_rules, validation
 from gui_logic.navigation import back_to_menu
 
 #study plan function
@@ -40,21 +40,21 @@ def study_plan_gui(frame, button_or_label, aa_app, fonts):
         pady=20
     )
 
-    if aa_logic.check_incomp_tasks(tasks):
-        sorted_urgent_tasks = aa_logic.urgent_sort(tasks)
-
-        #sorted_overdue_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) <= 0]
-        #sorted_urgent_tasks = [task for task in aa_logic.urgent_sort(tasks) if aa_logic.days_left(task["due_date"]) > 0]
+    if task_rules.check_incomp_tasks(tasks):
+        sorted_urgent_tasks = task_rules.urgent_sort(tasks)
 
         #sort task list to only include urgent sorts but have overdues at the top.
-        for i, task in enumerate([task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) <= 0] + [task for task in sorted_urgent_tasks if aa_logic.days_left(task["due_date"]) > 0], start=1):
-            hours_day = aa_logic.hours_per_day(float(task["hours"]), float(aa_logic.days_left(task["due_date"])))
-            if aa_logic.days_left(task["due_date"]) > 0:
+        for i, task in enumerate([task for task in sorted_urgent_tasks if validation.days_left(task["due_date"]) <= 0] + [task for task in sorted_urgent_tasks if validation.days_left(task["due_date"]) > 0], start=1):
+            hours_day = task_rules.hours_per_day(
+                task_rules.remaining_hours(task),
+                float(validation.days_left(task["due_date"]))
+            )
+            if validation.days_left(task["due_date"]) > 0:
                 task_label=ctk.CTkLabel(
                 study_plan_frame,
                 font=fonts["body"],
                 text_color='white',
-                text = f"[{i}] - Course: {task['course']}\n\nTask: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nAmount of Days Left: {aa_logic.days_left(task["due_date"])}\n\nSuggested Hours Per Day: {hours_day}\n\n"
+                text = f"[{i}] - Course: {task['course']}\n\nTask: {task['task']}\n\nLevel of Difficulty: {task['difficulty']}\n\nAmount of Days Left: {validation.days_left(task["due_date"])}\n\nSuggested Hours Per Day: {hours_day}\n\n"
                 )
                 task_label.pack(
                     pady=10

@@ -1,4 +1,4 @@
-from backend import aa_logic
+from backend import validation
 
 _aa_title = None
 
@@ -22,9 +22,9 @@ def update_checkbox_text(checkbox, fonts):
 
 def check_not_empty_gui(course, task, hours):
     return (
-        aa_logic.is_not_empty(course)
-        and aa_logic.is_not_empty(task)
-        and aa_logic.is_not_empty(hours)
+        validation.is_not_empty(course)
+        and validation.is_not_empty(task)
+        and validation.is_not_empty(hours)
     )
 
 

@@ -8,10 +8,10 @@ def add_task(user_id, task):
                 INSERT INTO tasks (
                     user_id,
                     task_name,
-                    course_name,
+                    course_id,
                     estimated_hours,
                     hours_used,
-                    completion_status,
+                    status,
                     difficulty_level,
                     due_date,
                     date_completed
@@ -22,13 +22,13 @@ def add_task(user_id, task):
                 (
                     user_id,
                     task["task"],
-                    task["course"],
-                    task["hours"] if not task["completed"] else None,
-                    task["hours"] if task["completed"] else None,
-                    task["completed"],
+                    task["course_id"],
+                    task.get("estimated_hours"),
+                    task.get("hours_used"),
+                    task["status"],
                     task["difficulty"],
-                    task["due_date"],
-                    task["date_completed"],
+                    task.get("due_date"),
+                    task.get("date_completed"),
                 )
             )
             row = cur.fetchone()
@@ -44,17 +44,21 @@ def get_tasks(user_id):
             cur.execute(
                 """
                 SELECT
-                    task_id,
-                    task_name,
-                    course_name,
-                    completion_status,
-                    difficulty_level,
-                    estimated_hours,
-                    hours_used,
-                    due_date,
-                    date_completed
-                FROM tasks 
-                WHERE user_id = %s;
+                    tasks.task_id,
+                    tasks.task_name,
+                    courses.course_id,
+                    courses.course_name,
+                    tasks.status,
+                    tasks.difficulty_level,
+                    tasks.estimated_hours,
+                    tasks.hours_used,
+                    tasks.due_date,
+                    tasks.date_completed
+                FROM tasks
+                INNER JOIN courses
+                    ON tasks.user_id = courses.user_id
+                    AND tasks.course_id = courses.course_id
+                WHERE tasks.user_id = %s;
                 """,
                 (user_id,)
             )
@@ -66,27 +70,32 @@ def get_tasks(user_id):
                 tasks.append({
                     "task_id": row[0],
                     "task": row[1],
-                    "course": row[2],
-                    "completed": row[3],
-                    "difficulty": row[4],
-                    "hours": row[5] if row[5] is not None else row[6],
-                    "due_date": row[7],
-                    "date_completed": row[8],
+                    "course_id": row[2],
+                    "course": row[3],
+                    "status": row[4],
+                    "difficulty": row[5],
+                    "estimated_hours": row[6],
+                    "hours_used": row[7],
+                    "due_date": row[8],
+                    "date_completed": row[9],
                 })
 
             return tasks
         
 def update_task(task_id, updated_task):
-    if updated_task["completed"]:
-        estimated_hours = None
-        hours_used = updated_task["hours"]
-        due_date = None
-        date_completed = updated_task["date_completed"]
-    else:
-        estimated_hours = updated_task["hours"]
+    status = updated_task["status"]
+    estimated_hours = updated_task.get("estimated_hours")
+    hours_used = updated_task.get("hours_used")
+    due_date = updated_task.get("due_date")
+    date_completed = updated_task.get("date_completed")
+
+    if status == "not_started":
         hours_used = None
-        due_date = updated_task["due_date"]
         date_completed = None
+    elif status == "in_progress":
+        date_completed = None
+    elif status == "completed":
+        due_date = None
 
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -94,10 +103,10 @@ def update_task(task_id, updated_task):
                 """
                 UPDATE tasks
                 SET task_name = %s,
-                    course_name = %s,
+                    course_id = %s,
                     estimated_hours = %s,
                     hours_used = %s,
-                    completion_status = %s,
+                    status = %s,
                     difficulty_level = %s,
                     due_date = %s,
                     date_completed = %s
@@ -105,10 +114,10 @@ def update_task(task_id, updated_task):
                 """,
                 (
                     updated_task["task"],
-                    updated_task["course"],
+                    updated_task["course_id"],
                     estimated_hours,
                     hours_used,
-                    updated_task["completed"],
+                    status,
                     updated_task["difficulty"],
                     due_date,
                     date_completed,
