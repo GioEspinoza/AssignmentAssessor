@@ -81,6 +81,50 @@ def get_tasks(user_id):
                 })
 
             return tasks
+
+def get_tasks_by_course(course_name, user_id):
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    tasks.task_id,
+                    tasks.task_name,
+                    courses.course_id,
+                    courses.course_name,
+                    tasks.status,
+                    tasks.difficulty_level,
+                    tasks.estimated_hours,
+                    tasks.hours_used,
+                    tasks.due_date,
+                    tasks.date_completed
+                FROM tasks
+                INNER JOIN courses
+                    ON tasks.user_id = courses.user_id
+                    AND tasks.course_id = courses.course_id
+                WHERE courses.course_name = %s AND tasks.user_id = %s;
+                """,
+                (course_name, user_id)
+            )
+
+            rows = cur.fetchall()
+
+            tasks = []
+            for row in rows:
+                tasks.append({
+                    "task_id": row[0],
+                    "task": row[1],
+                    "course_id": row[2],
+                    "course": row[3],
+                    "status": row[4],
+                    "difficulty": row[5],
+                    "estimated_hours": row[6],
+                    "hours_used": row[7],
+                    "due_date": row[8],
+                    "date_completed": row[9],
+                })
+
+            return tasks
         
 def update_task(task_id, updated_task):
     status = updated_task["status"]
