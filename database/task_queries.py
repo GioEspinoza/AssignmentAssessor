@@ -125,7 +125,67 @@ def get_tasks_by_course(course_name, user_id):
                 })
 
             return tasks
-        
+
+
+def get_tasks_by_tag_ids(user_id, tag_ids, match_all=False):
+    comparison = "= %s" if match_all else ">= 1"
+    parameters = [user_id, tag_ids]
+    if match_all:
+        parameters.append(len(tag_ids))
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT
+                    tasks.task_id,
+                    tasks.task_name,
+                    courses.course_id,
+                    courses.course_name,
+                    tasks.status,
+                    tasks.difficulty_level,
+                    tasks.estimated_hours,
+                    tasks.hours_used,
+                    tasks.due_date,
+                    tasks.date_completed,
+                    tasks.short_description
+                FROM tasks
+                INNER JOIN courses
+                    ON tasks.user_id = courses.user_id
+                    AND tasks.course_id = courses.course_id
+                INNER JOIN task_tags
+                    ON tasks.user_id = task_tags.user_id
+                    AND tasks.task_id = task_tags.task_id
+                WHERE tasks.user_id = %s
+                    AND task_tags.tag_id = ANY(%s)
+                GROUP BY
+                    tasks.task_id,
+                    courses.course_id,
+                    courses.course_name
+                HAVING COUNT(DISTINCT task_tags.tag_id) {comparison}
+                ORDER BY tasks.due_date NULLS LAST, tasks.task_id;
+                """,
+                parameters,
+            )
+
+            return [
+                {
+                    "task_id": row[0],
+                    "task": row[1],
+                    "course_id": row[2],
+                    "course": row[3],
+                    "status": row[4],
+                    "difficulty": row[5],
+                    "estimated_hours": row[6],
+                    "hours_used": row[7],
+                    "due_date": row[8],
+                    "date_completed": row[9],
+                    "short_description": row[10],
+                }
+                for row in cur.fetchall()
+            ]
+
+
 def update_task(task_id, updated_task):
     status = updated_task["status"]
     estimated_hours = updated_task.get("estimated_hours")

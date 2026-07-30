@@ -16,36 +16,40 @@ def enable_linux_mousewheel(scrollable_frame, units=1):
         return "break"
 
     def bind_widget_tree(widget):
-        try:
-            widget.bind(
-                "<Button-4>",
-                lambda event: scroll(event, -1),
-                add="+",
-            )
-            widget.bind(
-                "<Button-5>",
-                lambda event: scroll(event, 1),
-                add="+",
-            )
-        except NotImplementedError:
-            # Some composite CustomTkinter widgets, such as
-            # CTkSegmentedButton, intentionally disable direct bindings.
-            pass
+        if not getattr(widget, "_linux_mousewheel_enabled", False):
+            try:
+                widget.bind(
+                    "<Button-4>",
+                    lambda event: scroll(event, -1),
+                    add="+",
+                )
+                widget.bind(
+                    "<Button-5>",
+                    lambda event: scroll(event, 1),
+                    add="+",
+                )
+                widget._linux_mousewheel_enabled = True
+            except NotImplementedError:
+                # Some composite CustomTkinter widgets, such as
+                # CTkSegmentedButton, intentionally disable direct bindings.
+                pass
 
         for child in widget.winfo_children():
             bind_widget_tree(child)
 
     bind_widget_tree(scrollable_frame)
-    canvas.bind(
-        "<Button-4>",
-        lambda event: scroll(event, -1),
-        add="+",
-    )
-    canvas.bind(
-        "<Button-5>",
-        lambda event: scroll(event, 1),
-        add="+",
-    )
+    if not getattr(canvas, "_linux_mousewheel_enabled", False):
+        canvas.bind(
+            "<Button-4>",
+            lambda event: scroll(event, -1),
+            add="+",
+        )
+        canvas.bind(
+            "<Button-5>",
+            lambda event: scroll(event, 1),
+            add="+",
+        )
+        canvas._linux_mousewheel_enabled = True
 
 
 __all__ = ["enable_linux_mousewheel"]

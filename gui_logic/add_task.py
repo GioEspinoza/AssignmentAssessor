@@ -1,12 +1,19 @@
+from tkinter import messagebox, ttk
+
 import customtkinter as ctk
-from tkinter import ttk
+import psycopg
 from tkcalendar import DateEntry
-from backend import course_service, task_rules, task_service
+
+from backend import course_service, tag_services, task_rules, task_service
 from backend.session import get_current_user_id
 from database import task_queries
+from gui_logic.add_course_window import open_add_course_popup
+from gui_logic.add_tag_window import add_tag_popup
 from gui_style import colors, spacing
-from gui_style.responsive import clone_fonts, ResponsiveText
+from gui_style.responsive import ResponsiveText, clone_fonts
+from gui_widgets.tag_selector import TagSelector
 from gui_widgets.widgets import enable_linux_mousewheel
+
 
 def add_task(parent, fonts):
     base_fonts = fonts
@@ -66,11 +73,7 @@ def add_task(parent, fonts):
         text_color=colors.TEXT_SECONDARY,
     )
 
-    title_label.grid(
-        row=0,
-        column=0,
-        sticky="w"
-        )
+    title_label.grid(row=0, column=0, sticky="w")
 
     subtitle_label.grid(
         row=1,
@@ -261,7 +264,57 @@ def add_task(parent, fonts):
     )
 
     courses = get_courses_for_user(get_current_user_id())
+    add_course_option = "＋ Add another course..."
     course_dropdown = None
+    selected_course_name = None
+    no_courses_label = None
+    add_course_button = None
+
+    def create_course_dropdown(course_names):
+        nonlocal course_dropdown
+
+        course_dropdown = ctk.CTkOptionMenu(
+            course_section,
+            values=[*course_names, add_course_option],
+            font=fonts["body"],
+            text_color=colors.TEXT_PRIMARY,
+            fg_color=colors.SURFACE,
+            button_color=colors.SURFACE,
+            button_hover_color=colors.SURFACE_HOVER,
+            dropdown_fg_color=colors.SURFACE,
+            dropdown_hover_color=colors.SURFACE_HOVER,
+            corner_radius=spacing.RADIUS_MEDIUM,
+            height=38,
+        )
+        course_dropdown.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            pady=(spacing.SPACE_3, 0),
+        )
+
+    def show_added_course(course_name):
+        nonlocal selected_course_name
+
+        if no_courses_label is not None:
+            no_courses_label.destroy()
+        if add_course_button is not None:
+            add_course_button.destroy()
+        if course_dropdown is not None:
+            course_dropdown.destroy()
+
+        updated_courses = get_courses_for_user(get_current_user_id())
+        create_course_dropdown(updated_courses)
+        if course_dropdown is not None and selected_course_name is not None:
+            course_dropdown.set(selected_course_name)
+        selected_course_name = course_name
+        if course_dropdown is not None and selected_course_name is not None:
+            course_dropdown.configure(command=handle_course_selection)
+        course_workload_subtitle.configure(
+            text="Select a course to view its workload distribution.",
+        )
+        refresh_course_workload(course_name)
 
     if not courses:
         no_courses_label = ctk.CTkLabel(
@@ -291,7 +344,11 @@ def add_task(parent, fonts):
             border_color=colors.BORDER,
             corner_radius=spacing.RADIUS_MEDIUM,
             height=38,
-            #command=lambda: add_course_screen(parent, base_fonts),
+            command=lambda: open_add_course_popup(
+                parent,
+                base_fonts,
+                on_course_added=show_added_course,
+            ),
         )
         add_course_button.grid(
             row=2,
@@ -301,26 +358,7 @@ def add_task(parent, fonts):
             pady=(spacing.SPACE_3, 0),
         )
     else:
-        course_dropdown = ctk.CTkOptionMenu(
-            course_section,
-            values=courses,
-            font=fonts["body"],
-            text_color=colors.TEXT_PRIMARY,
-            fg_color=colors.SURFACE,
-            button_color=colors.SURFACE,
-            button_hover_color=colors.SURFACE_HOVER,
-            dropdown_fg_color=colors.SURFACE,
-            dropdown_hover_color=colors.SURFACE_HOVER,
-            corner_radius=spacing.RADIUS_MEDIUM,
-            height=38,
-        )
-        course_dropdown.grid(
-            row=1,
-            column=0,
-            columnspan=2,
-            sticky="ew",
-            pady=(spacing.SPACE_3, 0),
-        )
+        create_course_dropdown(courses)
 
     difficulty_section = ctk.CTkFrame(
         top_fields_frame,
@@ -393,9 +431,7 @@ def add_task(parent, fonts):
         sticky="w",
     )
 
-    appearance_index = (
-        1 if ctk.get_appearance_mode().casefold() == "dark" else 0
-    )
+    appearance_index = 1 if ctk.get_appearance_mode().casefold() == "dark" else 0
 
     def resolve_color(color):
         if isinstance(color, tuple):
@@ -512,176 +548,112 @@ def add_task(parent, fonts):
         pady=(spacing.SPACE_2, 0),
     )
 
-    tags_section = ctk.CTkFrame(
+    user_tags = tag_services.get_user_tags(get_current_user_id())
+    available_tags = user_tags or [
+        {
+            "tag_name": tag_name,
+            "color_hex": color_hex,
+        }
+        for tag_name, color_hex in tag_services.DEFAULT_TAGS
+    ]
+
+    def open_create_tag_popup():
+        add_tag_popup(
+            parent,
+            fonts,
+            on_tag_added=tag_selector.add_tag,
+        )
+
+    tag_selector = TagSelector(
+        assignment_details_frame,
+        overlay_parent=add_task_frame,
+        fonts=fonts,
+        available_tags=available_tags,
+        on_create_tag=open_create_tag_popup,
+    )
+    tag_selector.grid(
+        row=3,
+        column=0,
+        sticky="ew",
+        padx=(spacing.CARD_PADDING, spacing.SPACE_2),
+        pady=(0, spacing.CARD_PADDING),
+    )
+
+    status_frame = ctk.CTkFrame(
         assignment_details_frame,
         fg_color=colors.TRANSPARENT,
     )
-    tags_section.grid(
+    status_frame.grid(
         row=3,
-        column=0,
-        columnspan=2,
+        column=1,
         sticky="ew",
-        padx=spacing.CARD_PADDING,
+        padx=(spacing.SPACE_2, spacing.CARD_PADDING),
         pady=(0, spacing.CARD_PADDING),
     )
-    tags_section.grid_columnconfigure(0, weight=1)
+    status_frame.grid_columnconfigure(0, weight=1)
 
-    tags_label = ctk.CTkLabel(
-        tags_section,
-        text="Tags",
+    status_label = ctk.CTkLabel(
+        status_frame,
+        text="Assignment status",
         font=fonts["body_bold"],
         text_color=colors.TEXT_PRIMARY,
     )
-    tags_label.grid(
+    status_label.grid(
         row=0,
         column=0,
         sticky="w",
     )
 
-    tags_helper = ctk.CTkLabel(
-        tags_section,
-        text="Optional",
-        font=fonts["small"],
-        text_color=colors.TEXT_SECONDARY,
-    )
-    tags_helper.grid(
-        row=0,
-        column=1,
-        sticky="e",
-    )
+    status_value = ctk.StringVar(value="Not Started")
 
-    tags_entry = ctk.CTkEntry(
-        tags_section,
-        placeholder_text="e.g. Essay, Midterm, Group project",
+    def update_status_fields(selected_status):
+        if selected_status == "Completed":
+            date_label.configure(text="Completion date")
+            hours_label.configure(text="Total hours spent")
+            hours_helper.configure(text="Your best estimate is fine.")
+        else:
+            date_label.configure(text="Due date")
+            hours_label.configure(text="Estimated hours remaining")
+            hours_helper.configure(text="How much work is still needed?")
+
+    status_control = ctk.CTkOptionMenu(
+        status_frame,
+        values=["Not Started", "In Progress", "Completed"],
+        variable=status_value,
+        command=update_status_fields,
         font=fonts["body"],
         text_color=colors.TEXT_PRIMARY,
-        placeholder_text_color=colors.TEXT_SECONDARY,
-        fg_color=colors.SURFACE_HOVER,
-        border_color=colors.BORDER,
+        fg_color=colors.SURFACE,
+        button_color=colors.ACCENT,
+        button_hover_color=colors.ACCENT_HOVER,
+        dropdown_fg_color=colors.SURFACE,
+        dropdown_hover_color=colors.SURFACE_HOVER,
+        dropdown_text_color=colors.TEXT_PRIMARY,
         corner_radius=spacing.RADIUS_MEDIUM,
         height=38,
     )
-    tags_entry.grid(
+    status_control.grid(
         row=1,
         column=0,
         sticky="ew",
-        padx=(0, spacing.SPACE_2),
-        pady=(spacing.SPACE_2, 0),
+        pady=(spacing.SPACE_3, 0),
     )
 
-    selected_tags = []
-    tags_list_frame = ctk.CTkFrame(
-        tags_section,
-        fg_color=colors.TRANSPARENT,
-    )
-    tags_list_frame.grid(
-        row=2,
-        column=0,
-        columnspan=2,
-        sticky="ew",
-        pady=(spacing.SPACE_2, 0),
-    )
-    tags_list_frame.grid_columnconfigure((0, 1, 2), weight=0)
-    tags_list_frame.grid_remove()
-
-    def render_tags():
-        for widget in tags_list_frame.winfo_children():
-            widget.destroy()
-
-        if not selected_tags:
-            tags_list_frame.grid_remove()
-            return
-
-        tags_list_frame.grid()
-
-        for index, tag in enumerate(selected_tags):
-            tag_text = f"#{tag}  ×"
-            tag_button = ctk.CTkButton(
-                tags_list_frame,
-                text=tag_text,
-                font=fonts["small"],
-                text_color=colors.TEXT_ON_ACCENT,
-                fg_color=colors.ACCENT,
-                hover_color=colors.ACCENT_HOVER,
-                corner_radius=spacing.RADIUS_MEDIUM,
-                cursor="hand2",
-                height=30,
-                width=max(
-                    48,
-                    fonts["small"].measure(tag_text)
-                    + (2 * spacing.SPACE_3),
-
-                ),
-                command=lambda value=tag: remove_tag(value),
-            )
-            tag_button.grid(
-                row=index // 3,
-                column=index % 3,
-                sticky="w",
-                padx=(
-                    0 if index % 3 == 0 else spacing.SPACE_1,
-                    0 if index % 3 == 2 else spacing.SPACE_1,
-                ),
-                pady=(0, spacing.SPACE_1),
-            )
-
-    def remove_tag(tag):
-        selected_tags.remove(tag)
-        render_tags()
-
-    def add_tag():
-        tag = tags_entry.get().strip().lstrip("#").strip()
-        if not tag:
-            return
-
-        if any(existing.casefold() == tag.casefold() for existing in selected_tags):
-            tags_entry.delete(0, "end")
-            return
-
-        selected_tags.append(tag)
-        tags_entry.delete(0, "end")
-        render_tags()
-
-    tags_button = ctk.CTkButton(
-        tags_section,
-        text="Add tag",
-        font=fonts["body_bold"],
-        text_color=colors.TEXT_ON_ACCENT,
-        fg_color=colors.ACCENT,
-        hover_color=colors.ACCENT_HOVER,
-        corner_radius=spacing.RADIUS_MEDIUM,
-        height=38,
-        width=96,
-        command=add_tag,
-    )
-    tags_button.grid(
-        row=1,
-        column=1,
-        sticky="e",
-        pady=(spacing.SPACE_2, 0),
-    )
-    tags_button.configure(cursor="hand2")
-    tags_entry.bind("<Return>", lambda event: add_tag())
-    details_row = ctk.CTkFrame(
+    hours_section = ctk.CTkFrame(
         assignment_details_frame,
         fg_color=colors.TRANSPARENT,
     )
-    details_row.grid(
+    hours_section.grid(
         row=4,
         column=0,
-        columnspan=2,
         sticky="ew",
-        padx=spacing.CARD_PADDING,
+        padx=(spacing.CARD_PADDING, spacing.SPACE_2),
         pady=(0, spacing.CARD_PADDING),
     )
-    details_row.grid_columnconfigure(
-        (0, 1),
-        weight=1,
-        uniform="assignment_details",
-    )
+    hours_section.grid_columnconfigure(0, weight=1)
 
     hours_label = ctk.CTkLabel(
-        details_row,
+        hours_section,
         text="Estimated hours",
         font=fonts["body_bold"],
         text_color=colors.TEXT_PRIMARY,
@@ -693,7 +665,7 @@ def add_task(parent, fonts):
     )
 
     hours_entry = ctk.CTkComboBox(
-        details_row,
+        hours_section,
         values=["0", "1", "2", "3", "4", "5", "6", "7", "8"],
         font=fonts["body"],
         dropdown_font=fonts["body"],
@@ -718,7 +690,7 @@ def add_task(parent, fonts):
     )
 
     hours_helper = ctk.CTkLabel(
-        details_row,
+        hours_section,
         text="How much work is still needed?",
         font=fonts["small"],
         text_color=colors.TEXT_SECONDARY,
@@ -730,55 +702,37 @@ def add_task(parent, fonts):
         pady=(spacing.SPACE_1, 0),
     )
 
-    status_label = ctk.CTkLabel(
-        details_row,
-        text="Assignment status",
+    update_status_fields(status_value.get())
+
+    submit_button = ctk.CTkButton(
+        assignment_details_frame,
+        text="Add Assignment",
         font=fonts["body_bold"],
-        text_color=colors.TEXT_PRIMARY,
-    )
-    status_label.grid(
-        row=0,
-        column=1,
-        sticky="w",
-        padx=(spacing.SPACE_2, 0),
-    )
-
-    status_value = ctk.StringVar(value="Not Started")
-
-    def update_status_fields(selected_status):
-        if selected_status == "Completed":
-            date_label.configure(text="Completion date")
-            hours_label.configure(text="Total hours spent")
-            hours_helper.configure(text="Your best estimate is fine.")
-        else:
-            date_label.configure(text="Due date")
-            hours_label.configure(text="Estimated hours remaining")
-            hours_helper.configure(text="How much work is still needed?")
-
-    status_control = ctk.CTkOptionMenu(
-        details_row,
-        values=["Not Started", "In Progress", "Completed"],
-        variable=status_value,
-        command=update_status_fields,
-        font=fonts["body"],
-        text_color=colors.TEXT_PRIMARY,
-        fg_color=colors.SURFACE,
-        button_color=colors.ACCENT,
-        button_hover_color=colors.ACCENT_HOVER,
-        dropdown_fg_color=colors.SURFACE,
-        dropdown_hover_color=colors.SURFACE_HOVER,
-        dropdown_text_color=colors.TEXT_PRIMARY,
+        text_color=colors.TEXT_ON_ACCENT,
+        fg_color=colors.ACCENT,
+        hover_color=colors.ACCENT_HOVER,
         corner_radius=spacing.RADIUS_MEDIUM,
         height=38,
+        command=lambda: submit_task(
+            task_name_entry.get(),
+            course_dropdown.get() if course_dropdown is not None else None,
+            difficulty_section_segmented_button.get(),
+            date_date_entry.get_date(),
+            short_desc_entry.get("1.0", "end").strip(),
+            tag_selector.get_selected_tags(),
+            hours_entry.get(),
+            status_value.get(),
+            parent,
+        ),
     )
-    status_control.grid(
-        row=1,
+
+    submit_button.grid(
+        row=4,
         column=1,
-        sticky="ew",
-        padx=(spacing.SPACE_2, 0),
-        pady=(spacing.SPACE_2, 0),
+        sticky="e",
+        padx=(spacing.SPACE_2, spacing.CARD_PADDING),
+        pady=(0, spacing.CARD_PADDING),
     )
-    update_status_fields(status_value.get())
 
     course_workload_label = ctk.CTkLabel(
         course_workload_frame,
@@ -920,10 +874,7 @@ def add_task(parent, fonts):
             )
             return
 
-        horizontal_padding = (
-            (2 * spacing.CARD_PADDING)
-            + (2 * spacing.SPACE_2)
-        )
+        horizontal_padding = (2 * spacing.CARD_PADDING) + (2 * spacing.SPACE_2)
         card_size = min(
             180,
             max(
@@ -1011,16 +962,11 @@ def add_task(parent, fonts):
             if course_name
             else []
         )
-        active_tasks = [
-            task for task in tasks
-            if not task_rules.is_completed(task)
-        ]
-        hours_left = sum(
-            task_rules.remaining_hours(task)
-            for task in active_tasks
-        )
+        active_tasks = [task for task in tasks if not task_rules.is_completed(task)]
+        hours_left = sum(task_rules.remaining_hours(task) for task in active_tasks)
         future_tasks = [
-            task for task in tasks
+            task
+            for task in tasks
             if task.get("due_date") is not None
             and task_service.get_due_state(task["due_date"]) != "overdue"
         ]
@@ -1075,26 +1021,141 @@ def add_task(parent, fonts):
                 pady=(0, spacing.SPACE_2),
             )
 
+    def handle_course_selection(selection):
+        nonlocal selected_course_name
+
+        if selection == add_course_option:
+            if course_dropdown is not None and selected_course_name is not None:
+                course_dropdown.set(selected_course_name)
+            open_add_course_popup(
+                parent,
+                base_fonts,
+                on_course_added=show_added_course,
+            )
+            return
+
+        selected_course_name = selection
+        refresh_course_workload(selection)
+
     if course_dropdown is None:
         course_workload_subtitle.configure(
             text="Add an active course to view its workload distribution.",
         )
         refresh_course_workload(None)
     else:
-        course_dropdown.configure(command=refresh_course_workload)
-        refresh_course_workload(course_dropdown.get())
+        selected_course_name = course_dropdown.get()
+        course_dropdown.configure(command=handle_course_selection)
+        refresh_course_workload(selected_course_name)
 
     enable_linux_mousewheel(assignment_details_frame)
 
+
 def back_to_assignments(parent, fonts):
     from gui_logic.assignments import assignments_screen
+
     parent.winfo_toplevel().minsize(1024, 700)
     assignments_screen(parent, fonts)
+
 
 def get_courses_for_user(user_id):
     courses = course_service.get_active_courses(user_id)
     return [course["course_name"] for course in courses]
 
+
 def get_tasks_for_course(course_name, user_id):
     tasks = task_queries.get_tasks_by_course(course_name, user_id)
     return tasks
+
+
+def submit_task(
+    task_name,
+    course_name,
+    difficulty_level,
+    due_date,
+    short_description,
+    tags,
+    estimated_hours,
+    status,
+    parent,
+):
+    task_name = task_name.strip()
+
+    if not task_name or not course_name:
+        messagebox.showerror(
+            "Error",
+            "Please fill in all required fields.",
+            parent=parent,
+        )
+        return
+
+    if len(task_name) > 100:
+        messagebox.showerror(
+            "Error",
+            "Assignment name cannot exceed 100 characters.",
+            parent=parent,
+        )
+        return
+
+    user_id = get_current_user_id()
+    try:
+        courses = course_service.get_active_courses(user_id)
+    except (psycopg.Error, ValueError):
+        messagebox.showerror(
+            "Database Error",
+            "Courses could not be loaded. Please try again.",
+            parent=parent,
+        )
+        return
+
+    selected_course = next(
+        (course for course in courses if course["course_name"] == course_name),
+        None,
+    )
+
+    if selected_course is None:
+        messagebox.showerror(
+            "Error",
+            "The selected course could not be found.",
+            parent=parent,
+        )
+        return
+
+    try:
+        hours = float(estimated_hours)
+    except ValueError:
+        messagebox.showerror(
+            "Error",
+            "Estimated hours must be a number.",
+            parent=parent,
+        )
+        return
+
+    database_status = status.casefold().replace(" ", "_")
+    is_completed = database_status == "completed"
+
+    task = {
+        "task": task_name,
+        "course_id": selected_course["course_id"],
+        "difficulty": int(difficulty_level),
+        "status": database_status,
+        "estimated_hours": None if is_completed else hours,
+        "hours_used": hours if is_completed else None,
+        "due_date": None if is_completed else due_date,
+        "date_completed": due_date if is_completed else None,
+    }
+
+    try:
+        task_queries.add_task(user_id, task)
+    except (psycopg.Error, ValueError):
+        messagebox.showerror(
+            "Database Error",
+            "The assignment could not be saved. Please try again.",
+            parent=parent,
+        )
+        return
+
+    messagebox.showinfo(
+        "Success",
+        f"Assignment '{task_name}' has been added successfully.",
+        parent=parent,
+    )
