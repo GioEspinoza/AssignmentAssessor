@@ -15,9 +15,12 @@ from gui_widgets.tag_selector import TagSelector
 from gui_widgets.widgets import enable_linux_mousewheel
 
 
-def add_task(parent, fonts):
+def add_task(parent, fonts, back_command=None):
     base_fonts = fonts
     fonts = clone_fonts(fonts)
+    if back_command is None:
+        back_command = lambda: back_to_assignments(parent, base_fonts)
+
     parent.winfo_toplevel().minsize(1260, 700)
 
     for widget in parent.winfo_children():
@@ -90,7 +93,7 @@ def add_task(parent, fonts):
         fg_color=colors.SURFACE,
         hover_color=colors.SURFACE_HOVER,
         corner_radius=spacing.RADIUS_MEDIUM,
-        command=lambda: back_to_assignments(parent, base_fonts),
+        command=back_command,
     )
     cancel_button.grid(
         row=0,
@@ -245,11 +248,8 @@ def add_task(parent, fonts):
         padx=(spacing.SPACE_2, spacing.CARD_PADDING),
         pady=spacing.CARD_PADDING,
     )
-    course_section.grid_columnconfigure(
-        (0, 1),
-        weight=1,
-        uniform="course_heading",
-    )
+    course_section.grid_columnconfigure(0, weight=1)
+    course_section.grid_columnconfigure(1, weight=0)
 
     course_label = ctk.CTkLabel(
         course_section,
@@ -266,12 +266,16 @@ def add_task(parent, fonts):
     courses = get_courses_for_user(get_current_user_id())
     add_course_option = "＋ Add another course..."
     course_dropdown = None
+    course_settings_button = None
     selected_course_name = None
     no_courses_label = None
     add_course_button = None
 
     def create_course_dropdown(course_names):
-        nonlocal course_dropdown
+        nonlocal course_dropdown, course_settings_button
+
+        if course_settings_button is not None:
+            course_settings_button.destroy()
 
         course_dropdown = ctk.CTkOptionMenu(
             course_section,
@@ -289,8 +293,29 @@ def add_task(parent, fonts):
         course_dropdown.grid(
             row=1,
             column=0,
-            columnspan=2,
             sticky="ew",
+            pady=(spacing.SPACE_3, 0),
+        )
+
+        course_settings_button = ctk.CTkButton(
+            course_section,
+            text="⋮",
+            width=38,
+            height=38,
+            font=fonts["body_bold"],
+            text_color=colors.TEXT_PRIMARY,
+            fg_color=colors.SURFACE,
+            hover_color=colors.SURFACE_HOVER,
+            border_width=spacing.CARD_BORDER_WIDTH,
+            border_color=colors.BORDER,
+            corner_radius=spacing.RADIUS_MEDIUM,
+            cursor="hand2",
+        )
+        course_settings_button.grid(
+            row=1,
+            column=1,
+            sticky="e",
+            padx=(spacing.SPACE_2, 0),
             pady=(spacing.SPACE_3, 0),
         )
 
@@ -397,7 +422,31 @@ def add_task(parent, fonts):
         corner_radius=spacing.RADIUS_MEDIUM,
         height=38,
     )
+    difficulty_hover_colors = {
+        "1": ("#BBF7D0", "#166534"),
+        "2": ("#D9F99D", "#3F6212"),
+        "3": ("#FDE68A", "#92400E"),
+        "4": ("#FED7AA", "#9A3412"),
+        "5": ("#FECACA", "#991B1B"),
+    }
+
+    def apply_difficulty_scale_colors(_selected_value=None):
+        selected_value = difficulty_section_segmented_button.get()
+        for value, hover_color in difficulty_hover_colors.items():
+            difficulty_section_segmented_button._buttons_dict[value].configure(
+                fg_color=(
+                    hover_color
+                    if value == selected_value
+                    else colors.SURFACE_HOVER
+                ),
+                hover_color=hover_color,
+            )
+
+    difficulty_section_segmented_button.configure(
+        command=apply_difficulty_scale_colors,
+    )
     difficulty_section_segmented_button.set("3")
+    apply_difficulty_scale_colors()
     difficulty_section_segmented_button.grid(
         row=1,
         column=0,
@@ -1142,10 +1191,11 @@ def submit_task(
         "hours_used": hours if is_completed else None,
         "due_date": None if is_completed else due_date,
         "date_completed": due_date if is_completed else None,
+        "short_description": short_description or None,
     }
 
     try:
-        task_queries.add_task(user_id, task)
+        task_queries.add_task(user_id, task, tags)
     except (psycopg.Error, ValueError):
         messagebox.showerror(
             "Database Error",

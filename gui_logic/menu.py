@@ -6,7 +6,7 @@ from gui_style import colors, spacing
 from gui_style.responsive import ResponsiveText
 from gui_widgets.dashboard_card import DashboardCard
 from gui_widgets.widgets import enable_linux_mousewheel
-from gui_logic import assignments
+from gui_logic import assignments, add_task
 
 # Presentation data only. A future card widget can iterate over this collection.
 DASHBOARD_CARD_CONFIG = (
@@ -691,7 +691,11 @@ def menu_screen(parent, fonts, username=None):
             font=fonts["button"],
             fg_color=colors.ACCENT,
             hover_color=colors.ACCENT_HOVER,
-            command=lambda: print("Add assignment button clicked"),
+            command=lambda: add_task.add_task(
+                parent,
+                fonts,
+                back_command=lambda: menu_screen(parent, fonts),
+            ),
         )
 
         empty_title.grid(

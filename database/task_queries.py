@@ -1,6 +1,9 @@
 from database.db import get_db_connection
 
-def add_task(user_id, task):
+
+def add_task(user_id, task, tags=None):
+    tags = tags or []
+
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -14,9 +17,10 @@ def add_task(user_id, task):
                     status,
                     difficulty_level,
                     due_date,
-                    date_completed
+                    date_completed,
+                    short_description
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING task_id;
                 """,
                 (
@@ -29,6 +33,7 @@ def add_task(user_id, task):
                     task["difficulty"],
                     task.get("due_date"),
                     task.get("date_completed"),
+                    task.get("short_description"),
                 )
             )
             row = cur.fetchone()
@@ -36,7 +41,45 @@ def add_task(user_id, task):
             if row is None:
                 raise ValueError("Task insert failed. No task_id returned.")
 
-            return row[0]
+            task_id = row[0]
+            tag_ids = []
+
+            for tag in tags:
+                tag_id = tag.get("tag_id")
+
+                if tag_id is None:
+                    cur.execute(
+                        """
+                        INSERT INTO tags (user_id, tag_name, color_hex)
+                        VALUES (%s, %s, %s)
+                        ON CONFLICT (user_id, (lower(tag_name)))
+                        DO UPDATE SET color_hex = EXCLUDED.color_hex
+                        RETURNING tag_id;
+                        """,
+                        (
+                            user_id,
+                            tag["tag_name"].strip(),
+                            tag["color_hex"],
+                        ),
+                    )
+                    tag_row = cur.fetchone()
+                    if tag_row is None:
+                        raise ValueError("Tag insert failed. No tag_id returned.")
+                    tag_id = tag_row[0]
+
+                if tag_id not in tag_ids:
+                    tag_ids.append(tag_id)
+
+            cur.executemany(
+                """
+                INSERT INTO task_tags (user_id, task_id, tag_id)
+                VALUES (%s, %s, %s);
+                """,
+                [(user_id, task_id, tag_id) for tag_id in tag_ids],
+            )
+
+            return task_id
+
 
 def get_tasks(user_id):
     with get_db_connection() as conn:
@@ -53,7 +96,8 @@ def get_tasks(user_id):
                     tasks.estimated_hours,
                     tasks.hours_used,
                     tasks.due_date,
-                    tasks.date_completed
+                    tasks.date_completed,
+                    tasks.short_description
                 FROM tasks
                 INNER JOIN courses
                     ON tasks.user_id = courses.user_id
@@ -78,9 +122,11 @@ def get_tasks(user_id):
                     "hours_used": row[7],
                     "due_date": row[8],
                     "date_completed": row[9],
+                    "short_description": row[10],
                 })
 
             return tasks
+
 
 def get_tasks_by_course(course_name, user_id):
     with get_db_connection() as conn:
@@ -97,7 +143,8 @@ def get_tasks_by_course(course_name, user_id):
                     tasks.estimated_hours,
                     tasks.hours_used,
                     tasks.due_date,
-                    tasks.date_completed
+                    tasks.date_completed,
+                    tasks.short_description
                 FROM tasks
                 INNER JOIN courses
                     ON tasks.user_id = courses.user_id
@@ -122,6 +169,7 @@ def get_tasks_by_course(course_name, user_id):
                     "hours_used": row[7],
                     "due_date": row[8],
                     "date_completed": row[9],
+                    "short_description": row[10],
                 })
 
             return tasks

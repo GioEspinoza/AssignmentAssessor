@@ -1,11 +1,21 @@
-import customtkinter as ctk
-from backend import auth_service
 import webbrowser
+
+import customtkinter as ctk
+
+from backend import auth_service
+from gui_style.responsive import clone_fonts, ResponsiveText
+
 
 def open_forgot_password_user_link():
     webbrowser.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
+
 def login_screen(parent, aa_title, menu, fonts):
+    base_fonts = fonts
+    fonts = clone_fonts(fonts)
+    if aa_title is not None:
+        aa_title.configure(font=fonts["brand"])
+
     parent.grid_rowconfigure(0, weight=1)
     parent.grid_columnconfigure(0, weight=1)
 
@@ -13,6 +23,17 @@ def login_screen(parent, aa_title, menu, fonts):
     login_container.grid(row=0, column=0, sticky="nsew")
     login_container.grid_rowconfigure(0, weight=1)
     login_container.grid_columnconfigure(0, weight=1)
+    setattr(
+        login_container,
+        "responsive_text",
+        ResponsiveText(
+            login_container,
+            fonts,
+            base_width=1100,
+            min_scale=0.85,
+            max_scale=1.25,
+        ),
+    )
 
     authentication_frame = ctk.CTkTabview(
         login_container,
@@ -113,7 +134,7 @@ def login_screen(parent, aa_title, menu, fonts):
             parent,
             menu,
             aa_title,
-            fonts
+            base_fonts
         )
     )
 
@@ -194,7 +215,7 @@ def login_screen(parent, aa_title, menu, fonts):
             parent,
             menu,
             aa_title,
-            fonts
+            base_fonts
         )
     )
 
