@@ -2,15 +2,15 @@
 
 # Assignment Assessor
 
-### A desktop academic planner that turns deadlines into an actionable study plan.
+### A responsive desktop workspace for organizing coursework, deadlines, and study effort.
 
 [![CI](https://github.com/GioEspinoza/AssignmentAssessor/actions/workflows/ci.yml/badge.svg)](https://github.com/GioEspinoza/AssignmentAssessor/actions/workflows/ci.yml)
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CustomTkinter](https://img.shields.io/badge/UI-CustomTkinter-1F6AA5)](https://github.com/TomSchimansky/CustomTkinter)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Tests](https://img.shields.io/badge/tests-30%20passing-22C55E)](#quality)
+[![Tests](https://img.shields.io/badge/tests-32%20passing-22C55E)](#quality)
 
-[Overview](#overview) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Setup](#local-setup) · [Roadmap](#roadmap)
+[Overview](#overview) · [Screenshots](#screenshots) · [Features](#features) · [Architecture](#architecture) · [Setup](#local-setup) · [Roadmap](#roadmap)
 
 </div>
 
@@ -18,66 +18,109 @@
 
 ## Overview
 
-Assignment Assessor helps students answer a deceptively difficult question:
-**what should I work on next?**
+Assignment Assessor is a Python desktop application for turning a collection of
+courses and deadlines into a manageable academic workflow. Students can create
+an account, maintain course-scoped assignments, track progress, estimate
+remaining effort, label work with reusable tags, and review upcoming work from
+a responsive dashboard.
 
-The application combines assignment difficulty, remaining effort, and time
-until the deadline into a priority score. A responsive desktop dashboard then
-surfaces upcoming coursework, workload summaries, progress states, and study
-recommendations.
+The project also serves as a practical example of layered desktop application
+engineering:
 
-Beyond the product itself, this repository demonstrates practical desktop
-application engineering:
-
-- A layered Python architecture with GUI-independent domain and service modules
-- PostgreSQL persistence with user, course, and assignment relationships
-- Salted PBKDF2-HMAC-SHA256 password storage
-- Responsive, theme-aware CustomTkinter components
-- Database-independent unit tests and automated GitHub Actions checks
-- A documented migration path from an early CLI prototype to a desktop product
+- Modern, theme-aware interfaces built with CustomTkinter
+- Responsive typography shared across authentication and application screens
+- PostgreSQL persistence with user-level ownership constraints
+- Transactional assignment, description, and tag creation
+- GUI-independent task rules, validation, and service modules
+- Fast unit tests backed by fakes instead of a required test database
+- An archived CLI prototype showing the application's evolution
 
 ## Screenshots
 
-| Responsive dashboard | Authentication |
-| :---: | :---: |
-| <img src="docs/screenshots/dashboard.png" alt="Assignment Assessor dashboard" width="100%"> | <img src="docs/screenshots/authentication.png" alt="Assignment Assessor authentication screen" width="100%"> |
+### Authentication
 
-## Product highlights
+Responsive login and registration tabs keep authentication focused while
+sharing the same typography system as the main application.
 
-### Academic workflow
+<p align="center">
+  <img src="docs/screenshots/Authentication.png" alt="Assignment Assessor login screen" width="100%">
+</p>
 
-- User-scoped courses and assignments
+### Dashboard
+
+The dashboard combines workload totals, quick-action cards, appearance
+controls, and an upcoming-assignment panel.
+
+<p align="center">
+  <img src="docs/screenshots/Dashboard.png" alt="Assignment Assessor dashboard" width="100%">
+</p>
+
+### Assignment workspace
+
+Assignments can be searched and filtered by status. The split layout provides
+a task list, selection-driven quick view, workload summary, and dedicated empty
+states.
+
+<p align="center">
+  <img src="docs/screenshots/Assignments.png" alt="Assignment management screen" width="100%">
+</p>
+
+### Add assignment
+
+The responsive assignment form collects course, difficulty, due date,
+description, tags, status, and effort. Its course panel summarizes active work
+and upcoming deadlines for the selected course.
+
+<p align="center">
+  <img src="docs/screenshots/Add%20Assignments.png" alt="Add Assignment form and course workload panel" width="100%">
+</p>
+
+## Features
+
+### Available now
+
+- Account registration and login with session-aware navigation
+- Salted PBKDF2-HMAC-SHA256 password hashing
+- User-scoped courses, assignments, and reusable tags
 - Three assignment states: **Not Started**, **In Progress**, and **Completed**
-- Course-aware assignment entry with calendar and due-time controls
-- Upcoming-deadline sorting and overdue detection
-- Search and status filtering
-- Remaining-workload and completion summaries
-- Priority-based study recommendations
-- Course archiving that preserves assignment history
-
-### Interface system
-
+- Assignment creation with:
+  - Active-course selection and inline course creation
+  - A five-level, color-graded difficulty selector
+  - Calendar-based due-date selection
+  - Optional short descriptions
+  - Existing or newly created tags
+  - Estimated remaining hours or completed hours
+- Atomic assignment saves: the task, description, new tags, and tag links
+  succeed or roll back together
+- Origin-aware navigation: cancelling Add Assignment returns to either the
+  dashboard or Assignments, depending on where it was opened
+- Assignment search, status filtering, selectable rows, and quick views
+- Dashboard summaries for due-soon, in-progress, and completed work
+- Up-next sorting with overdue and approaching-deadline states
+- Course workload counts and upcoming-work previews
 - Light and dark appearance modes
-- Responsive typography without compounding font sizes
-- Reusable dashboard cards with parent-matched accent styling
-- Scrollable forms with native Linux/X11 mouse-wheel behavior
-- Theme-aware calendar, hour, minute, and AM/PM controls
-- Shared color, spacing, radius, and typography tokens
-- Empty, selected, hover, and quick-view states
+- Responsive text across authentication, dashboard, assignment, and form screens
+- Linux/X11 mouse-wheel support for nested scrollable widgets
+- Course archive and restore support at the persistence layer
 
-### Engineering
+### In progress
 
-- Authentication, course, and task service boundaries
-- Parameterized PostgreSQL queries
-- Composite course ownership constraints
-- Reproducible schema snapshot
-- Isolated domain rules and input validation
-- Active code separated from the archived CLI prototype
+The dashboard includes visual entry points for several planned modules. The
+Assignments card and empty-state Add Assignment action are connected; the
+following areas remain roadmap items:
 
-## How prioritization works
+- Urgent-work workspace
+- Calendar view
+- Study planner
+- Analytics
+- Lock-in/focus sessions
+- Dashboard-wide search, notifications, and profile actions
+- Course settings action beside the Add Assignment course selector
 
-Open assignments receive a score based on their difficulty, remaining hours,
-and deadline:
+## Prioritization model
+
+Open assignments can be ranked using difficulty, remaining effort, and the
+number of days until the deadline:
 
 ```text
 remaining hours = max(estimated hours - hours used, 0)
@@ -86,9 +129,9 @@ priority = (difficulty × remaining hours) / days remaining
 ```
 
 Assignments due today or already overdue use one day as the denominator. This
-keeps the score finite while ensuring urgent work stays visible.
+keeps the score finite while ensuring urgent work remains visible.
 
-The study planner uses:
+The study recommendation helper uses:
 
 ```text
 recommended hours per day = remaining hours / days remaining
@@ -98,36 +141,41 @@ recommended hours per day = remaining hours / days remaining
 
 ```mermaid
 flowchart LR
-    UI["gui_logic<br/>Screens & navigation"]
-    Widgets["gui_widgets<br/>Reusable UI behavior"]
+    UI["gui_logic<br/>Screens and navigation"]
+    Widgets["gui_widgets<br/>Reusable interface behavior"]
+    Style["gui_style<br/>Tokens and responsive text"]
     Services["backend/*_service.py<br/>Application workflows"]
     Rules["backend/task_rules.py<br/>Domain rules"]
-    Validation["backend/validation.py<br/>Input & date validation"]
+    Validation["backend/validation.py<br/>Input and date validation"]
     Queries["database/*_queries.py<br/>Parameterized SQL"]
     DB[("PostgreSQL")]
 
     UI --> Widgets
+    UI --> Style
     UI --> Services
     Services --> Rules
     Services --> Validation
     Services --> Queries
+    UI --> Queries
     Queries --> DB
 ```
 
-The key boundary is intentional: backend modules never import CustomTkinter,
-fonts, colors, or widgets. Screens collect input and render results; services
-coordinate workflows; rules remain deterministic and easy to test.
+The long-term boundary is straightforward: screens collect and present data,
+services coordinate application behavior, deterministic rules stay independent
+of the GUI, and query modules own SQL and row mapping. Some newer assignment
+creation behavior currently calls its query boundary directly and is a
+candidate for continued service-layer consolidation.
 
 ```text
 AssignmentAssessor/
-├── backend/          # services, task rules, validation, auth, and session
-├── database/         # connection handling, query modules, and schema snapshot
-├── gui_logic/        # CustomTkinter screens and navigation
-├── gui_style/        # design tokens and responsive typography
-├── gui_widgets/      # reusable visual components and widget behavior
-├── tests/            # fast, database-independent unit tests
-├── legacy/           # archived CLI prototype and compatibility logic
-├── docs/             # architecture notes and application screenshots
+├── backend/          # authentication, sessions, services, rules, validation
+├── database/         # PostgreSQL connection, queries, and schema snapshot
+├── gui_logic/        # CustomTkinter screens, forms, and navigation
+├── gui_style/        # colors, spacing, typography, responsive scaling
+├── gui_widgets/      # dashboard cards, tag selector, shared widget behavior
+├── tests/            # database-independent unit and query-boundary tests
+├── legacy/           # archived command-line prototype
+├── docs/             # architecture notes and current screenshots
 └── main.py           # desktop application entry point
 ```
 
@@ -139,7 +187,10 @@ For a deeper walkthrough, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 erDiagram
     USERS ||--o{ COURSES : owns
     USERS ||--o{ TASKS : creates
+    USERS ||--o{ TAGS : defines
     COURSES ||--o{ TASKS : contains
+    TASKS ||--o{ TASK_TAGS : receives
+    TAGS ||--o{ TASK_TAGS : labels
 
     USERS {
         int user_id PK
@@ -155,6 +206,7 @@ erDiagram
         varchar course_name
         varchar course_code
         boolean is_active
+        date date_created
     }
 
     TASKS {
@@ -168,25 +220,44 @@ erDiagram
         int difficulty_level
         date due_date
         date date_completed
+        text short_description
+    }
+
+    TAGS {
+        int tag_id PK
+        int user_id FK
+        varchar tag_name
+        varchar color_hex
+        timestamp date_created
+    }
+
+    TASK_TAGS {
+        int user_id FK
+        int task_id FK
+        int tag_id FK
     }
 ```
 
-The composite task-to-course relationship ensures a task cannot reference
-another user's course. Courses are archived with `is_active` instead of being
-deleted, preserving historical assignments.
+Composite ownership constraints prevent assignments and tags from crossing user
+boundaries. Courses use `is_active` for archiving, preserving historical
+assignments while excluding archived courses from new-assignment choices. Tag
+names are unique per user without regard to letter casing.
 
 ## Technology
 
-| Area | Choice | Why |
+| Area | Choice | Purpose |
 | --- | --- | --- |
-| Language | Python 3.12+ | Clear domain modeling and rapid desktop development |
-| Desktop UI | CustomTkinter | Native desktop delivery with modern themed widgets |
-| Date input | tkcalendar | Themeable calendar selection for assignment deadlines |
-| Database | PostgreSQL | Relational integrity, constraints, and reliable querying |
-| Driver | Psycopg 3 | Modern PostgreSQL adapter with context-managed transactions |
-| Security | PBKDF2-HMAC-SHA256 | Salted, iterative password hashing |
-| Testing | Pytest | Fast unit coverage for rules and services |
-| Quality | Ruff + GitHub Actions | Repeatable lint, test, and compile checks |
+| Language | Python 3.12+ | Application and domain implementation |
+| Desktop UI | CustomTkinter | Modern, theme-aware desktop widgets |
+| Date input | tkcalendar | Calendar-based due-date selection |
+| Color input | CTkColorPicker | Custom reusable tag colors |
+| Images | Pillow | Theme-aware interface assets |
+| Database | PostgreSQL 14+ | Relational persistence and integrity |
+| Driver | Psycopg 3 | Parameterized SQL and context-managed transactions |
+| Configuration | python-dotenv | Local database connection configuration |
+| Security | PBKDF2-HMAC-SHA256 | Salted iterative password hashing |
+| Testing | Pytest | Fast unit and query-boundary coverage |
+| Quality | Ruff + GitHub Actions | Automated lint, test, and compile checks |
 
 ## Local setup
 
@@ -194,49 +265,78 @@ deleted, preserving historical assignments.
 
 - Python 3.12 or newer
 - PostgreSQL 14 or newer
-- `psql` available from your terminal
+- PostgreSQL command-line tools (`createdb` and `psql`)
+- Tk support for your Python installation
 
-### 1. Clone and install
+On Debian or Ubuntu, Tk can be installed with:
+
+```bash
+sudo apt install python3-tk
+```
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/GioEspinoza/AssignmentAssessor.git
 cd AssignmentAssessor
+```
 
+### 2. Create and activate a virtual environment
+
+Linux or macOS:
+
+```bash
 python -m venv venv
 source venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 ```
 
-On Windows:
+Windows PowerShell:
 
 ```powershell
-venv\Scripts\activate
+python -m venv venv
+venv\Scripts\Activate.ps1
 ```
 
-### 2. Create the database
+Install the runtime dependencies:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### 3. Create the PostgreSQL database
 
 ```bash
 createdb assignment_assessor
 psql -d assignment_assessor -f database/schema_snapshot.sql
 ```
 
-The checked-in snapshot mirrors the authoritative PostgreSQL schema managed
-through DataGrip.
+The checked-in schema snapshot contains the tables, indexes, constraints, and
+relationships needed by the current application.
 
-### 3. Configure the connection
+### 4. Configure the connection
+
+Linux or macOS:
 
 ```bash
 cp .env.example .env
 ```
 
-Update `.env`:
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Set your local connection string in `.env`:
 
 ```dotenv
 DATABASE_URL=postgresql://username:password@localhost:5432/assignment_assessor
 ```
 
-### 4. Run
+Do not commit `.env`; it is intended for local credentials only.
+
+### 5. Run the application
 
 ```bash
 python main.py
@@ -244,13 +344,13 @@ python main.py
 
 ## Quality
 
-Install development dependencies:
+Install the development dependencies:
 
 ```bash
-pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.txt
 ```
 
-Run the same checks used by CI:
+Run the same checks used during development and CI:
 
 ```bash
 python -m pytest
@@ -258,29 +358,21 @@ ruff check .
 python -m compileall -q backend database gui_logic gui_style gui_widgets main.py
 ```
 
-The active suite is database-independent, making it fast enough for local
-feedback and every push.
-
-## Current state
-
-The current desktop build includes authentication, the responsive dashboard,
-course-aware persistence, assignment browsing, status filtering, quick views,
-and a scrollable assignment-entry interface with status, course, date, time,
-description, and tag controls.
-
-Some dashboard controls and assignment-form submission actions are intentionally
-still being wired. The repository favors visible, accurate progress over
-presenting unfinished behavior as production-ready.
+The active test suite currently contains **32 passing tests** and does not
+require a live PostgreSQL instance.
 
 ## Roadmap
 
-- Complete the remastered assignment creation and editing workflows
-- Add course management and archive/restore screens
-- Wire dashboard-wide search, profile, and notification actions
-- Persist assignment due times and add reminder scheduling
+- Build the urgent-work view from the existing priority rules
+- Add a monthly calendar for assignments and events
+- Complete study-planning and focus-session workflows
+- Add workload and completion analytics
+- Implement course management behind the course settings control
+- Wire dashboard search, notification, and profile actions
+- Add due-time persistence, reminders, and scheduling
+- Move remaining GUI-to-query workflows behind service boundaries
 - Add PostgreSQL integration tests alongside the fast unit suite
-- Expand analytics with workload and completion visualizations
-- Package the desktop application for one-command installation
+- Package the application for one-command desktop installation
 
 ## Documentation
 
@@ -293,5 +385,5 @@ presenting unfinished behavior as production-ready.
 
 Built and designed by [Gio Espinoza](https://github.com/GioEspinoza).
 
-If this project interests you, explore the service layer, schema constraints,
-and responsive UI system—or open an issue with feedback.
+Contributions and constructive feedback are welcome. See
+[CONTRIBUTING.md](CONTRIBUTING.md) before submitting changes.
