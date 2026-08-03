@@ -1,7 +1,6 @@
 import customtkinter as ctk
 
 from gui_style import colors, spacing
-from gui_widgets.widgets import enable_linux_mousewheel
 
 
 class TagSelector(ctk.CTkFrame):
@@ -183,7 +182,6 @@ class TagSelector(ctk.CTkFrame):
                 pady=(spacing.SPACE_1, 0),
             )
 
-        enable_linux_mousewheel(self.preset_list)
 
     def _render_selected_tags(self):
         for widget in self.selected_tags_frame.winfo_children():

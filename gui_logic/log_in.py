@@ -40,6 +40,7 @@ def login_screen(parent, aa_title, menu, fonts):
         width=700,
         height=570,
         corner_radius=19,
+        segmented_button_font=fonts["button"],
         anchor="nw"
     )
 
@@ -62,7 +63,6 @@ def login_screen(parent, aa_title, menu, fonts):
         height=34,
         corner_radius=8,
         border_width=0,
-        font=fonts["button"],
         fg_color=tab_color,
         unselected_color=tab_color,
         unselected_hover_color=tab_color

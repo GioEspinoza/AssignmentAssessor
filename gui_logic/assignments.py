@@ -5,7 +5,7 @@ from backend import task_service
 from backend.session import get_current_user_id
 from gui_style import colors, spacing
 from gui_style.responsive import clone_fonts, ResponsiveText
-from gui_widgets.widgets import enable_linux_mousewheel
+from gui_widgets.widgets import create_header_action
 
 
 STATUS_FILTERS = {
@@ -71,14 +71,10 @@ def assignments_screen(parent, fonts):
         columnspan=2
         )
     
-    back_button = ctk.CTkButton(
+    back_button = create_header_action(
         header_frame,
         text='< Back to Menu',
-        font=fonts["button"],
-        fg_color=colors.ACCENT,
-        hover_color=colors.ACCENT_HOVER,
-        text_color=colors.TEXT_ON_ACCENT,
-        corner_radius=spacing.RADIUS_MEDIUM,
+        font=fonts["small_bold"],
         command=lambda: return_to_menu(parent, base_fonts)
     )
     back_button.grid(
@@ -679,8 +675,6 @@ def assignments_screen(parent, fonts):
 
     search_entry.bind("<KeyRelease>", lambda event: apply_list_controls())
     filter_dropdown.configure(command=lambda selected: apply_list_controls())
-    enable_linux_mousewheel(assignments_frame)
-    enable_linux_mousewheel(quick_view_frame)
 
 
 def update_quick_view(task):

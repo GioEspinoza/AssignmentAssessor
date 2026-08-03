@@ -1,55 +1,27 @@
-import sys
+import customtkinter as ctk
+
+from gui_style import colors
 
 
-def enable_linux_mousewheel(scrollable_frame, units=1):
-    """Add Linux/X11 wheel events to a CustomTkinter scrollable frame."""
-    if not sys.platform.startswith("linux"):
-        return
-
-    canvas = getattr(scrollable_frame, "_parent_canvas", None)
-    if canvas is None:
-        return
-
-    def scroll(event, direction):
-        if canvas.yview() != (0.0, 1.0):
-            canvas.yview_scroll(direction * units, "units")
-        return "break"
-
-    def bind_widget_tree(widget):
-        if not getattr(widget, "_linux_mousewheel_enabled", False):
-            try:
-                widget.bind(
-                    "<Button-4>",
-                    lambda event: scroll(event, -1),
-                    add="+",
-                )
-                widget.bind(
-                    "<Button-5>",
-                    lambda event: scroll(event, 1),
-                    add="+",
-                )
-                widget._linux_mousewheel_enabled = True
-            except NotImplementedError:
-                # Some composite CustomTkinter widgets, such as
-                # CTkSegmentedButton, intentionally disable direct bindings.
-                pass
-
-        for child in widget.winfo_children():
-            bind_widget_tree(child)
-
-    bind_widget_tree(scrollable_frame)
-    if not getattr(canvas, "_linux_mousewheel_enabled", False):
-        canvas.bind(
-            "<Button-4>",
-            lambda event: scroll(event, -1),
-            add="+",
-        )
-        canvas.bind(
-            "<Button-5>",
-            lambda event: scroll(event, 1),
-            add="+",
-        )
-        canvas._linux_mousewheel_enabled = True
+HEADER_ACTION_HEIGHT = 32
+HEADER_ACTION_HORIZONTAL_PADDING = 14
 
 
-__all__ = ["enable_linux_mousewheel"]
+def create_header_action(parent, *, text, font, command):
+    """Create the compact pill used for page-level navigation actions."""
+    text_width = max(0, int(font.measure(text)))
+
+    return ctk.CTkButton(
+        parent,
+        text=text,
+        font=font,
+        width=text_width + (HEADER_ACTION_HORIZONTAL_PADDING * 2),
+        height=HEADER_ACTION_HEIGHT,
+        corner_radius=HEADER_ACTION_HEIGHT // 2,
+        fg_color=colors.ACCENT,
+        hover_color=colors.ACCENT_HOVER,
+        text_color=colors.TEXT_ON_ACCENT,
+        cursor="hand2",
+        command=command,
+    )
+__all__ = ["create_header_action"]

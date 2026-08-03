@@ -123,3 +123,35 @@ def restore_course(user_id, course_id):
 
             if cur.rowcount == 0:
                 raise ValueError("Course restore failed. No rows affected.")
+
+def delete_course(user_id, course_id):
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM courses
+                WHERE user_id = %s
+                    AND course_id = %s;
+                """,
+                (user_id, course_id)
+            )
+
+            if cur.rowcount == 0:
+                raise ValueError("Course delete failed. No rows affected.")
+
+def update_course(user_id, course_id, new_course_name, new_course_code):
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE courses
+                SET course_name = %s,
+                    course_code = %s
+                WHERE user_id = %s
+                    AND course_id = %s;
+                """,
+                (new_course_name, new_course_code, user_id, course_id)
+            )
+
+            if cur.rowcount == 0:
+                raise ValueError("Course update failed. No rows affected.")

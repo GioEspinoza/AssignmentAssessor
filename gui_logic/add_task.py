@@ -9,10 +9,11 @@ from backend.session import get_current_user_id
 from database import task_queries
 from gui_logic.add_course_window import open_add_course_popup
 from gui_logic.add_tag_window import add_tag_popup
+from gui_logic.edit_course import open_edit_course_popup
 from gui_style import colors, spacing
 from gui_style.responsive import ResponsiveText, clone_fonts
 from gui_widgets.tag_selector import TagSelector
-from gui_widgets.widgets import enable_linux_mousewheel
+from gui_widgets.widgets import create_header_action
 
 
 def add_task(parent, fonts, back_command=None):
@@ -76,30 +77,27 @@ def add_task(parent, fonts, back_command=None):
         text_color=colors.TEXT_SECONDARY,
     )
 
-    title_label.grid(row=0, column=0, sticky="w")
+    title_label.grid(row=1, column=0, columnspan=2, sticky="w")
 
     subtitle_label.grid(
-        row=1,
+        row=2,
         column=0,
+        columnspan=2,
         sticky="w",
         pady=(spacing.SPACE_1, 0),
     )
 
-    cancel_button = ctk.CTkButton(
+    cancel_button = create_header_action(
         header_frame,
         text="Cancel",
-        font=fonts["body_bold"],
-        text_color=colors.TEXT_PRIMARY,
-        fg_color=colors.SURFACE,
-        hover_color=colors.SURFACE_HOVER,
-        corner_radius=spacing.RADIUS_MEDIUM,
+        font=fonts["small_bold"],
         command=back_command,
     )
     cancel_button.grid(
         row=0,
         column=1,
         sticky="e",
-        padx=(0, spacing.CARD_PADDING),
+        pady=(0, spacing.SPACE_2),
     )
 
     form_card = ctk.CTkFrame(
@@ -310,6 +308,11 @@ def add_task(parent, fonts, back_command=None):
             border_color=colors.BORDER,
             corner_radius=spacing.RADIUS_MEDIUM,
             cursor="hand2",
+            command=lambda: open_edit_course_popup(
+                parent,
+                base_fonts,
+                refresh_courses_after_update,
+            ),
         )
         course_settings_button.grid(
             row=1,
@@ -331,14 +334,10 @@ def add_task(parent, fonts, back_command=None):
 
         updated_courses = get_courses_for_user(get_current_user_id())
         create_course_dropdown(updated_courses)
-        if course_dropdown is not None and selected_course_name is not None:
-            course_dropdown.set(selected_course_name)
         selected_course_name = course_name
-        if course_dropdown is not None and selected_course_name is not None:
+        if course_dropdown is not None:
+            course_dropdown.set(course_name)
             course_dropdown.configure(command=handle_course_selection)
-        course_workload_subtitle.configure(
-            text="Select a course to view its workload distribution.",
-        )
         refresh_course_workload(course_name)
 
     if not courses:
@@ -659,7 +658,7 @@ def add_task(parent, fonts, back_command=None):
         if selected_status == "Completed":
             date_label.configure(text="Completion date")
             hours_label.configure(text="Total hours spent")
-            hours_helper.configure(text="Your best estimate is fine.")
+            hours_helper.configure(text="Optional.")
         else:
             date_label.configure(text="Due date")
             hours_label.configure(text="Estimated hours remaining")
@@ -1006,6 +1005,9 @@ def add_task(parent, fonts, back_command=None):
     upcoming_tasks_list_frame.grid_columnconfigure(0, weight=1)
 
     def refresh_course_workload(course_name):
+        if course_name:
+            course_workload_subtitle.configure(text=course_name)
+
         tasks = (
             task_queries.get_tasks_by_course(course_name, get_current_user_id())
             if course_name
@@ -1074,8 +1076,8 @@ def add_task(parent, fonts, back_command=None):
         nonlocal selected_course_name
 
         if selection == add_course_option:
-            if course_dropdown is not None and selected_course_name is not None:
-                course_dropdown.set(selected_course_name)
+            if course_dropdown is not None:
+                course_dropdown.set(selected_course_name or "")
             open_add_course_popup(
                 parent,
                 base_fonts,
@@ -1086,17 +1088,49 @@ def add_task(parent, fonts, back_command=None):
         selected_course_name = selection
         refresh_course_workload(selection)
 
+    def refresh_courses_after_update():
+        nonlocal course_dropdown, selected_course_name
+
+        if course_dropdown is not None:
+            course_dropdown.destroy()
+
+        updated_courses = get_courses_for_user(get_current_user_id())
+        create_course_dropdown(updated_courses)
+
+        if course_dropdown is None:
+            return
+
+        course_dropdown.configure(command=handle_course_selection)
+
+        if (
+            selected_course_name is not None
+            and selected_course_name in updated_courses
+        ):
+            course_dropdown.set(selected_course_name)
+            refresh_course_workload(selected_course_name)
+        else:
+            selected_course_name = None
+            course_dropdown.set("")
+            course_workload_subtitle.configure(
+                text=(
+                    "Select a course to view its workload distribution."
+                    if updated_courses
+                    else "Add an active course to view its workload distribution."
+                ),
+            )
+            refresh_course_workload(None)
+
     if course_dropdown is None:
         course_workload_subtitle.configure(
             text="Add an active course to view its workload distribution.",
         )
         refresh_course_workload(None)
     else:
-        selected_course_name = course_dropdown.get()
+        course_dropdown.set("")
+        selected_course_name = None
         course_dropdown.configure(command=handle_course_selection)
-        refresh_course_workload(selected_course_name)
+        refresh_course_workload(None)
 
-    enable_linux_mousewheel(assignment_details_frame)
 
 
 def back_to_assignments(parent, fonts):

@@ -5,8 +5,7 @@ from backend import session, task_service
 from gui_style import colors, spacing
 from gui_style.responsive import ResponsiveText
 from gui_widgets.dashboard_card import DashboardCard
-from gui_widgets.widgets import enable_linux_mousewheel
-from gui_logic import assignments, add_task
+from gui_logic import add_task, assignments, view_urgent
 
 # Presentation data only. A future card widget can iterate over this collection.
 DASHBOARD_CARD_CONFIG = (
@@ -719,6 +718,5 @@ def menu_screen(parent, fonts, username=None):
             sticky="w",
         )
 
-    enable_linux_mousewheel(content_frame)
 
     return dashboard_frame
