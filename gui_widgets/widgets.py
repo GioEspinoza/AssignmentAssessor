@@ -8,7 +8,6 @@ HEADER_ACTION_HORIZONTAL_PADDING = 14
 
 
 def create_header_action(parent, *, text, font, command):
-    """Create the compact pill used for page-level navigation actions."""
     text_width = max(0, int(font.measure(text)))
 
     return ctk.CTkButton(

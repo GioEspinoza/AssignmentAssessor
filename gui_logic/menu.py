@@ -5,7 +5,7 @@ from backend import session, task_service
 from gui_style import colors, spacing
 from gui_style.responsive import ResponsiveText
 from gui_widgets.dashboard_card import DashboardCard
-from gui_logic import add_task, assignments, view_urgent
+from gui_logic import add_task, assignments, urgent_screen
 
 # Presentation data only. A future card widget can iterate over this collection.
 DASHBOARD_CARD_CONFIG = (
@@ -65,6 +65,7 @@ def get_time_of_day():
 def get_due_status(due_date):
     due_states = {
         "overdue": ("Overdue", colors.DANGER),
+        "due_today": ("Due today", colors.WARNING),
         "due_soon": ("Due soon", colors.WARNING),
         "upcoming": ("Upcoming", colors.ACCENT),
     }
@@ -462,7 +463,7 @@ def menu_screen(parent, fonts, username=None):
         description=DASHBOARD_CARD_CONFIG[1]["description"],
         accent_color=DASHBOARD_CARD_CONFIG[1]["accent_color"],
         icon=DASHBOARD_CARD_CONFIG[1]["icon"],
-        command=lambda: print("Urgent card clicked"),
+        command=lambda: urgent_screen.urgent_screen(parent, fonts),
     )
 
     urgent_card.grid(

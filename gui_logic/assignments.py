@@ -6,6 +6,7 @@ from backend.session import get_current_user_id
 from gui_style import colors, spacing
 from gui_style.responsive import clone_fonts, ResponsiveText
 from gui_widgets.widgets import create_header_action
+from gui_logic.navigation import return_to_menu
 
 
 STATUS_FILTERS = {
@@ -16,8 +17,7 @@ STATUS_FILTERS = {
 
 
 def assignments_screen(parent, fonts):
-    user_task_list = task_service.get_tasks(get_current_user_id())
-    task_list = user_task_list
+    task_list = task_service.get_tasks(get_current_user_id())
     base_fonts = fonts
 
     fonts = clone_fonts(fonts)
@@ -633,7 +633,7 @@ def assignments_screen(parent, fonts):
     def apply_list_controls():
         selected_status = STATUS_FILTERS.get(filter_dropdown.get())
         filtered_tasks = task_service.filter_tasks_by_status(
-            user_task_list,
+            task_list,
             selected_status,
         )
         visible_tasks = task_service.search_tasks(
@@ -712,10 +712,6 @@ def get_hours_text(task):
         return f"Hours: {hours_used} used / {estimated_hours} estimated"
 
     return f"Estimated hours: {task.get('estimated_hours') or '—'}"
-
-def return_to_menu(parents, fonts):
-    from gui_logic.menu import menu_screen
-    menu_screen(parents, fonts)
 
 def add_task(parent, fonts):
     from gui_logic.add_task import add_task

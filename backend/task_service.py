@@ -31,6 +31,8 @@ def get_due_state(due_date):
 
     if days_remaining < 0:
         return "overdue"
+    elif days_remaining == 0:
+        return "due_today"
     elif days_remaining <= 7:
         return "due_soon"
     else:

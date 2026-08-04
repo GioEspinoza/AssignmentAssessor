@@ -129,6 +129,14 @@ def test_dashboard_data_queries_tasks_once(monkeypatch):
     assert dashboard_data["summary"]["due_soon"] == 1
 
 
+def test_due_state_distinguishes_today_from_this_week():
+    assert task_service.get_due_state(date.today()) == "due_today"
+    assert (
+        task_service.get_due_state(date.today() + timedelta(days=1))
+        == "due_soon"
+    )
+
+
 def test_course_service_reports_active_courses(monkeypatch):
     monkeypatch.setattr(
         course_service.course_queries,
