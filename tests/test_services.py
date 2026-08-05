@@ -1,6 +1,12 @@
 from datetime import date, timedelta
 
-from backend import auth_service, course_service, session, task_service
+from backend import (
+    auth_service,
+    course_service,
+    session,
+    tag_services,
+    task_service,
+)
 
 
 def test_register_user_sets_session(monkeypatch):
@@ -135,6 +141,72 @@ def test_due_state_distinguishes_today_from_this_week():
         task_service.get_due_state(date.today() + timedelta(days=1))
         == "due_soon"
     )
+
+
+def test_get_due_status_text():
+    assert task_service.get_due_status_text(date.today()) == "Due today"
+    assert (
+        task_service.get_due_status_text(date.today() + timedelta(days=1))
+        == "Due in 1 day"
+    )
+    assert (
+        task_service.get_due_status_text(date.today() + timedelta(days=4))
+        == "Due in 4 days"
+    )
+    assert (
+        task_service.get_due_status_text(date.today() - timedelta(days=1))
+        == "Overdue"
+    )
+
+
+def test_available_tags_include_presets_and_custom_tags(monkeypatch):
+    custom_tag = {
+        "tag_id": 91,
+        "tag_name": "Lab",
+        "color_hex": "#123456",
+    }
+    monkeypatch.setattr(
+        tag_services,
+        "get_user_tags",
+        lambda user_id: [custom_tag],
+    )
+
+    available_tags = tag_services.get_available_tags(7)
+    available_names = {
+        tag["tag_name"].strip().casefold()
+        for tag in available_tags
+    }
+
+    assert {
+        tag_name.casefold()
+        for tag_name, _color_hex in tag_services.DEFAULT_TAGS
+    } <= available_names
+    assert "lab" in available_names
+
+
+def test_available_tags_deduplicate_normalized_names(monkeypatch):
+    persisted_homework = {
+        "tag_id": 92,
+        "tag_name": "  homework  ",
+        "color_hex": "#654321",
+    }
+    monkeypatch.setattr(
+        tag_services,
+        "get_user_tags",
+        lambda user_id: [persisted_homework],
+    )
+
+    available_tags = tag_services.get_available_tags(7)
+    homework_tags = [
+        tag
+        for tag in available_tags
+        if tag["tag_name"].strip().casefold() == "homework"
+    ]
+
+    assert len(homework_tags) == 1
+    assert homework_tags[0]["tag_name"] == "homework"
+    assert homework_tags[0]["tag_id"] == 92
+    assert homework_tags[0]["color_hex"] == "#654321"
 
 
 def test_course_service_reports_active_courses(monkeypatch):

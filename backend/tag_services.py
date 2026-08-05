@@ -93,8 +93,29 @@ def get_user_tags(user_id):
     return tags_queries.get_tags(user_id)
 
 
+def merge_available_tags(user_tags):
+    available_tags_by_name = {
+        _clean_tag_name(tag_name).casefold(): {
+            "tag_name": _clean_tag_name(tag_name),
+            "color_hex": color_hex,
+        }
+        for tag_name, color_hex in DEFAULT_TAGS
+    }
+
+    for tag in user_tags or []:
+        clean_tag = {
+            **tag,
+            "tag_name": _clean_tag_name(tag["tag_name"]),
+        }
+        available_tags_by_name[
+            clean_tag["tag_name"].casefold()
+        ] = clean_tag
+
+    return list(available_tags_by_name.values())
+
+
 def get_available_tags(user_id):
-    return get_user_tags(user_id)
+    return merge_available_tags(get_user_tags(user_id) or [])
 
 
 def update_user_tag(user_id, tag_id, tag_name, color_hex):

@@ -1,6 +1,37 @@
+from tkinter import TclError
+
 import customtkinter as ctk
 
 from gui_style import colors, spacing
+
+
+def calculate_dropdown_geometry(
+    entry_top,
+    entry_height,
+    overlay_height,
+    requested_height,
+    gap,
+):
+    entry_bottom = entry_top + entry_height
+    space_below = max(0, overlay_height - entry_bottom - gap)
+    space_above = max(0, entry_top - gap)
+
+    if space_below >= requested_height:
+        side = "below"
+        dropdown_height = requested_height
+    elif space_above > space_below:
+        side = "above"
+        dropdown_height = min(requested_height, space_above)
+    else:
+        side = "below"
+        dropdown_height = min(requested_height, space_below)
+
+    dropdown_y = (
+        entry_bottom + gap
+        if side == "below"
+        else entry_top - gap - dropdown_height
+    )
+    return side, dropdown_y, dropdown_height
 
 
 class TagSelector(ctk.CTkFrame):
@@ -17,9 +48,13 @@ class TagSelector(ctk.CTkFrame):
         super().__init__(parent, fg_color=colors.TRANSPARENT)
         self.overlay_parent = overlay_parent
         self.fonts = fonts
-        self.available_tags = available_tags
+        self.available_tags = list(available_tags)
         self.selected_tags = []
         self.on_create_tag = on_create_tag
+        self._dropdown_visible = False
+        self._reposition_job = None
+        self._binding_ids = []
+        self._cleanup_complete = False
 
         self.search_value = ctk.StringVar()
         self.search_value.trace_add("write", self._filter_tags)
@@ -32,18 +67,52 @@ class TagSelector(ctk.CTkFrame):
 
         self.search_entry.bind("<Button-1>", self._show_dropdown, add=True)
         self.search_entry.bind("<FocusIn>", self._show_dropdown)
-        self.winfo_toplevel().bind(
-            "<Button-1>",
-            self._close_on_outside_click,
+        self.search_entry.bind(
+            "<Configure>",
+            self._schedule_reposition,
             add=True,
         )
+        self.bind("<Configure>", self._schedule_reposition, add=True)
+        self._bind_overlay_events()
+        self.bind("<Destroy>", self._cleanup_bindings, add=True)
 
     def get_selected_tags(self):
         return list(self.selected_tags)
 
+    @staticmethod
+    def _normalized_tag_name(tag):
+        return str(tag["tag_name"]).strip().casefold()
+
     def add_tag(self, tag):
-        self.available_tags.append(tag)
-        self._select_tag(tag)
+        tag_name = self._normalized_tag_name(tag)
+        clean_tag = {
+            **tag,
+            "tag_name": str(tag["tag_name"]).strip(),
+        }
+        self.available_tags = [
+            available_tag
+            for available_tag in self.available_tags
+            if self._normalized_tag_name(available_tag) != tag_name
+        ]
+        self.available_tags.append(clean_tag)
+
+        matching_selected_index = next(
+            (
+                index
+                for index, selected_tag in enumerate(self.selected_tags)
+                if self._normalized_tag_name(selected_tag) == tag_name
+            ),
+            None,
+        )
+        if matching_selected_index is None:
+            self.selected_tags.append(clean_tag)
+        else:
+            self.selected_tags[matching_selected_index] = clean_tag
+
+        self.search_value.set("")
+        self._render_selected_tags()
+        self._render_preset_tags()
+        self._schedule_reposition()
 
     def _build_selector(self):
         ctk.CTkLabel(
@@ -97,7 +166,7 @@ class TagSelector(ctk.CTkFrame):
             self.overlay_parent,
             width=100,
             height=self.DROPDOWN_HEIGHT,
-            fg_color=colors.TRANSPARENT,
+            fg_color=colors.SURFACE,
             border_width=1,
             border_color=colors.BORDER,
             corner_radius=spacing.RADIUS_MEDIUM,
@@ -108,7 +177,7 @@ class TagSelector(ctk.CTkFrame):
 
         self.preset_list = ctk.CTkScrollableFrame(
             self.dropdown,
-            fg_color=colors.TRANSPARENT,
+            fg_color=colors.SURFACE,
             corner_radius=0,
         )
         self.preset_list.grid(
@@ -120,7 +189,7 @@ class TagSelector(ctk.CTkFrame):
         )
         self.preset_list.grid_columnconfigure(0, weight=1)
 
-        create_button = ctk.CTkButton(
+        self.create_button = ctk.CTkButton(
             self.dropdown,
             text="+ Create new tag",
             font=self.fonts["body"],
@@ -134,7 +203,7 @@ class TagSelector(ctk.CTkFrame):
             cursor="hand2",
             command=self._create_tag,
         )
-        create_button.grid(
+        self.create_button.grid(
             row=1,
             column=0,
             sticky="ew",
@@ -150,13 +219,16 @@ class TagSelector(ctk.CTkFrame):
             widget.destroy()
 
         query = self.search_value.get().strip().casefold()
-        selected_names = {tag["tag_name"].casefold() for tag in self.selected_tags}
+        selected_names = {
+            self._normalized_tag_name(tag)
+            for tag in self.selected_tags
+        }
 
         visible_tags = [
             tag
             for tag in self.available_tags
-            if tag["tag_name"].casefold() not in selected_names
-            and query in tag["tag_name"].casefold()
+            if self._normalized_tag_name(tag) not in selected_names
+            and query in self._normalized_tag_name(tag)
         ]
 
         for row, tag in enumerate(visible_tags):
@@ -213,36 +285,171 @@ class TagSelector(ctk.CTkFrame):
             )
 
     def _select_tag(self, tag):
-        self.selected_tags.append(tag)
+        tag_name = self._normalized_tag_name(tag)
+        if not any(
+            self._normalized_tag_name(selected_tag) == tag_name
+            for selected_tag in self.selected_tags
+        ):
+            self.selected_tags.append(tag)
+
         self.search_value.set("")
         self._render_selected_tags()
         self._render_preset_tags()
+        self._schedule_reposition()
 
     def _remove_tag(self, tag):
         self.selected_tags.remove(tag)
         self._render_selected_tags()
         self._render_preset_tags()
+        self._schedule_reposition()
 
     def _show_dropdown(self, _event=None):
+        self._dropdown_visible = True
+        self._render_preset_tags()
+        self._schedule_reposition()
+
+    def _schedule_reposition(self, _event=None):
+        try:
+            selector_exists = self.winfo_exists()
+        except TclError:
+            return
+
+        if not self._dropdown_visible or not selector_exists:
+            return
+
+        if self._reposition_job is not None:
+            self.after_cancel(self._reposition_job)
+
+        self._reposition_job = self.after_idle(self._position_dropdown)
+
+    def _position_dropdown(self):
+        self._reposition_job = None
+        try:
+            selector_exists = self.winfo_exists()
+            entry_is_mapped = self.search_entry.winfo_ismapped()
+        except TclError:
+            return
+
+        if not self._dropdown_visible or not selector_exists:
+            return
+        if not entry_is_mapped:
+            self._hide_dropdown()
+            return
+
         self.overlay_parent.update_idletasks()
-        self.dropdown.configure(width=self.search_entry.winfo_width())
+        entry_width = self.search_entry.winfo_width()
+        entry_x = (
+            self.search_entry.winfo_rootx()
+            - self.overlay_parent.winfo_rootx()
+        )
+        entry_top = (
+            self.search_entry.winfo_rooty()
+            - self.overlay_parent.winfo_rooty()
+        )
+        entry_height = self.search_entry.winfo_height()
+        overlay_height = self.overlay_parent.winfo_height()
+
+        if entry_top + entry_height <= 0 or entry_top >= overlay_height:
+            self._hide_dropdown()
+            return
+
+        gap = self.dropdown._apply_widget_scaling(spacing.SPACE_1)
+        requested_height = self.dropdown._apply_widget_scaling(
+            self.DROPDOWN_HEIGHT
+        )
+        _side, dropdown_y, dropdown_height = calculate_dropdown_geometry(
+            entry_top,
+            entry_height,
+            overlay_height,
+            requested_height,
+            gap,
+        )
+
+        if dropdown_height <= 0:
+            self._hide_dropdown()
+            return
+
+        to_logical_units = self.dropdown._reverse_widget_scaling
+
+        self.dropdown.configure(
+            width=to_logical_units(float(entry_width)),
+            height=to_logical_units(float(dropdown_height)),
+        )
         self.dropdown.place(
-            x=(self.search_entry.winfo_rootx() - self.overlay_parent.winfo_rootx()),
-            y=(
-                self.search_entry.winfo_rooty()
-                - self.overlay_parent.winfo_rooty()
-                + self.search_entry.winfo_height()
-                + spacing.SPACE_1
-            ),
+            x=to_logical_units(float(entry_x)),
+            y=to_logical_units(float(dropdown_y)),
         )
         self.dropdown.lift()
+
+    def _bind_overlay_events(self):
+        toplevel = self.winfo_toplevel()
+        bindings = (
+            (toplevel, "<Button-1>", self._close_on_outside_click),
+            (toplevel, "<Configure>", self._handle_toplevel_configure),
+            (toplevel, "<MouseWheel>", self._schedule_reposition),
+            (toplevel, "<Button-4>", self._schedule_reposition),
+            (toplevel, "<Button-5>", self._schedule_reposition),
+            (toplevel, "<B1-Motion>", self._schedule_reposition),
+            (toplevel, "<ButtonRelease-1>", self._schedule_reposition),
+            (toplevel, "<KeyRelease>", self._schedule_reposition),
+        )
+
+        for widget, sequence, callback in bindings:
+            binding_id = widget.bind(sequence, callback, add=True)
+            self._binding_ids.append((widget, sequence, binding_id))
+
+    def _handle_toplevel_configure(self, event):
+        try:
+            toplevel = self.winfo_toplevel()
+        except TclError:
+            return
+
+        if event.widget is toplevel:
+            self._schedule_reposition()
 
     def _close_on_outside_click(self, event):
         if self._is_inside(event.widget, self.search_entry):
             return
         if self._is_inside(event.widget, self.dropdown):
             return
+        self._hide_dropdown()
+
+    def _hide_dropdown(self):
+        self._dropdown_visible = False
+        if self._reposition_job is not None:
+            try:
+                self.after_cancel(self._reposition_job)
+            except TclError:
+                pass
+            self._reposition_job = None
         self.dropdown.place_forget()
+
+    def _cleanup_bindings(self, _event=None):
+        if self._cleanup_complete:
+            return
+        self._cleanup_complete = True
+        self._dropdown_visible = False
+
+        if self._reposition_job is not None:
+            try:
+                self.after_cancel(self._reposition_job)
+            except TclError:
+                pass
+            self._reposition_job = None
+
+        for widget, sequence, binding_id in self._binding_ids:
+            try:
+                widget.unbind(sequence, binding_id)
+            except TclError:
+                pass
+        self._binding_ids.clear()
+
+        try:
+            if self.dropdown.winfo_exists():
+                self.dropdown.place_forget()
+                self.dropdown.destroy()
+        except TclError:
+            pass
 
     @staticmethod
     def _is_inside(widget, container):
@@ -253,6 +460,6 @@ class TagSelector(ctk.CTkFrame):
         return False
 
     def _create_tag(self):
-        self.dropdown.place_forget()
+        self._hide_dropdown()
         if self.on_create_tag is not None:
             self.on_create_tag()

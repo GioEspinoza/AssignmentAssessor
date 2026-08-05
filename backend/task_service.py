@@ -39,6 +39,19 @@ def get_due_state(due_date):
         return "upcoming"
 
 
+def get_due_status_text(due_date):
+    due_state = get_due_state(due_date)
+
+    if due_state == "overdue":
+        return "Overdue"
+    if due_state == "due_today":
+        return "Due today"
+
+    days_remaining = (parse_task_date(due_date) - date.today()).days
+    day_label = "day" if days_remaining == 1 else "days"
+    return f"Due in {days_remaining} {day_label}"
+
+
 def get_upcoming_tasks(user_id, limit=3):
     return select_upcoming_tasks(get_tasks(user_id), limit)
 

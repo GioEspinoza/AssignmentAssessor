@@ -40,12 +40,15 @@ def add_tag_popup(parent, fonts, on_tag_added):
         if not tag_name:
             return
 
-        on_tag_added(
+        tag_added = on_tag_added(
             {
                 "tag_name": tag_name,
                 "color_hex": selected_color,
             }
         )
+        if tag_added is False:
+            return
+
         popup.destroy()
 
     content_frame = ctk.CTkFrame(

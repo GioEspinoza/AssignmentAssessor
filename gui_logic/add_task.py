@@ -1,4 +1,4 @@
-from tkinter import messagebox, ttk
+from tkinter import Label, TclError, messagebox, ttk
 
 import customtkinter as ctk
 import psycopg
@@ -140,12 +140,14 @@ def add_task(parent, fonts, back_command=None):
         uniform="assignment_form_columns",
     )
 
-    course_workload_frame = ctk.CTkFrame(
+    course_workload_frame = ctk.CTkScrollableFrame(
         form_card,
         fg_color=colors.SURFACE_HOVER,
         border_width=spacing.CARD_BORDER_WIDTH,
         border_color=colors.BORDER,
         corner_radius=spacing.RADIUS_LARGE,
+        scrollbar_button_color=colors.BORDER,
+        scrollbar_button_hover_color=colors.TEXT_SECONDARY,
     )
     course_workload_frame.grid(
         row=0,
@@ -154,7 +156,6 @@ def add_task(parent, fonts, back_command=None):
         padx=(spacing.SPACE_2, spacing.CARD_PADDING),
         pady=spacing.CARD_PADDING,
     )
-    course_workload_frame.grid_propagate(False)
     course_workload_frame.grid_rowconfigure((0, 1, 2, 3), weight=0)
     course_workload_frame.grid_rowconfigure(4, weight=1)
     course_workload_frame.grid_columnconfigure(
@@ -596,25 +597,37 @@ def add_task(parent, fonts, back_command=None):
         pady=(spacing.SPACE_2, 0),
     )
 
-    user_tags = tag_services.get_user_tags(get_current_user_id())
-    available_tags = user_tags or [
-        {
-            "tag_name": tag_name,
-            "color_hex": color_hex,
-        }
-        for tag_name, color_hex in tag_services.DEFAULT_TAGS
-    ]
+    user_id = get_current_user_id()
+    available_tags = tag_services.get_available_tags(user_id)
+
+    def persist_created_tag(tag):
+        try:
+            created_tag = tag_services.create_user_tag(
+                user_id,
+                tag["tag_name"],
+                tag["color_hex"],
+            )
+        except (psycopg.Error, ValueError) as error:
+            messagebox.showerror(
+                "Tag Error",
+                str(error),
+                parent=parent,
+            )
+            return False
+
+        tag_selector.add_tag(created_tag)
+        return True
 
     def open_create_tag_popup():
         add_tag_popup(
             parent,
             fonts,
-            on_tag_added=tag_selector.add_tag,
+            on_tag_added=persist_created_tag,
         )
 
     tag_selector = TagSelector(
         assignment_details_frame,
-        overlay_parent=add_task_frame,
+        overlay_parent=parent.winfo_toplevel(),
         fonts=fonts,
         available_tags=available_tags,
         on_create_tag=open_create_tag_popup,
@@ -771,6 +784,7 @@ def add_task(parent, fonts, back_command=None):
             hours_entry.get(),
             status_value.get(),
             parent,
+            back_command,
         ),
     )
 
@@ -1015,14 +1029,8 @@ def add_task(parent, fonts, back_command=None):
         )
         active_tasks = [task for task in tasks if not task_rules.is_completed(task)]
         hours_left = sum(task_rules.remaining_hours(task) for task in active_tasks)
-        future_tasks = [
-            task
-            for task in tasks
-            if task.get("due_date") is not None
-            and task_service.get_due_state(task["due_date"]) != "overdue"
-        ]
         upcoming_tasks = task_service.select_upcoming_tasks(
-            future_tasks,
+            active_tasks,
             limit=3,
         )
 
@@ -1043,34 +1051,301 @@ def add_task(parent, fonts, back_command=None):
             return
 
         for row, task in enumerate(upcoming_tasks):
-            task_name_label = ctk.CTkLabel(
-                upcoming_tasks_list_frame,
-                text=task["task"],
-                font=fonts["body_bold"],
-                text_color=colors.TEXT_PRIMARY,
-                anchor="w",
+            due_state = task_service.get_due_state(task["due_date"])
+            due_text_color = (
+                colors.DANGER
+                if due_state == "overdue"
+                else colors.WARNING
+                if due_state == "due_today"
+                else colors.TEXT_SECONDARY
             )
-            task_name_label.grid(
+
+            task_card = ctk.CTkFrame(
+                upcoming_tasks_list_frame,
+                fg_color=colors.SURFACE,
+                border_width=spacing.CARD_BORDER_WIDTH,
+                border_color=colors.BORDER,
+                corner_radius=spacing.RADIUS_MEDIUM,
+            )
+            task_card.grid(
                 row=row,
                 column=0,
                 sticky="ew",
                 pady=(0, spacing.SPACE_2),
             )
+            task_card.grid_columnconfigure(0, weight=1)
+            task_card.grid_rowconfigure((0, 1, 2), weight=0)
+            task_card.grid_propagate(True)
 
-            due_date_label = ctk.CTkLabel(
-                upcoming_tasks_list_frame,
-                text=str(task["due_date"]),
-                font=fonts["small"],
-                text_color=colors.TEXT_SECONDARY,
-                anchor="e",
+            task_name = task["task"]
+            task_name_label = Label(
+                task_card,
+                text=task_name,
+                font=base_fonts["card_title"],
+                foreground=resolve_color(colors.TEXT_PRIMARY),
+                background=resolve_color(colors.SURFACE),
+                anchor="w",
+                justify="left",
+                wraplength=1,
+                borderwidth=0,
+                highlightthickness=0,
+            )
+            task_name_label.grid(
+                row=0,
+                column=0,
+                sticky="ew",
+                padx=spacing.SPACE_3,
+                pady=(spacing.SPACE_3, spacing.SPACE_1),
+            )
+
+            task_tags_frame = ctk.CTkFrame(
+                task_card,
+                height=1,
+                fg_color=colors.TRANSPARENT,
+            )
+            task_tags_frame.grid(
+                row=1,
+                column=0,
+                sticky="ew",
+                padx=spacing.SPACE_3,
+                pady=(0, spacing.SPACE_1),
+            )
+            task_tags_frame.grid_propagate(False)
+
+            task_tags = tag_services.get_task_tags(
+                get_current_user_id(),
+                task["task_id"],
+            )
+            tag_labels = []
+            for tag in task_tags:
+                tag_label = ctk.CTkLabel(
+                    task_tags_frame,
+                    text=tag["tag_name"],
+                    font=fonts["small_bold"],
+                    text_color=tag["color_hex"],
+                    fg_color=colors.SURFACE,
+                    border_width=1,
+                    border_color=tag["color_hex"],
+                    corner_radius=spacing.RADIUS_MEDIUM,
+                    height=26,
+                )
+                tag_labels.append(tag_label)
+
+            layout_state = {
+                "job": None,
+                "card_width": None,
+            }
+            preview_widgets = {"due_label": None}
+
+            def wrap_title_in_two_lines(
+                text,
+                available_width,
+                title_font=base_fonts["card_title"],
+            ):
+                if title_font.measure(text) <= available_width:
+                    return text
+
+                words = text.split()
+                candidates = []
+                for split_index in range(1, len(words)):
+                    first_line = " ".join(words[:split_index])
+                    second_line = " ".join(words[split_index:])
+                    first_width = title_font.measure(first_line)
+                    second_width = title_font.measure(second_line)
+                    if (
+                        first_width <= available_width
+                        and second_width <= available_width
+                    ):
+                        candidates.append(
+                            (
+                                abs(first_width - second_width),
+                                first_line,
+                                second_line,
+                            )
+                        )
+
+                if not candidates:
+                    return text
+
+                _difference, first_line, second_line = min(candidates)
+                return f"{first_line}\n{second_line}"
+
+            def perform_preview_layout(
+                title_label=task_name_label,
+                tags_frame=task_tags_frame,
+                labels=tag_labels,
+                card=task_card,
+                original_title=task_name,
+                state=layout_state,
+                widgets=preview_widgets,
+                title_wrapper=wrap_title_in_two_lines,
+            ):
+                state["job"] = None
+                try:
+                    card_exists = card.winfo_exists()
+                except TclError:
+                    return
+                if not card_exists:
+                    return
+
+                state["card_width"] = card.winfo_width()
+                card.update_idletasks()
+                title_width = max(1, title_label.winfo_width())
+                title_label.configure(
+                    text=title_wrapper(
+                        original_title,
+                        title_width,
+                    ),
+                    wraplength=title_width,
+                )
+
+                due_label = widgets["due_label"]
+                if due_label is not None:
+                    due_label.configure(
+                        wraplength=max(1, due_label.winfo_width()),
+                    )
+
+                if not labels:
+                    tags_frame.grid_remove()
+                    return
+
+                tags_frame.grid()
+                tags_frame.update_idletasks()
+                available_width = max(1, tags_frame.winfo_width())
+                chip_gap = tags_frame._apply_widget_scaling(
+                    spacing.SPACE_1
+                )
+                chip_padding = tags_frame._apply_widget_scaling(
+                    spacing.SPACE_2
+                )
+                tag_rows = []
+                current_tag_row = []
+                used_width = 0
+
+                for label in labels:
+                    label.place_forget()
+                    max_chip_width = max(
+                        1,
+                        available_width - chip_gap,
+                    )
+                    label.configure(
+                        wraplength=label._reverse_widget_scaling(
+                            float(
+                                max(
+                                    tags_frame._apply_widget_scaling(40),
+                                    max_chip_width - (2 * chip_padding),
+                                )
+                            )
+                        ),
+                    )
+                    label.update_idletasks()
+                    requested_width = min(
+                        label._label.winfo_reqwidth() + (2 * chip_padding),
+                        max_chip_width,
+                    )
+                    requested_height = max(
+                        tags_frame._apply_widget_scaling(26),
+                        label._label.winfo_reqheight() + chip_padding,
+                    )
+                    label.configure(
+                        width=label._reverse_widget_scaling(
+                            float(requested_width)
+                        ),
+                        height=label._reverse_widget_scaling(
+                            float(requested_height)
+                        ),
+                    )
+                    label.place(x=0, y=0)
+                    label.update_idletasks()
+                    label_width = label.winfo_width()
+                    label_height = label.winfo_height()
+                    width_with_gap = label_width + chip_gap
+
+                    if (
+                        current_tag_row
+                        and used_width + width_with_gap > available_width
+                    ):
+                        tag_rows.append(current_tag_row)
+                        current_tag_row = []
+                        used_width = 0
+
+                    current_tag_row.append(
+                        (label, label_width, label_height)
+                    )
+                    used_width += width_with_gap
+
+                if current_tag_row:
+                    tag_rows.append(current_tag_row)
+
+                current_y = 0
+                for tag_row in tag_rows:
+                    current_x = 0
+                    row_height = max(
+                        label_height
+                        for _label, _label_width, label_height in tag_row
+                    )
+                    for label, label_width, _label_height in tag_row:
+                        label.place_configure(
+                            x=current_x,
+                            y=current_y,
+                        )
+                        current_x += label_width + chip_gap
+                    current_y += row_height + chip_gap
+
+                tags_frame.configure(
+                    height=tags_frame._reverse_widget_scaling(
+                        float(max(1, current_y))
+                    ),
+                )
+
+            def schedule_preview_layout(
+                event=None,
+                card=task_card,
+                state=layout_state,
+                layout_callback=perform_preview_layout,
+            ):
+                if (
+                    event is not None
+                    and state["card_width"] == event.width
+                ):
+                    return
+                if event is not None:
+                    state["card_width"] = event.width
+
+                if state["job"] is not None:
+                    try:
+                        card.after_cancel(state["job"])
+                    except TclError:
+                        pass
+                state["job"] = card.after_idle(
+                    layout_callback
+                )
+
+            due_date_label = Label(
+                task_card,
+                text=task_service.get_due_status_text(task["due_date"]),
+                font=fonts["body_bold"],
+                foreground=resolve_color(due_text_color),
+                background=resolve_color(colors.SURFACE),
+                anchor="w",
+                justify="left",
+                borderwidth=0,
+                highlightthickness=0,
             )
             due_date_label.grid(
-                row=row,
-                column=1,
-                sticky="e",
-                padx=(spacing.SPACE_2, 0),
-                pady=(0, spacing.SPACE_2),
+                row=2,
+                column=0,
+                sticky="ew",
+                padx=spacing.SPACE_3,
+                pady=(0, spacing.SPACE_3),
             )
+            preview_widgets["due_label"] = due_date_label
+            task_card.bind(
+                "<Configure>",
+                schedule_preview_layout,
+                add=True,
+            )
+            schedule_preview_layout()
 
     def handle_course_selection(selection):
         nonlocal selected_course_name
@@ -1160,6 +1435,7 @@ def submit_task(
     estimated_hours,
     status,
     parent,
+    success_command=None,
 ):
     task_name = task_name.strip()
 
@@ -1243,3 +1519,6 @@ def submit_task(
         f"Assignment '{task_name}' has been added successfully.",
         parent=parent,
     )
+
+    if success_command is not None:
+        success_command()
