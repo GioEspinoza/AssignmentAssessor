@@ -1,4 +1,5 @@
 from tkinter import Label, TclError, messagebox, ttk
+from typing import Any
 
 import customtkinter as ctk
 import psycopg
@@ -1135,7 +1136,7 @@ def add_task(parent, fonts, back_command=None):
                 "job": None,
                 "card_width": None,
             }
-            preview_widgets = {"due_label": None}
+            preview_widgets: dict[str, Any] = {"due_label": None}
 
             def wrap_title_in_two_lines(
                 text,

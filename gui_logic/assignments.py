@@ -208,13 +208,15 @@ class TaskActionsMenu:
         overlay_width = self.overlay_parent.winfo_width()
         overlay_height = self.overlay_parent.winfo_height()
 
-        button_x = button.winfo_rootx() - overlay_root_x
-        button_top = button.winfo_rooty() - overlay_root_y
-        button_width = button.winfo_width()
-        button_height = button.winfo_height()
-        button_right = button_x + button_width
-        button_bottom = button_top + button_height
-
+        if button:
+            button_x = button.winfo_rootx() - overlay_root_x
+            button_top = button.winfo_rooty() - overlay_root_y
+            button_width = button.winfo_width()
+            button_height = button.winfo_height()
+            button_right = button_x + button_width
+            button_bottom = button_top + button_height
+        else:
+            button_x = button_top = button_right = button_bottom = 0
         if (
             button_right <= 0
             or button_x >= overlay_width
@@ -712,12 +714,12 @@ def assignments_screen(parent, fonts):
             task_title_label.bind(
                 "<Configure>",
                 lambda _event, label=task_title_label: fit_label_wraplength(label),
-                add=True,
+                add="+",
             )
             task_due_date_label.bind(
                 "<Configure>",
                 lambda _event, label=task_due_date_label: fit_label_wraplength(label),
-                add=True,
+                add="+",
             )
             task_click_targets.append(
                 (task, task_frame, (task_frame, task_title_label, task_due_date_label))
@@ -942,7 +944,7 @@ def assignments_screen(parent, fonts):
         selected_assignment_title.bind(
             "<Configure>",
             lambda _event: fit_label_wraplength(selected_assignment_title),
-            add=True,
+            add="+",
         )
 
         selected_assignment_course = ctk.CTkLabel(
@@ -962,7 +964,7 @@ def assignments_screen(parent, fonts):
         selected_assignment_course.bind(
             "<Configure>",
             lambda _event: fit_label_wraplength(selected_assignment_course),
-            add=True,
+            add="+",
         )
 
         metadata_frame = ctk.CTkFrame(
@@ -1029,11 +1031,11 @@ def assignments_screen(parent, fonts):
             metadata_value_label.bind(
                 "<Configure>",
                 lambda _event, label=metadata_value_label: fit_label_wraplength(label),
-                add=True,
+                add="+",
             )
             metadata_cards.append(metadata_card)
 
-        metadata_layout_state = {"wide": None}
+        metadata_layout_state: dict[str, bool | None] = {"wide": None}
 
         def layout_metadata(_event=None):
             try:
@@ -1141,7 +1143,8 @@ def assignments_screen(parent, fonts):
             pady=(0, spacing.SPACE_2),
         )
         details_tags_frame.grid_columnconfigure(0, weight=1)
-        tag_layout_state = {"width": None}
+
+        tag_layout_state: dict[str, int | None] = {"width": None}
 
         def render_detail_tags(_event=None):
             try:
@@ -1241,7 +1244,7 @@ def assignments_screen(parent, fonts):
                             colors.BORDER,
                         ),
                         corner_radius=spacing.RADIUS_SMALL,
-                        wraplength=max_chip_wraplength,
+                        wraplength=int(max_chip_wraplength),
                         justify="left",
                         height=28,
                     )
@@ -1296,7 +1299,7 @@ def assignments_screen(parent, fonts):
         description_label.bind(
             "<Configure>",
             lambda _event: fit_label_wraplength(description_label),
-            add=True,
+            add="+",
         )
         quick_view_frame.after_idle(reset_quick_view_scroll)
 
