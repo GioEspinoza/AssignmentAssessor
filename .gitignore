@@ -1,32 +1,39 @@
-# Virtual environments
-venv/
-.venv/
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
 
-# Python artifacts
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python-generated files and tooling
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.pyright/
 .coverage
 htmlcov/
-build/
-dist/
 *.egg-info/
 
-# Secrets and local configuration
-.env
-.env.*
-!.env.example
+# JavaScript dependencies and build output
+node_modules/
+.next/
+.nuxt/
+.svelte-kit/
+dist/
+build/
+coverage/
+*.tsbuildinfo
 
-# Editors and operating systems
-.vscode/
+# IDE metadata
 .idea/
+.vscode/
+
+# Operating-system files
 .DS_Store
 Thumbs.db
-
-# Legacy local data files
-tasks.json
-user_prof.json
-.user_prof.json
-.tasks.json
